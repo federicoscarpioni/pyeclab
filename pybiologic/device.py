@@ -2,6 +2,10 @@
 This module
 '''
 import api.kbio_api as api
+import logging
+
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger(__name__)
 
 def load_technique():
     ...
@@ -16,10 +20,12 @@ class BiologicDevice(api):
         def __init__(self,
                      address,
                      binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/",
+                     logging_level=logging.WARNING,
                      verbosity = 3):
             DLL_path = self.choose_library(binary_path)
             super(BiologicDevice,self).__init__(DLL_path)
             self.address = address
+            logging.basicConfig(level=logging_level)
             self.verbosity = verbosity
             self.connect()
             self.test_connection()
