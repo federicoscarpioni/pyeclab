@@ -49,6 +49,7 @@ class OCV_params :
     record_dt : float
     e_range   : float
     bandwidth : int
+    xctr      : int
 
 # -----------------------------------------------------------------------------#
 
