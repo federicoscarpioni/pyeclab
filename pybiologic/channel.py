@@ -2,59 +2,136 @@ import numpy as np
 from threading import Thread
 import time
 import logging
+from device import BiologicDevice
+from auxiliary_functions import save_exp_metadata, create_data_file_for_saving, SavingMetadata, get_saving_path, write_latest_data_to_file
+from api.tech_types import TECH_ID
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
 
-def save_exp_metadata(path, metadata):
-    '''
-    Save all the information regarding the experiment
-    '''
-    ...
-
 class Channel:
     
     def __init__(self,
-                 bio_device, 
-                 channel_num, 
-                 saving_metadata, 
-                 logging_level=logging.WARNING,
-                 #verbosity=1,
-                 #debug=True
-                 ):
-        
-        self.bio_device   = bio_device
+                 bio_device : BiologicDevice, 
+                 channel_num : int, 
+                 saving_metadata: SavingMetadata, 
+                 record_Ece : bool = False,
+                 record_analog_in1 : bool = False,
+                 record_analog_in2 : bool = False,
+                 logging_leve : logging.INFO = logging.WARNING, # I am not sure this type is correct
+                 print_values : bool  = False):
+        self.saving_path     = get_saving_path(saving_metadata)
+        self.bio_device      = bio_device
         self.saving_metadata = saving_metadata
-        self.num          = channel_num
-        self.cycle_number = 1
-        self.part_count = 1
+        self.print_values    = print_values
+        self.num             = channel_num
 
-    def load_sequence(self, sequence): # change this variables name that are confusing!!
-        '''
-        Load the sequence of techniques to the instrument channel. 
-        '''
-        self.sequence = sequence 
-        self.bio_device.load_sequence(self.num, self.sequence)         
+
+    def set_hardwer_config(self):
+        bio_device = self.bio_device.
+    def load_sequence(self, sequence): 
+        self.sequence = sequence
+        self.bio_device.load_sequence(self.num, self.sequence) 
+
+
+    def start(self): 
+        self.saving_file_handle = create_data_file_for_saving(self.saving_path)
+        save_exp_metadata(self.saving_path)
+        self.bio_device.start_channel(self.num)  
+        loop_thread = Thread(target=self.data_transfer_loop)
+        loop_thread.start()
+        print(f'CH{self.num}: Experiment started')
+
+
+    def stop(self):
+        self.bio_device.stop_channel(self.num)
+        print(f'CH{self.num}: interrupted by the user')   
     
-    def measure_loop(self):
+
+    def data_transfer_loop(self, sleep_time = 1):
         '''
-        Main experiment loop, retrives data with a certain frequency from the 
-        BioLogic device. Useful to execute the acquisition in a separate thread.
+        Retrives data from the BioLogic device asynchronously.
+        Retrive sampled points from the instrumnet (ADC values), convert to physical 
+        values and save to disk. 
         '''
         while True:
            self.get_data()
-           if self.is_running == False:
+           latest_data = self.convert_buffer_to_physical_values(self.data_buffer)
+           self.write_latest_data_to_file(latest_data)
+           if self.print_values : self.print_current_values()
+           self.monitoring_sequnce_progression()
+           if self.current_values.Status == 0:
+               print(f'CH{self.num}: Sequence terminated')
                break
-           time.sleep(.01)
+           time.sleep(sleep_time)
 
-           
 
-    def start(self): 
-        save_exp_metadata()
-        self.bio_device.start_channel(self.num)
+    def get_data(self):
+        ''' 
+        When retriving latest agglomerated data from the instrument, the api will
+        return three objects: 
+        current_values = current values of the measurement
+        data_info = info on  the technique that is running and on the buffer content
+        data_buffer = data in a one dimension
+        See the EC-Lab Development Kit manual for details on the data structures.
+        '''
+        self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(self.bio_device.device_id, self.num)
+
+
+    def monitoring_sequnce_progression(self):
+        '''
+        This methods checks when a new technique is started in the instrument. This
+        can be used to add new beahviours to the application.
+        '''
+        new_tech_index = self.data_info.TechniqueIndex
+        new_tech_id    = self.data_info.TechniqueID
+
+       
+        if self.is_running == False:
+            self.current_tech_index = new_tech_index
+            self.current_tech_id    = new_tech_id
+            self.is_running = True
+        # Check if a new technique is running
+        if self.current_tech_index != new_tech_index : 
+            if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
+
+
+    def print_current_values(self):
+        print(f'CH{self.num} - Ewe: {self.current_values.Ewe:.4}V | I: {self.current_values.I*1000:.4}mA | Tech_ID: {TECH_ID(self.current_values.TechniqueID).name} | Tech_indx: {self.current_values.TechniqueIndex} | loop: {self.current_values.loop}')
+
+                     
+    def convert_buffer_to_physical_values(self): # Maybe it is not necessary to make buffers attributes
+        '''
+        Convert digitalized signal from ADC to physical values.
+        '''
+        # Buffer from the device
+        buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
+        # Convert voltage buffer numbers in real values
+        Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,2]) for i in range(0, self.data_info.NbRows)])
+        # Convert buffer numbers in real values
+        if self.data_info.TechniqueID != 100:
+            I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,3]) for i in range(0, self.data_info.NbRows)]) 
+        else:
+            I = np.array([0]*len(self.Ewe))
+        # Convert time in seconds
+        t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
+        return Ewe, I, t
         
-        
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
     def save_exp_params(self):
         savepath = f'{self.experiment_info.deis_directory}/{self.experiment_info.project_name}/{self.experiment_info.cell_name}/{self.experiment_info.experiment_name}CH{self.num}/'
         # Create the path
@@ -75,37 +152,9 @@ class Channel:
                 f.write(f'\nTechnique #{i}: ' + self.sequence[i].ecc_file[:-5])
                 f.write('\n')
                 for key, value in self.sequence[i].user_params.__dict__.items(): 
-                    f.write('%s: %s\n' % (key, value))    
-                    
-    
-        
-        
-    
-        
-        
+                    f.write('%s: %s\n' % (key, value))  
 
-        
-        
- 
-    def convert_buffer(self, data): # Maybe it is not necessary to make buffers attributes
-        '''
-        Convert BioLogic buffer numbers to physical values.
-        '''
-        # Buffer from the device
-        buff = np.array(data[2]).reshape(data[1].NbRows, data[1].NbCols)
-        # Convert voltage buffer numbers in real values
-        self.Ewe_buff = np.array([self.bio_device.ConvertNumericIntoSingle(buff[i,2]) for i in range(0,data[1].NbRows)])
-        # Convert buffer numbers in real values
-        if data[1].TechniqueID != 100:
-            self.I_buff = np.array([self.bio_device.ConvertNumericIntoSingle(buff[i,3]) for i in range(0,data[1].NbRows)]) 
-        else:
-            self.I_buff = np.array([0]*len(self.Ewe_buff))
-        # Convert time in seconds
-        self.t_buff = np.array([(((buff[i,0] << 32) + buff[i,1]) * data[0].TimeBase) + data[1].StartTime for i in range(0,data[1].NbRows)])
-        
-    
 
-    
     
     def copy_buffer(self):
         ''' 
@@ -176,49 +225,11 @@ class Channel:
                                          self.sequence[new_tech_index].ecc_file)
             
     
-    def get_data(self):
-        ''' 
-        Retrive buffer from instrument memory, convert to physical values and 
-        copy into the preallocated arrays. 
-        '''
-        data = self.bio_device.GetData(self.bio_device.device_id, self.num)
-        if self.verbosity>1: print(f'CH{self.num} - Ewe: {data[0].Ewe:.4}V | I: {data[0].I*1000:.4}mA | Tech_ID: {data[1].TechniqueID} | Tech_indx: {data[1].TechniqueIndex} | loop: {data[1].loop}')
-        new_tech_index = data[1].TechniqueIndex
-        new_tech_id    = data[1].TechniqueID
-
-        # self.update_potentiostatic_value(data[0].Ewe, 4)
-        if self.is_running == False:
-            self.current_tech_index = new_tech_index
-            self.current_tech_id    = new_tech_id
-            self.is_running = True
-        # Check if a new technique is running
-        if self.current_tech_index != new_tech_index : 
-            if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
-            # Save data
-            self.save_data()    
-            print(f'> CH{self.num} msg > Data saved')
-            # Re-initilize technique parameters and flag variables
-            self.current_tech_index = new_tech_index
-            self.current_tech_id    = new_tech_id
-            self.part_count = 1
-            if self.verbosity>0: print(f"> Channel {self.num} msg: {self.get_technique_name()} started")
-
-        # Check for sequence end
-        if data[0].State == 0 and self.current_tech_id != 0:
-            self.save_data()
-            if self.verbosity>0: print(f'> CH{self.num} msg: sequence completed from the instrument')
-            self.is_running = False
-        self.convert_buffer(data) 
-        self.copy_buffer()
+    
         
         
         
-    def stop(self):
-        ''' 
-        Stop the experiment execution in the channel.
-        '''
-        self.bio_device.stop_channel(self.num)
-        self.is_running = False
+    
 
         
     
