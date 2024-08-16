@@ -47,25 +47,30 @@ class Channel:
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
-        print(f'CH{self.num}: interrupted by the user')   
+        print(f'CH{self.num}: interrupted by the user')  
     
 
-    def data_transfer_loop(self, sleep_time = 1):
+    def retrive_data_loop(self, sleep_time = 1):
         '''
-        Retrives data from the BioLogic device asynchronously.
-        Retrive sampled points from the instrumnet (ADC values), convert to physical 
-        values and save to disk. 
+        Retrives latest measurement data from the BioLogic device.
         '''
         while True:
-           self.get_data()
-           latest_data = self.convert_buffer_to_physical_values(self.data_buffer)
-           self.write_latest_data_to_file(latest_data)
-           if self.print_values : self.print_current_values()
-           self.monitoring_sequnce_progression()
-           if self.current_values.Status == 0:
-               print(f'CH{self.num}: Sequence terminated')
-               break
-           time.sleep(sleep_time)
+            # Get data from instrument ADC
+            self.get_data()
+            # Convert ADC numbers to physical values
+            latest_data = self.convert_buffer_to_physical_values(self.data_buffer)
+            # Write on open file
+            self.write_latest_data_to_file(latest_data)
+            # Print latest values 
+            if self.print_values : self.print_current_values()
+            # Check if the technique has changed on the instrument
+            self.monitoring_sequnce_progression()
+            # Brake the loop if sequence is terminates
+            if self.current_values.Status == 0:
+                print(f'CH{self.num}: Sequence terminated')
+                break
+            # Sleep before retriving next measrued data
+            time.sleep(sleep_time)
 
 
     def get_data(self):
