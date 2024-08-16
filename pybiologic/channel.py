@@ -19,7 +19,7 @@ class Channel:
                  record_Ece : bool = False,
                  record_analog_in1 : bool = False,
                  record_analog_in2 : bool = False,
-                 logging_leve : logging.INFO = logging.WARNING, # I am not sure this type is correct
+                 logging_level : logging.INFO = logging.WARNING, # I am not sure this type is correct
                  print_values : bool  = False):
         self.saving_path     = get_saving_path(saving_metadata)
         self.bio_device      = bio_device
