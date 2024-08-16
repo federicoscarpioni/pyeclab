@@ -1,4 +1,4 @@
-import os
+import time
 from pybiologic.device import BiologicDevice
 from pybiologic.techniques import OCV
 
@@ -19,7 +19,7 @@ bldev.load_sequence(1,sequence_test)
 # Start the  technique in channel 1
 bldev.start_channel(1)
 # Stop manually after 8 seconds
-os.sleep(8)
+time.sleep(8)
 bldev.stop_channel(1)
 # Disconnect the device
 bldev.disconnect()
