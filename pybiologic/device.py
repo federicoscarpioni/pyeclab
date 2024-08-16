@@ -62,6 +62,7 @@ class BiologicDevice(api):
             print(f"> number of channel plugged: {self.number_channels}")
 
         def set_hardware_configuration(self, channel, cnx, mode):
+            '''See pag 154 of the manual'''
             self.SetHardwareConf(self.device_id, channel, )
 
         def _load_firmware_channels(self, force_load):

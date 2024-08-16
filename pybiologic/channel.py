@@ -28,8 +28,9 @@ class Channel:
         self.num             = channel_num
 
 
-    def set_hardwer_config(self):
-        bio_device = self.bio_device.
+    def set_hardware_config(self):
+        ...
+
     def load_sequence(self, sequence): 
         self.sequence = sequence
         self.bio_device.load_sequence(self.num, self.sequence) 
