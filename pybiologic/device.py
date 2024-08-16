@@ -33,7 +33,7 @@ class BiologicDevice(api):
             self.is_VMP3 = self.device_info.model in KBIO.VMP3_FAMILY
             self.load_firmware_channels(force_load=False)
         
-        def choose_library(self, binary_path):
+        def _choose_library(self, binary_path):
             ''' 
             Choose the proper BioLogic dll according to Python version (32/64bit)'
             '''
@@ -64,7 +64,7 @@ class BiologicDevice(api):
         def set_hardware_configuration(self, channel, cnx, mode):
             self.SetHardwareConf(self.device_id, channel, )
 
-        def load_firmware_channels(self, force_load):
+        def _load_firmware_channels(self, force_load):
             '''
             Load the firmware in a channel if needed
             '''
