@@ -7,14 +7,13 @@ import logging
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
-def load_technique():
-    ...
 
 class BiologicDevice(api):
         '''
         Connect and setup BioLogic device and perform measurement techniques on 
         channels. Inharitates from BioLogic api module and simplify the calls to 
-        the functions.
+        the functions. 
+        IMPORTANT: The class doesn't retrive the measrument data from the instrument!
         '''
 
         def __init__(self,
