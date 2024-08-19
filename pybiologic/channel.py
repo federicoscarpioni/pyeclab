@@ -139,7 +139,10 @@ class Channel:
 
     def _write_latest_data_to_file(self, data):
         for values in zip(*data):
-            self.saving_file.write('\t'.join(map(str, values)) + f'{len([self.technique_number]*data[0])}' +'\n')
+            # Create list of the information relative to the current technique
+            technique_num_column = [self.current_tech_index]*leng(data[0])
+            loop_column = [self.data_info.loop]*leng(data[0])
+            self.saving_file.write('\t'.join(map(str, values)) + f'\t{technique_num_column}\t' + f'{loop_column}' + '\n')
 
     def _close_saving_file(self):
         self.saving_file.close()
