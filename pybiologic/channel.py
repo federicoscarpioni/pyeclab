@@ -126,16 +126,7 @@ class Channel:
     
 
     
-
-
-
-
-
-
-
-
-
-
+    # ---- Methods to be reviewed ---- #
 
     def save_exp_params(self):
         savepath = f'{self.experiment_info.deis_directory}/{self.experiment_info.project_name}/{self.experiment_info.cell_name}/{self.experiment_info.experiment_name}CH{self.num}/'
@@ -159,8 +150,6 @@ class Channel:
                 for key, value in self.sequence[i].user_params.__dict__.items(): 
                     f.write('%s: %s\n' % (key, value))  
 
-
-    
     def copy_buffer(self):
         ''' 
         Copy converted data buffers to an allocated array. next_sample variable
@@ -181,8 +170,6 @@ class Channel:
         self.next_sample = dest_end
         self.send_data_to_queue(self.downsampling_factor) # !!! soft code the downsampling constant
  
-  
-    
     def end_technique(self):
         ''' 
         End the current technique in the sequence by replacing its original
@@ -203,12 +190,6 @@ class Channel:
                                          bt.reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
                                          self.sequence[self.current_tech_index].ecc_file)
 
-    
- 
-    
-    
-    
-    
     def get_technique_name(self):
         if self.current_tech_id == 100:
             technique_name = 'OCV'
@@ -217,11 +198,7 @@ class Channel:
         elif self.current_tech_id == 155:
             technique_name = 'chronopotentiometry'
         return technique_name
-    
-    
-    
-            
-    
+
     def update_potentiostatic_value(self, Ewe, new_tech_index):
         self.bio_device.UpdateParameters(self.bio_device.device_id,
                                          self.num,
