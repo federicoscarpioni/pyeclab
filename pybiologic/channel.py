@@ -112,6 +112,9 @@ class Channel:
     def _convert_buffer_to_physical_values(self): # Maybe it is not necessary to make buffers attributes
         '''
         Convert digitalized signal from ADC to physical values.
+
+        Note: Counter electrode to be added!    
+
         '''
         # Buffer from the device
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
@@ -124,10 +127,10 @@ class Channel:
             I = np.array([0]*len(self.Ewe))
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
-        return Ewe, I, t
+        return t, Ewe, I 
 
     # Methods for saving    
-    
+
     def _create_saving_file(self):
         file_name = self.saving_path + self.measurement_name
         self.saving_file = open(file_name, 'w+') 
@@ -136,7 +139,7 @@ class Channel:
 
     def _write_latest_data_to_file(self, data):
         for values in zip(*data):
-            self.saving_file.write('\t'.join(map(str, values)) + '\n')
+            self.saving_file.write('\t'.join(map(str, values)) + f'{len([self.technique_number]*data[0])}' +'\n')
 
     def _close_saving_file(self):
         self.saving_file.close()
