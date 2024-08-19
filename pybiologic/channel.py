@@ -50,22 +50,22 @@ class Channel:
         print(f'CH{self.num}: interrupted by the user')  
     
 
-    def retrive_data_loop(self, sleep_time = 0.1):
+    def _retrive_data_loop(self, sleep_time = 0.1):
         '''
         Retrives latest measurement data from the BioLogic device, converts and 
         saves. The sequence progression is also monitored.
         '''
         while True:
             # Get data from instrument ADC
-            self.get_data()
+            self._get_data()
             # Convert ADC numbers to physical values
-            latest_data = self.convert_buffer_to_physical_values(self.data_buffer)
+            latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
             # Write on open file
             self.write_latest_data_to_file(latest_data)
             # Print latest values 
-            if self.print_values : self.print_current_values()
+            if self.print_values : self._print_current_values()
             # Check if the technique has changed on the instrument
-            self.monitoring_sequnce_progression()
+            self._monitoring_sequnce_progression()
             # Brake the loop if sequence is terminates
             if self.current_values.Status == 0:
                 print(f'CH{self.num}: Sequence terminated')
@@ -74,7 +74,7 @@ class Channel:
             time.sleep(sleep_time)
 
 
-    def get_data(self):
+    def _get_data(self):
         ''' 
         When retriving latest agglomerated data from the instrument, the api will
         return three objects: 
@@ -86,7 +86,7 @@ class Channel:
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(self.bio_device.device_id, self.num)
 
 
-    def monitoring_sequnce_progression(self):
+    def _monitoring_sequnce_progression(self):
         '''
         This methods checks when a new technique is started in the instrument. This
         can be used to add new beahviours to the application.
@@ -102,11 +102,11 @@ class Channel:
             if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
 
 
-    def print_current_values(self):
+    def _print_current_values(self):
         print(f'CH{self.num} - Ewe: {self.current_values.Ewe:.4}V | I: {self.current_values.I*1000:.4}mA | Tech_ID: {TECH_ID(self.current_values.TechniqueID).name} | Tech_indx: {self.current_values.TechniqueIndex} | loop: {self.current_values.loop}')
 
                      
-    def convert_buffer_to_physical_values(self): # Maybe it is not necessary to make buffers attributes
+    def _convert_buffer_to_physical_values(self): # Maybe it is not necessary to make buffers attributes
         '''
         Convert digitalized signal from ADC to physical values.
         '''
