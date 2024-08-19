@@ -50,9 +50,10 @@ class Channel:
         print(f'CH{self.num}: interrupted by the user')  
     
 
-    def retrive_data_loop(self, sleep_time = 1):
+    def retrive_data_loop(self, sleep_time = 0.1):
         '''
-        Retrives latest measurement data from the BioLogic device.
+        Retrives latest measurement data from the BioLogic device, converts and 
+        saves. The sequence progression is also monitored.
         '''
         while True:
             # Get data from instrument ADC
@@ -92,8 +93,6 @@ class Channel:
         '''
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id    = self.data_info.TechniqueID
-
-       
         if self.is_running == False:
             self.current_tech_index = new_tech_index
             self.current_tech_id    = new_tech_id
@@ -115,7 +114,7 @@ class Channel:
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
         # Convert voltage buffer numbers in real values
         Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,2]) for i in range(0, self.data_info.NbRows)])
-        # Convert buffer numbers in real values
+        # Convert buffer numbers in real values, I is 0 for OCV (ID 100)
         if self.data_info.TechniqueID != 100:
             I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,3]) for i in range(0, self.data_info.NbRows)]) 
         else:
