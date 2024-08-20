@@ -109,6 +109,9 @@ class Channel:
                 self._close_saving_file()
                 print(f'CH{self.num}: Sequence terminated')
                 break
+            # Stop current technique if any software limit is reached
+            if self._check_software_limits():
+                self.end_technique()
             # Sleep before retriving next measrued data
             time.sleep(sleep_time)
 
@@ -169,8 +172,30 @@ class Channel:
 
     ## Methods for software controll ##          
     
-    def _check_software_limit(self):
-        ...
+    def set_condition(self, attribute, operator, threshold):
+        self.conditions.append((attribute, operator, threshold))
+    
+    def _check_software_limits(self):
+        '''
+        Check if a certain condition (< or > of a trashold value) if met for a 
+        value of the sampled data over a certain number of points.
+        '''
+        for attribute, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
+            attribute_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            if attribute_value is None:
+                continue
+            if operator == '<' and attribute_value >= threshold:
+                return False
+            elif operator == '>' and attribute_value <= threshold:
+                return False
+        return True
+
+    def _check_software_limits_avarage(self, point_avarage):
+        '''
+        Check if a certain condition (< or > of a trashold value) if met for the
+        avarage value of a sampled data over a certain number of points.
+        '''
+        ...    
 
 
     ## Methods for saving data ##   
