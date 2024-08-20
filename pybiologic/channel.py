@@ -1,4 +1,5 @@
 import numpy as np
+from pathlib import Path
 from collections import namedtuple
 from threading import Thread
 import time
@@ -17,7 +18,7 @@ class Channel:
     def __init__(self,
                  bio_device : BiologicDevice, 
                  channel_num : int, 
-                 saving_path : str,
+                 saving_dir : str,
                  channel_options : namedtuple,
                  record_Ece : bool = False,
                  record_analog_in1 : bool = False,
@@ -26,8 +27,8 @@ class Channel:
                  print_values : bool  = False):
         self.bio_device       = bio_device
         self.num              = channel_num
-        self.saving_path      = saving_path
         self.measurement_name = channel_options.measurement_name # !!! maybe I can save directly the whole options
+        self.saving_path      = saving_dir + '/' + self.measurement_name
         self.print_values     = print_values
         
 
@@ -41,10 +42,14 @@ class Channel:
         self.bio_device.load_sequence(self.num, self.sequence) 
 
     def start(self): 
-        self.saving_file_handle = _create_saving_file()
-        save_exp_metadata()
+        # Save experiment data
+        self._create_exp_folder()
+        self._create_saving_file()
+        self._save_exp_metadata()
+        # Start channel on the device
         self.bio_device.start_channel(self.num)  
-        loop_thread = Thread(target=self.data_transfer_loop)
+        # Start collecting data from the device
+        loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         print(f'CH{self.num}: Experiment started')
 
@@ -131,9 +136,11 @@ class Channel:
 
     # Methods for saving    
 
-    def _create_saving_file(self):
-        file_name = self.saving_path + self.measurement_name
-        self.saving_file = open(file_name, 'w+') 
+    def _create_exp_folder(self):
+        Path(self.saving_path).mkdir(parents=True, exist_ok=True)
+
+    def _create_saving_file(self):       
+        self.saving_file = open(saving_file_path + '/measurement_data.txt', 'w+') 
         # Write headers
         self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') #!!! Include the possibility to add Ece and Aux
 
@@ -151,7 +158,10 @@ class Channel:
     def _close_saving_file(self):
         self.saving_file.close()
 
+    def _save_exp_metadata(self):
+        ...
     
+
     # ---- Methods to be reviewed ---- #
 
     def save_exp_params(self):
