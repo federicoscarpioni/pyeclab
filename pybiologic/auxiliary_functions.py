@@ -1,28 +1,6 @@
 from dataclasses import dataclass
 import os
 
-
-@dataclass
-class SavingMetadata():
-    deis_directory  : str
-    project_name    : str
-    cell_name       : str
-    experiment_name : str
-
-#------------------------------------------------------------------------------#
-
-@dataclass
-class ExperimentMetadata():
-   ...
-
-#------------------------------------------------------------------------------#
-
-def get_saving_path(saving_metadata:SavingMetadata) -> str:
-   return os.path.join(saving_metadata.deis_directory,
-                       saving_metadata.project_name,
-                       saving_metadata.cell_name,
-                       saving_metadata.experiment_name)
-
 #------------------------------------------------------------------------------#
 
 def load_sequence_from_json(path:str) -> list: # Specify which object type will be the list elements
@@ -32,23 +10,6 @@ def load_sequence_from_json(path:str) -> list: # Specify which object type will 
 
 def create_empty_json_sequence(path:str, techniques:list[str]):
    ...
-
-#------------------------------------------------------------------------------#
-
-def create_data_file_for_saving(path):
-   ...
-
-
-def write_latest_data_to_file(path):
-   ...
-   
-#------------------------------------------------------------------------------#
-
-def save_exp_metadata(path, experiment_metadata):
-    '''
-    Save all the information regarding the experiment
-    '''
-    ...
 
 #------------------------------------------------------------------------------#
 

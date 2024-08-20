@@ -1,4 +1,5 @@
 import numpy as np
+from datetime.datime import now
 from pathlib import Path
 from collections import namedtuple
 from threading import Thread
@@ -11,7 +12,7 @@ from api.tech_types import TECH_ID
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
-ChannelOptions = namedtuple('ChannelOptions', ['measurement_name'])
+ChannelOptions = namedtuple('ChannelOptions', ['experiment_name'])
 
 class Channel:
     
@@ -27,8 +28,8 @@ class Channel:
                  print_values : bool  = False):
         self.bio_device       = bio_device
         self.num              = channel_num
-        self.measurement_name = channel_options.measurement_name # !!! maybe I can save directly the whole options
-        self.saving_path      = saving_dir + '/' + self.measurement_name
+        self.experiment_name = channel_options.experiment_name # ? maybe I can save directly the whole options
+        self.saving_path      = saving_dir + '/' + self.experiment_name
         self.print_values     = print_values
         
 
@@ -159,7 +160,22 @@ class Channel:
         self.saving_file.close()
 
     def _save_exp_metadata(self):
-        ...
+        # Note: I am not using the 'with' constructor here because I assume I 
+        # might want to update the metada if some event happen. In that case,
+        # the closing function should be move in the stop() method.
+        self.metadata_file = open(saving_file_path + '/experiment_metadata.txt', 'w')
+        # File title
+        self.metadata_file.write('pyBioLogic metadata file\n')
+        # Information of the starting time
+        self.starting_time = now()
+        self.metadata_file.write(f"\n Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
+        self.metadata_file.write(f"\n Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
+        # Information of the saving file name
+        self.metadata_file.write(f'\nExperiment name : {self.experiment_name}')
+        self.metadata_file.write(f'\nSaving file path : {self.saving_path}')
+        # !!! Add information on the device, channel number, cell name and user comments
+        self.metadata_file.close()
+
     
 
     # ---- Methods to be reviewed ---- #
