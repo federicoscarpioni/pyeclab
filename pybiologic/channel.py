@@ -35,7 +35,7 @@ class Channel:
         self.conditions       = []
         
 
-    ## Methods for setting hardware ##
+    ## Methods for setting hardware for the experiment ##
 
     def set_hardware_config(self):
         ...
@@ -43,6 +43,11 @@ class Channel:
     def load_sequence(self, sequence): 
         self.sequence = sequence
         self.bio_device.load_sequence(self.num, self.sequence) 
+
+    def import_sequence(self, json_file_path): 
+        with open('json_file_path', 'r') as sequence_json:
+            self.sequence = json.load(sequence_json)
+        self.bio_device.load_sequence(self.num, self.sequence)
 
 
     ## Methods for managing the execution of the experiment ##
@@ -52,6 +57,7 @@ class Channel:
         self._create_exp_folder()
         self._create_saving_file()
         self._save_exp_metadata()
+        self._save_sequence_json()
         # Start channel on the device
         self.bio_device.start_channel(self.num)  
         # Start collecting data from the device
@@ -204,7 +210,7 @@ class Channel:
         Path(self.saving_path).mkdir(parents=True, exist_ok=True)
 
     def _create_saving_file(self):       
-        self.saving_file = open(saving_file_path + '/measurement_data.txt', 'w+') 
+        self.saving_file = open(self.saving_path + '/measurement_data.txt', 'w+') 
         # Write headers
         self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') #!!! Include the possibility to add Ece and Aux
 
@@ -231,7 +237,7 @@ class Channel:
         # Note: I am not using the 'with' constructor here because I assume I 
         # might want to update the metada if some event happen. In that case,
         # the closing function should be move in the stop() method.
-        self.metadata_file = open(saving_file_path + '/experiment_metadata.txt', 'w')
+        self.metadata_file = open(self.saving_path + '/experiment_metadata.txt', 'w')
         # File title
         self.metadata_file.write('pyBioLogic metadata file\n')
         # Information of the starting time
@@ -246,7 +252,10 @@ class Channel:
         # ! Add the list of condition checked by the software
         self.metadata_file.close()
 
-    
+    def _save_sequence_json(self):
+        json_file_path = self.saving_path + '/sequence.json'
+        with open(json_file_path, 'w') as json_file:
+            json.dump(self.sequence, json_file)
 
     # ---- Methods to be reviewed ---- #
 
