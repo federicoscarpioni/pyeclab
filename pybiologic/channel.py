@@ -135,7 +135,7 @@ class Channel:
         file_name = self.saving_path + self.measurement_name
         self.saving_file = open(file_name, 'w+') 
         # Write headers
-        self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') 
+        self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') #!!! Include the possibility to add Ece and Aux
 
     def _write_latest_data_to_file(self, data):
         technique_num = self.current_tech_index * np.ones(len(data[0]))
