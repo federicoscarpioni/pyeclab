@@ -10,8 +10,7 @@ from technique import set_duration_to_1s, reset_duration
 from auxiliary_functions import save_exp_metadata, create_data_file_for_saving, SavingMetadata, get_saving_path, write_latest_data_to_file
 from api.tech_types import TECH_ID
 
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-logger = logging.getLogger(__name__)
+# ! Add a logger
 
 ChannelOptions = namedtuple('ChannelOptions', ['experiment_name'])
 
@@ -25,7 +24,6 @@ class Channel:
                  record_Ece : bool = False,
                  record_analog_in1 : bool = False,
                  record_analog_in2 : bool = False,
-                 logging_level : logging.INFO = logging.WARNING, # !!! I am not sure this type is correct
                  print_values : bool  = False):
         self.bio_device       = bio_device
         self.num              = channel_num
