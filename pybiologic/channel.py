@@ -127,7 +127,7 @@ class Channel:
             I = np.array([0]*len(self.Ewe))
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
-        return t, Ewe, I 
+        return t, Ewe, I # !!! I think is better to output a named tuple
 
     # Methods for saving    
 
@@ -138,11 +138,15 @@ class Channel:
         self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') 
 
     def _write_latest_data_to_file(self, data):
-        for values in zip(*data):
-            # Create list of the information relative to the current technique
-            technique_num_column = [self.current_tech_index]*leng(data[0])
-            loop_column = [self.data_info.loop]*leng(data[0])
-            self.saving_file.write('\t'.join(map(str, values)) + f'\t{technique_num_column}\t' + f'{loop_column}' + '\n')
+        technique_num = self.current_tech_index * np.ones(len(data[0]))
+        loop_num = self.data_info.loop * np.ones(len(data[0]))
+        # Concatenate measurement values and technique data. The use of if statment
+        # allows to include also the case of recorder Ece and Auxiliary input
+        for i in len(data):
+            data_to_save = np.concatenate((data[i]), axis=1)
+        data_to_save = np.concatenate((data_to_save, technique_num, loop_num), axis =1) 
+        # Write data to saving_file
+        data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e')
 
     def _close_saving_file(self):
         self.saving_file.close()
