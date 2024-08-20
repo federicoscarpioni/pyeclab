@@ -113,7 +113,7 @@ class Channel:
         '''
         Convert digitalized signal from ADC to physical values.
 
-        Note: Counter electrode to be added!    
+        Note: Counter electrode  and AUX to be added!    
 
         '''
         # Buffer from the device
