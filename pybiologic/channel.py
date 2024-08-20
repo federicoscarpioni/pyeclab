@@ -57,7 +57,7 @@ class Channel:
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
-        self._get_measurement_values()
+        self._get_measurement_values() # ? There shoudl be still the latest values to retrive
         self._close_saving_file()
         print(f'CH{self.num}: interrupted by the user')  
 
@@ -205,65 +205,65 @@ class Channel:
 
     # ---- Methods to be reviewed ---- #
 
-    def save_exp_params(self):
-        savepath = f'{self.experiment_info.deis_directory}/{self.experiment_info.project_name}/{self.experiment_info.cell_name}/{self.experiment_info.experiment_name}CH{self.num}/'
-        # Create the path
-        Path(savepath).mkdir(parents=True, exist_ok=True)
-        with open(savepath+'exp_details.txt', 'w') as f:
-            f.write('Experimental parameters\n\n')
-            f.write('Starting time:' + datetime.now().strftime("%m/%d/%Y-%H:%M:%S"))
-            f.write('\n')
-            if self.pico is not None:
-                f.write('Acquisition with Picoscope\nSampling starting time:'+self.pico.time_start.strftime("%m/%d/%Y-%H:%M:%S")+'\n')
-            for key, value in self.experiment_info.__dict__.items(): 
-                f.write('%s: %s\n' % (key, value))
-            f.write('\nSoftware paramteres\n')
-            for key, value in self.software_params.__dict__.items(): 
-                f.write('%s: %s\n' % (key, value))
-            f.write('\nSequence paramters\n')
-            for i in range(0,len(self.sequence)):
-                f.write(f'\nTechnique #{i}: ' + self.sequence[i].ecc_file[:-5])
-                f.write('\n')
-                for key, value in self.sequence[i].user_params.__dict__.items(): 
-                    f.write('%s: %s\n' % (key, value))  
+    # def save_exp_params(self):
+    #     savepath = f'{self.experiment_info.deis_directory}/{self.experiment_info.project_name}/{self.experiment_info.cell_name}/{self.experiment_info.experiment_name}CH{self.num}/'
+    #     # Create the path
+    #     Path(savepath).mkdir(parents=True, exist_ok=True)
+    #     with open(savepath+'exp_details.txt', 'w') as f:
+    #         f.write('Experimental parameters\n\n')
+    #         f.write('Starting time:' + datetime.now().strftime("%m/%d/%Y-%H:%M:%S"))
+    #         f.write('\n')
+    #         if self.pico is not None:
+    #             f.write('Acquisition with Picoscope\nSampling starting time:'+self.pico.time_start.strftime("%m/%d/%Y-%H:%M:%S")+'\n')
+    #         for key, value in self.experiment_info.__dict__.items(): 
+    #             f.write('%s: %s\n' % (key, value))
+    #         f.write('\nSoftware paramteres\n')
+    #         for key, value in self.software_params.__dict__.items(): 
+    #             f.write('%s: %s\n' % (key, value))
+    #         f.write('\nSequence paramters\n')
+    #         for i in range(0,len(self.sequence)):
+    #             f.write(f'\nTechnique #{i}: ' + self.sequence[i].ecc_file[:-5])
+    #             f.write('\n')
+    #             for key, value in self.sequence[i].user_params.__dict__.items(): 
+    #                 f.write('%s: %s\n' % (key, value))  
 
-    def copy_buffer(self):
-        ''' 
-        Copy converted data buffers to an allocated array. next_sample variable
-        contains the first 'free' (or empty, i.e. zero element) index to start 
-        the copy from.
-        '''
-        dest_end = self.next_sample + self.Ewe_buff.size
-        if dest_end > self.max_array_allocation:
-            self.save_data(True)
-            self.inizialize_arrays()
-            dest_end = self.Ewe_buff.size
-        if self.pico is not None and self.pico.nextSample > self.max_array_allocation:
-            self.save_data(True)
-            dest_end = self.Ewe_buff.size
-        self.Ewe[self.next_sample:dest_end]             = self.Ewe_buff
-        self.I[self.next_sample:dest_end]               = self.I_buff
-        self.time_experiment[self.next_sample:dest_end] = self.t_buff
-        self.next_sample = dest_end
-        self.send_data_to_queue(self.downsampling_factor) # !!! soft code the downsampling constant
+    # def copy_buffer(self):
+    #     ''' 
+    #     Copy converted data buffers to an allocated array. next_sample variable
+    #     contains the first 'free' (or empty, i.e. zero element) index to start 
+    #     the copy from.
+    #     '''
+    #     dest_end = self.next_sample + self.Ewe_buff.size
+    #     if dest_end > self.max_array_allocation:
+    #         self.save_data(True)
+    #         self.inizialize_arrays()
+    #         dest_end = self.Ewe_buff.size
+    #     if self.pico is not None and self.pico.nextSample > self.max_array_allocation:
+    #         self.save_data(True)
+    #         dest_end = self.Ewe_buff.size
+    #     self.Ewe[self.next_sample:dest_end]             = self.Ewe_buff
+    #     self.I[self.next_sample:dest_end]               = self.I_buff
+    #     self.time_experiment[self.next_sample:dest_end] = self.t_buff
+    #     self.next_sample = dest_end
+    #     self.send_data_to_queue(self.downsampling_factor) # !!! soft code the downsampling constant
  
 
 
-    def get_technique_name(self):
-        if self.current_tech_id == 100:
-            technique_name = 'OCV'
-        elif self.current_tech_id == 101:
-            technique_name = 'chonoamperometry'
-        elif self.current_tech_id == 155:
-            technique_name = 'chronopotentiometry'
-        return technique_name
+    # def get_technique_name(self):
+    #     if self.current_tech_id == 100:
+    #         technique_name = 'OCV'
+    #     elif self.current_tech_id == 101:
+    #         technique_name = 'chonoamperometry'
+    #     elif self.current_tech_id == 155:
+    #         technique_name = 'chronopotentiometry'
+    #     return technique_name
 
-    def update_potentiostatic_value(self, Ewe, new_tech_index):
-        self.bio_device.UpdateParameters(self.bio_device.device_id,
-                                         self.num,
-                                         self.current_tech_index,
-                                         bt.update_CA_voltage(self.bio_device, Ewe, self.sequence[new_tech_index]),
-                                         self.sequence[new_tech_index].ecc_file)
+    # def update_potentiostatic_value(self, Ewe, new_tech_index):
+    #     self.bio_device.UpdateParameters(self.bio_device.device_id,
+    #                                      self.num,
+    #                                      self.current_tech_index,
+    #                                      bt.update_CA_voltage(self.bio_device, Ewe, self.sequence[new_tech_index]),
+    #                                      self.sequence[new_tech_index].ecc_file)
             
     
     
