@@ -23,10 +23,11 @@ class Channel:
                  channel_num : int, 
                  saving_dir : str,
                  channel_options : namedtuple,
-                 record_Ece : bool = False,
-                 record_analog_in1 : bool = False,
-                 record_analog_in2 : bool = False,
-                 print_values : bool  = False):
+                 do_live_plot : bool = True,
+                 do_record_Ece : bool = False,
+                 do_record_analog_in1 : bool = False,
+                 do_record_analog_in2 : bool = False,
+                 do_print_values : bool  = False):
         self.bio_device       = bio_device
         self.num              = channel_num
         self.experiment_name = channel_options.experiment_name # ? maybe I can save directly the whole options
@@ -62,6 +63,9 @@ class Channel:
         self._get_measurement_values() # ? There shoudl be still the latest values to retrive
         self._close_saving_file()
         print(f'CH{self.num}: interrupted by the user')  
+
+    def start_live_plot(self):
+        liveplot = LivePlot(self)
 
 
     def end_technique(self):
@@ -161,6 +165,7 @@ class Channel:
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
 
+    
     def _check_software_limit(self):
         ...
 
