@@ -8,7 +8,6 @@ import time
 import logging
 from device import BiologicDevice
 from technique import set_duration_to_1s, reset_duration
-from auxiliary_functions import save_exp_metadata, create_data_file_for_saving, SavingMetadata, get_saving_path, write_latest_data_to_file
 from api.tech_types import TECH_ID
 from liveplot import LivePlot
 
@@ -23,19 +22,20 @@ class Channel:
                  channel_num : int, 
                  saving_dir : str,
                  channel_options : namedtuple,
-                 do_live_plot : bool = True,
+                 do_live_plot : bool = True, # ? Deside which naming convention to use for booleans
                  do_record_Ece : bool = False,
                  do_record_analog_in1 : bool = False,
                  do_record_analog_in2 : bool = False,
                  do_print_values : bool  = False):
         self.bio_device       = bio_device
         self.num              = channel_num
-        self.experiment_name = channel_options.experiment_name # ? maybe I can save directly the whole options
+        self.experiment_name  = channel_options.experiment_name # ? maybe I can save directly the whole options
         self.saving_path      = saving_dir + '/' + self.experiment_name
         self.print_values     = print_values
+        self.conditions       = []
         
 
-    # Methods for setting hardware and send commands to device
+    ## Methods for setting hardware ##
 
     def set_hardware_config(self):
         ...
@@ -43,6 +43,9 @@ class Channel:
     def load_sequence(self, sequence): 
         self.sequence = sequence
         self.bio_device.load_sequence(self.num, self.sequence) 
+
+
+    ## Methods for managing the execution of the experiment ##
 
     def start(self): 
         # Save experiment data
@@ -57,7 +60,6 @@ class Channel:
         print(f'CH{self.num}: Experiment started')
         if do_live_plot: self.start_live_plot()
 
-
     def stop(self):
         self.bio_device.stop_channel(self.num)
         self._get_measurement_values() # ? There shoudl be still the latest values to retrive
@@ -66,7 +68,6 @@ class Channel:
 
     def start_live_plot(self):
         liveplot = LivePlot(self)
-
 
     def end_technique(self):
         ''' 
@@ -86,8 +87,11 @@ class Channel:
                                         reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
                                         self.sequence[self.current_tech_index].ecc_file)
     
+    def _print_current_values(self):
+        print(f'CH{self.num} - Ewe: {self.current_values.Ewe:4.5}V | I: {self.current_values.I:4.5}mA | Tech_ID: {TECH_ID(self.current_values.TechniqueID).name} | Tech_indx: {self.current_values.TechniqueIndex} | loop: {self.current_values.loop}')
+    
 
-    # Methods for managing the main loop
+    ## Methods for managing data collaction in the main loop ##
 
     def _retrive_data_loop(self, sleep_time = 1):
         '''
@@ -127,25 +131,7 @@ class Channel:
         '''
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(self.bio_device.device_id, self.num)
 
-    def _monitoring_sequnce_progression(self):
-        '''
-        This methods checks when a new technique is started in the instrument. This
-        can be used to add new beahviours to the application.
-        '''
-        new_tech_index = self.data_info.TechniqueIndex
-        new_tech_id    = self.data_info.TechniqueID
-        if self.is_running == False:
-            self.current_tech_index = new_tech_index
-            self.current_tech_id    = new_tech_id
-            self.is_running = True
-        # Check if a new technique is running
-        if self.current_tech_index != new_tech_index : 
-            if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
-
-    def _print_current_values(self):
-        print(f'CH{self.num} - Ewe: {self.current_values.Ewe:.4}V | I: {self.current_values.I*1000:.4}mA | Tech_ID: {TECH_ID(self.current_values.TechniqueID).name} | Tech_indx: {self.current_values.TechniqueIndex} | loop: {self.current_values.loop}')
-               
-    def _convert_buffer_to_physical_values(self): # Maybe it is not necessary to make buffers attributes
+    def _convert_buffer_to_physical_values(self):
         '''
         Convert digitalized signal from ADC to physical values.
 
@@ -164,12 +150,30 @@ class Channel:
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
+ 
+    def _monitoring_sequnce_progression(self):
+        '''
+        This methods checks when a new technique is started in the instrument. This
+        can be used to add new beahviours to the application.
+        '''
+        new_tech_index = self.data_info.TechniqueIndex
+        new_tech_id    = self.data_info.TechniqueID
+        if self.is_running == False:
+            self.current_tech_index = new_tech_index
+            self.current_tech_id    = new_tech_id
+            self.is_running = True
+        # Check if a new technique is running
+        if self.current_tech_index != new_tech_index : 
+            if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
 
+
+    ## Methods for software controll ##          
     
     def _check_software_limit(self):
         ...
 
-    # Methods for saving    
+
+    ## Methods for saving data ##   
 
     def _create_exp_folder(self):
         Path(self.saving_path).mkdir(parents=True, exist_ok=True)
@@ -214,6 +218,7 @@ class Channel:
         self.metadata_file.write(f'\nSaving file path : {self.saving_path}')
         # !!! Print all the information of the techniques in the sequence
         # ! Add information on the device, channel number, cell name and user comments
+        # ! Add the list of condition checked by the software
         self.metadata_file.close()
 
     
