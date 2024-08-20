@@ -6,6 +6,7 @@ from threading import Thread
 import time
 import logging
 from device import BiologicDevice
+from technique import set_duration_to_1s, reset_duration
 from auxiliary_functions import save_exp_metadata, create_data_file_for_saving, SavingMetadata, get_saving_path, write_latest_data_to_file
 from api.tech_types import TECH_ID
 
@@ -56,24 +57,39 @@ class Channel:
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
+        self._get_measurement_values()
         self._close_saving_file()
         print(f'CH{self.num}: interrupted by the user')  
+
+
+    def end_technique(self):
+        ''' 
+        End the current technique in the sequence by replacing its original
+        duration to the value of 1 second (This is a workaround for the lack
+        of a specific function in the EC-Lab SDK). 
+        '''
+        self.bio_device.UpdateParameters(self.bio_device.device_id,
+                                        self.num,
+                                        self.current_tech_index,
+                                        set_duration_to_1s(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
+                                        self.sequence[self.current_tech_index].ecc_file)
+        
+        self.bio_device.UpdateParameters(self.bio_device.device_id,
+                                        self.num,
+                                        self.current_tech_index,
+                                        reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
+                                        self.sequence[self.current_tech_index].ecc_file)
     
 
     # Methods for managing the main loop
 
-    def _retrive_data_loop(self, sleep_time = 0.1):
+    def _retrive_data_loop(self, sleep_time = 1):
         '''
         Retrives latest measurement data from the BioLogic device, converts and 
         saves. The sequence progression is also monitored.
         '''
         while True:
-            # Get data from instrument ADC
-            self._get_data()
-            # Convert ADC numbers to physical values
-            latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
-            # Write on open file
-            self._write_latest_data_to_file(latest_data)
+            self._get_measurement_values()
             # Print latest values 
             if self.print_values : self._print_current_values()
             # Check if the technique has changed on the instrument
@@ -85,6 +101,14 @@ class Channel:
                 break
             # Sleep before retriving next measrued data
             time.sleep(sleep_time)
+
+    def _get_measurement_values(self):
+        # Get data from instrument ADC
+        self._get_data()
+        # Convert ADC numbers to physical values
+        latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
+        # Write on open file
+        self._write_latest_data_to_file(latest_data)
 
     def _get_data(self):
         ''' 
@@ -173,7 +197,8 @@ class Channel:
         # Information of the saving file name
         self.metadata_file.write(f'\nExperiment name : {self.experiment_name}')
         self.metadata_file.write(f'\nSaving file path : {self.saving_path}')
-        # !!! Add information on the device, channel number, cell name and user comments
+        # !!! Print all the information of the techniques in the sequence
+        # ! Add information on the device, channel number, cell name and user comments
         self.metadata_file.close()
 
     
@@ -222,25 +247,7 @@ class Channel:
         self.next_sample = dest_end
         self.send_data_to_queue(self.downsampling_factor) # !!! soft code the downsampling constant
  
-    def end_technique(self):
-        ''' 
-        End the current technique in the sequence by replacing its original
-        duration to the value of 1 second (This is a workaround for the lack
-        of a specific function in the BioLogic library). At the end the original
-        duration is reset for the successive cycle. 
-        The data for the current technique are saved and the array re-allocated.
-        '''
-        self.bio_device.UpdateParameters(self.bio_device.device_id,
-                                         self.num,
-                                         self.current_tech_index,
-                                         bt.duration_to_1s(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-                                         self.sequence[self.current_tech_index].ecc_file)
-        
-        self.bio_device.UpdateParameters(self.bio_device.device_id,
-                                         self.num,
-                                         self.current_tech_index,
-                                         bt.reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-                                         self.sequence[self.current_tech_index].ecc_file)
+
 
     def get_technique_name(self):
         if self.current_tech_id == 100:
