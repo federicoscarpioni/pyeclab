@@ -35,7 +35,7 @@ class Channel:
         self.print_values     = print_values
         
 
-    # Methods for setting hardware and commands
+    # Methods for setting hardware and send commands to device
 
     def set_hardware_config(self):
         ...
@@ -55,7 +55,7 @@ class Channel:
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         print(f'CH{self.num}: Experiment started')
-        liveplot = LivePlot(self)
+        if do_live_plot: self.start_live_plot()
 
 
     def stop(self):
