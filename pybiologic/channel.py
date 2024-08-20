@@ -3,12 +3,14 @@ from datetime.datime import now
 from pathlib import Path
 from collections import namedtuple
 from threading import Thread
+import msvcrt
 import time
 import logging
 from device import BiologicDevice
 from technique import set_duration_to_1s, reset_duration
 from auxiliary_functions import save_exp_metadata, create_data_file_for_saving, SavingMetadata, get_saving_path, write_latest_data_to_file
 from api.tech_types import TECH_ID
+from liveplot import LivePlot
 
 # ! Add a logger
 
@@ -52,6 +54,8 @@ class Channel:
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         print(f'CH{self.num}: Experiment started')
+        liveplot = LivePlot(self)
+
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
@@ -157,6 +161,9 @@ class Channel:
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
 
+    def _check_software_limit(self):
+        ...
+
     # Methods for saving    
 
     def _create_exp_folder(self):
@@ -175,8 +182,13 @@ class Channel:
         for i in len(data):
             data_to_save = np.concatenate((data[i]), axis=1)
         data_to_save = np.concatenate((data_to_save, technique_num, loop_num), axis =1) 
+        # Acquire the lock to avoid the file to be red while writin and cause data corruption
+        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1)
         # Write data to saving_file
         data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e')
+        # Release the lock
+        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        self.saving_file.flush()
 
     def _close_saving_file(self):
         self.saving_file.close()

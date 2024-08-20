@@ -17,9 +17,7 @@ class LivePlot():
         # to skip the header.
         self.last_position = 1  
         self._initialize_figure()
-        self._animate()
-        
-         
+        self._animate()   
 
     def _initialize_figure(self):
         # Create the figure    
@@ -42,7 +40,6 @@ class LivePlot():
         self.ax.yaxis.label.set_color('C0')
         self.ax2.yaxis.label.set_color('orange')
 
-
     def _read_latest_values(self):
         # Move the cursor on the file
         self.channel.saving_file.seek(self.last_position)
@@ -51,7 +48,6 @@ class LivePlot():
         # Update the cursor
         self.last_position = self.channel.saving_file.tell()
         return new_lines
-
 
     # This function is called periodically from FuncAnimation
     def _update_plot(self, i, q):
@@ -80,8 +76,6 @@ class LivePlot():
                 self.line2.set_data(time_data, I_data/1000)
                 self.ax.set_xlabel('Time / sec', fontsize=16)
         
-        
-    
     # Set up plot to call animate() function periodically
     def _animate(self,q):
         self.ani = animation.FuncAnimation(self.fig, self._update_plot, fargs=(q,), interval=self.update_interval)
