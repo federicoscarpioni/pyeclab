@@ -22,10 +22,10 @@ This behaviour can be overriden in the BL_xxx functions with an abort flag set t
 
 from array import array
 
-import devices.biologic.kbio.kbio_types as KBIO
+import kbio_types as KBIO
 
-from devices.biologic.kbio.c_utils import *
-from devices.biologic.kbio.utils import pp_plural, warn_diff, exception_brief
+from c_utils import *
+from utils import pp_plural, warn_diff, exception_brief
 
 #==============================================================================#
 
