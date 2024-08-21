@@ -24,8 +24,8 @@ from array import array
 
 import kbio_types as KBIO
 
-from c_utils import *
-from utils import pp_plural, warn_diff, exception_brief
+from api.c_utils import *
+from api.utils import pp_plural, warn_diff, exception_brief
 
 #==============================================================================#
 
