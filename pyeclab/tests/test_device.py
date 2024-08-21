@@ -1,6 +1,6 @@
 import time
 from pyeclab.device import BiologicDevice
-from pyeclab.techniques import OCV_params, make_OCV_params
+from pyeclab.techniques import OCV_params, make_OCV_tech
 
 # IP address of the instrument
 ip_address = ''
