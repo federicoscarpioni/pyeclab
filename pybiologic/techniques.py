@@ -97,9 +97,9 @@ def reset_duration(api, technique, tech_id):
 class OCV_params :
     duration  : float
     record_dt : float
-    e_range   : float
+    e_range   : int 
     bandwidth : int
-    xctr      : int
+    xctr      : int # Create a standard value here
 
     def __post_init__(self):
         return self.make_OCV_tech() 
@@ -121,7 +121,7 @@ class OCV_params :
         # Convert user values to BioLogic parameters
         p_duration = make_ecc_parm(OCV_parm_names['duration'], parameters.duration)
         p_record = make_ecc_parm(OCV_parm_names['record_dt'], parameters.record_dt)
-        p_erange = make_ecc_parm(OCV_parm_names['E_range'], KBIO.E_RANGE[parameters.e_range].value)
+        p_erange = make_ecc_parm(OCV_parm_names['E_range'], parameters.e_range)
         p_band = make_ecc_parm(OCV_parm_names['bandwidth'], parameters.bandwidth)
         
         # Create parameters object
