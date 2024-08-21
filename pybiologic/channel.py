@@ -1,7 +1,7 @@
 import numpy as np
 from datetime.datime import now
 from pathlib import Path
-from collections import namedtuple
+from collections import namedtuple, deque
 from threading import Thread
 import msvcrt
 import time
@@ -33,6 +33,7 @@ class Channel:
         self.saving_path      = saving_dir + '/' + self.experiment_name
         self.print_values     = print_values
         self.conditions       = []
+        self.conditions_on_avarage = []
         
 
     ## Methods for setting hardware for the experiment ##
@@ -125,9 +126,9 @@ class Channel:
         # Get data from instrument ADC
         self._get_data()
         # Convert ADC numbers to physical values
-        latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
+        self.latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
         # Write on open file
-        self._write_latest_data_to_file(latest_data)
+        self._write_latest_data_to_file(self.latest_data)
 
     def _get_data(self):
         ''' 
@@ -178,30 +179,54 @@ class Channel:
 
     ## Methods for software controll ##          
     
-    def set_condition(self, attribute, operator, threshold):
-        self.conditions.append((attribute, operator, threshold))
+    def set_condition(self, quantity:str, operato:str, threshold:float):
+        self.conditions.append((quantity, operator, threshold))
     
     def _check_software_limits(self):
         '''
-        Check if a certain condition (< or > of a trashold value) if met for a 
+        Check if a certain condition (< or > of a trashold value) is met for a 
         value of the sampled data over a certain number of points.
         '''
-        for attribute, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            attribute_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+        for quantity, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
+            quantity_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if attribute_value is None:
                 continue
-            if operator == '<' and attribute_value >= threshold:
+            if operator == '<' and quantity_value >= threshold:
                 return False
-            elif operator == '>' and attribute_value <= threshold:
+            elif operator == '>' and quantity_value <= threshold:
                 return False
         return True
 
-    def _check_software_limits_avarage(self, point_avarage):
+    def set_condition_on_avarage(self, quantity:str, operato:str, threshold:float, points_avarage:int):
         '''
-        Check if a certain condition (< or > of a trashold value) if met for the
+        latest_points is a circular buffer in the form of deque. It is saved in 
+        the condition tuple.
+        '''
+        latest_points = deque(maxlen = points_avarage)
+        self.conditions.append((quantity, operator, threshold, latest_points))
+
+    def _update_value_buffer(self, quantity:str, buffer : deque):
+        buffer.append(getattr(self.latest_data, quantity, None))
+
+    def _get_avarage(self, buffer):
+        return np.sum(buffer)/len(buffer)
+        
+    def _check_software_limits_avarage(self):
+        '''
+        Check if a certain condition (< or > of a trashold value) is met for the
         avarage value of a sampled data over a certain number of points.
         '''
-        ...    
+        for quantity, operator, threshold, latest_points in self.conditions_on_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
+            quantity_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            if quantity_value is None:
+                continue
+            self._update_value_buffer(quantity, lates_points)
+            avarage_value = self._get_avarage(latest_points)
+            if operator == '<' and avarage_value >= threshold:
+                return False
+            elif operator == '>' and avarage_value <= threshold:
+                return False
+        return True    
 
 
     ## Methods for saving data ##   
@@ -223,7 +248,7 @@ class Channel:
             data_to_save = np.concatenate((data[i]), axis=1)
         data_to_save = np.concatenate((data_to_save, technique_num, loop_num), axis =1) 
         # Acquire the lock to avoid the file to be red while writin and cause data corruption
-        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1)
+        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1) # ? Maybe this is note necessary
         # Write data to saving_file
         data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e')
         # Release the lock
