@@ -7,7 +7,7 @@ ip_address = ''
 # Pth of the SDK from BioLogic installed in the machine
 binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/",
 # Istantiate device class
-device = BiologicDevice(ip_address, binary_path)
+device = BiologicDevice(ip_address, binary_path = binary_path)
 # Create OCV technique
 ocv_params = OCV_params(10, 1, 0, 4, 0)
 ocv_technique = ocv_params.make_OCV_tech(device.is_VMP3)
