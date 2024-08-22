@@ -1,12 +1,14 @@
 '''
 This module
 '''
-import api.kbio_api as api
+from api.kbio_api import KBIO_api
+import api.kbio_types as types
+from api.c_utils import c_is_64b
 import logging
 
 
 
-class BiologicDevice(api):
+class BiologicDevice(KBIO_api):
         '''
         Connect and setup BioLogic device and perform measurement techniques on 
         channels. Inharitates from BioLogic api module and simplify the calls to 
@@ -17,18 +19,16 @@ class BiologicDevice(api):
         def __init__(self,
                      address,
                      binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/",
-                     logging_level=logging.WARNING,
                      verbosity = 3):
-            DLL_path = self.choose_library(binary_path)
+            DLL_path = self._choose_library(binary_path)
             super(BiologicDevice,self).__init__(DLL_path)
             self.address = address
-            logging.basicConfig(level=logging_level)
             self.verbosity = verbosity
             self.connect()
             self.test_connection()
             self.test_channels_plugged()
-            self.is_VMP3 = self.device_info.model in KBIO.VMP3_FAMILY
-            self.load_firmware_channels(force_load=False)
+            self.is_VMP3 = self.device_info.model in types.VMP3_FAMILY
+            self._load_firmware_channels(force_load=False)
         
         def _choose_library(self, binary_path):
             ''' 
@@ -91,7 +91,7 @@ class BiologicDevice(api):
             
         def status(self,current_values):
             status = current_values.State
-            status = KBIO.PROG_STATE(status).name
+            status = types.PROG_STATE(status).name
             return status
         
         def load_sequence(self, channel, sequence, display = False):

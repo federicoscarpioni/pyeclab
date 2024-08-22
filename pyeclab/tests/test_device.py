@@ -1,16 +1,16 @@
 import time
-from pyeclab.device import BiologicDevice
-from pyeclab.techniques import OCV_params, make_OCV_tech
+from device import BiologicDevice
+import techniques as tech
 
 # IP address of the instrument
-ip_address = ''
+ip_address = '172.28.26.11'
 # Pth of the SDK from BioLogic installed in the machine
-binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/",
+binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 # Istantiate device class
 device = BiologicDevice(ip_address, binary_path = binary_path)
 # Create OCV technique
-ocv_params = OCV_params(10, 1, 0, 4, 0)
-ocv_technique = ocv_params.make_OCV_tech(device.is_VMP3)
+ocv_params = tech.OCV_params(10, 1, 0, 4, 0)
+ocv_technique =  tech.make_OCV_tech(device, ocv_params)
 sequence_test = [ocv_technique]
 # Load to sequence on channel 1
 device.load_sequence(1,sequence_test)

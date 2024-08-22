@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from datetime.datime import now
 from pathlib import Path
 from collections import namedtuple, deque
@@ -31,7 +32,8 @@ class Channel:
         self.num              = channel_num
         self.experiment_name  = channel_options.experiment_name # ? maybe I can save directly the whole options
         self.saving_path      = saving_dir + '/' + self.experiment_name
-        self.print_values     = print_values
+        self.print_values     = do_print_values
+        self.do_live_plot     = do_live_plot
         self.conditions       = []
         self.conditions_on_avarage = []
         
@@ -65,7 +67,7 @@ class Channel:
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         print(f'CH{self.num}: Experiment started')
-        if do_live_plot: self.start_live_plot()
+        if self.do_live_plot: self.start_live_plot()
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
@@ -179,7 +181,7 @@ class Channel:
 
     ## Methods for software controll ##          
     
-    def set_condition(self, quantity:str, operato:str, threshold:float):
+    def set_condition(self, quantity:str, operator:str, threshold:float):
         self.conditions.append((quantity, operator, threshold))
     
     def _check_software_limits(self):
@@ -188,8 +190,8 @@ class Channel:
         value of the sampled data over a certain number of points.
         '''
         for quantity, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            quantity_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-            if attribute_value is None:
+            quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            if quantity_value is None:
                 continue
             if operator == '<' and quantity_value >= threshold:
                 return False
@@ -197,7 +199,7 @@ class Channel:
                 return False
         return True
 
-    def set_condition_on_avarage(self, quantity:str, operato:str, threshold:float, points_avarage:int):
+    def set_condition_on_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
         '''
         latest_points is a circular buffer in the form of deque. It is saved in 
         the condition tuple.
@@ -217,10 +219,10 @@ class Channel:
         avarage value of a sampled data over a certain number of points.
         '''
         for quantity, operator, threshold, latest_points in self.conditions_on_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            quantity_value = getattr(self.current_values, attribute, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if quantity_value is None:
                 continue
-            self._update_value_buffer(quantity, lates_points)
+            self._update_value_buffer(quantity, latest_points)
             avarage_value = self._get_avarage(latest_points)
             if operator == '<' and avarage_value >= threshold:
                 return False
@@ -252,7 +254,7 @@ class Channel:
         # Write data to saving_file
         data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e')
         # Release the lock
-        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)
         self.saving_file.flush()
 
     def _close_saving_file(self):
