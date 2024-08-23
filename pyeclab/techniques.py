@@ -98,19 +98,15 @@ def reset_duration(api, technique, tech_id):
 class OCV_params :
     duration  : float
     record_dt : float
-    e_range   : int 
+    e_range   : float
     bandwidth : int
-    xctr      : int # Create a standard value here
+    
 
-    # def __post_init__(self):
-    #     return self.make_OCV_tech() 
-
-def convert_OCV_params_ecc(api, parameters):
-    '''
-    Create parameters object from user values
-    '''
-
-    # Create dictionary with BioLogic parameters name
+def OCV_tech(api,is_VMP3, parameters):
+    # .ecc file names
+    ocv3_tech_file   = "ocv.ecc"
+    ocv4_tech_file   = "ocv4.ecc"
+    # Dictionary of parameters used to call the labrary later
     OCV_parm_names = {
         'duration':  ECC_parm("Rest_time_T", float),
         'record_dt': ECC_parm("Record_every_dT", float),
@@ -118,40 +114,21 @@ def convert_OCV_params_ecc(api, parameters):
         'E_range':   ECC_parm("E_Range", int),
         'bandwidth': ECC_parm('Bandwidth', int),
     }
-
-    # Convert user values to BioLogic parameters
-    p_duration = make_ecc_parm(api,OCV_parm_names['duration'], parameters.duration)
-    p_record = make_ecc_parm(api,OCV_parm_names['record_dt'], parameters.record_dt)
-    p_erange = make_ecc_parm(api,OCV_parm_names['E_range'], parameters.e_range)
-    p_band = make_ecc_parm(api,OCV_parm_names['bandwidth'], parameters.bandwidth)
-    
-    # Create parameters object
-    ecc_parms_OCV = make_ecc_parms(p_duration,
-                                p_record,
-                                p_erange, 
-                                p_band)
-    
-    return ecc_parms_OCV
-
-
-
-def make_OCV_tech(BLdevice, parameters):
-    '''
-    Create a named tuple with technique file name converted parameters and user 
-    parameters.
-    '''
-
-    # .ecc file names
-    ocv3_tech_file   = "ocv.ecc"
-    ocv4_tech_file   = "ocv4.ecc"
-    
     # pick the correct ecc file based on the instrument family
-    tech_file_OCV = ocv3_tech_file if BLdevice.is_VMP3 else ocv4_tech_file
-
-    # Convert user parameters to ecc_parms parameter object
-    ecc_parms_OCV = convert_OCV_params_ecc(BLdevice, parameters)
-
-    # Store ecc file and parameters in namedtuple
+    tech_file_OCV = ocv3_tech_file if is_VMP3 else ocv4_tech_file
+    
+    p_duration = make_ecc_parm(api, OCV_parm_names['duration'], parameters.duration)
+    p_record = make_ecc_parm(api, OCV_parm_names['record_dt'], parameters.record_dt)
+    p_erange = make_ecc_parm(api, OCV_parm_names['E_range'], parameters.e_range)
+    p_band = make_ecc_parm(api, OCV_parm_names['bandwidth'], parameters.bandwidth)
+        
+    ecc_parms_OCV = make_ecc_parms(api,
+                                   p_duration,
+                                   p_record,
+                                   p_erange, 
+                                   p_band)
+   
+    # Use namedtuple to store the data to upload to BioLogic FPGA
     OCV_tech = namedtuple('OCV_tech', 'ecc_file ecc_params user_params')
     ocv_tech = OCV_tech(tech_file_OCV, ecc_parms_OCV, parameters)
     

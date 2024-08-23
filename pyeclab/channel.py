@@ -1,14 +1,13 @@
 import numpy as np
 import json
-from datetime.datime import now
+from datetime import datetime
 from pathlib import Path
 from collections import namedtuple, deque
 from threading import Thread
 import msvcrt
 import time
-import logging
 from device import BiologicDevice
-from technique import set_duration_to_1s, reset_duration
+from techniques import set_duration_to_1s, reset_duration
 from api.tech_types import TECH_ID
 from liveplot import LivePlot
 
@@ -36,7 +35,8 @@ class Channel:
         self.do_live_plot     = do_live_plot
         self.conditions       = []
         self.conditions_on_avarage = []
-        
+        self.current_tech_index = 0 # I don't like to have this attribute, it is needed only for the very first main loop beacause it is not yet created
+        self.is_running      = False
 
     ## Methods for setting hardware for the experiment ##
 
@@ -45,7 +45,7 @@ class Channel:
 
     def load_sequence(self, sequence): 
         self.sequence = sequence
-        self.bio_device.load_sequence(self.num, self.sequence) 
+        self.bio_device.load_sequence(self.num, self.sequence, display=True) 
 
     def import_sequence(self, json_file_path): 
         with open('json_file_path', 'r') as sequence_json:
@@ -60,7 +60,7 @@ class Channel:
         self._create_exp_folder()
         self._create_saving_file()
         self._save_exp_metadata()
-        self._save_sequence_json()
+        # self._save_sequence_json()
         # Start channel on the device
         self.bio_device.start_channel(self.num)  
         # Start collecting data from the device
@@ -76,7 +76,7 @@ class Channel:
         print(f'CH{self.num}: interrupted by the user')  
 
     def start_live_plot(self):
-        liveplot = LivePlot(self)
+        self.liveplot = LivePlot(self)
 
     def end_technique(self):
         ''' 
@@ -97,7 +97,7 @@ class Channel:
                                         self.sequence[self.current_tech_index].ecc_file)
     
     def _print_current_values(self):
-        print(f'CH{self.num} - Ewe: {self.current_values.Ewe:4.5}V | I: {self.current_values.I:4.5}mA | Tech_ID: {TECH_ID(self.current_values.TechniqueID).name} | Tech_indx: {self.current_values.TechniqueIndex} | loop: {self.current_values.loop}')
+        print(f"CH{self.num} > Ewe: {self.current_values.Ewe:4.3e} V | I: {self.current_values.I:4.3e} mA | Tech_ID: {TECH_ID(self.data_info.TechniqueID).name} | Tech_indx: {self.data_info.TechniqueIndex} | loop: {self.data_info.loop}")
     
 
     ## Methods for managing data collaction in the main loop ##
@@ -108,18 +108,20 @@ class Channel:
         saves. The sequence progression is also monitored.
         '''
         while True:
-            self._get_measurement_values()
+            self.latest_data = self._get_measurement_values()
+            # Write latest data to open saving file
+            self._write_latest_data_to_file()
             # Print latest values 
             if self.print_values : self._print_current_values()
             # Check if the technique has changed on the instrument
             self._monitoring_sequnce_progression()
             # Brake the loop if sequence is terminates
-            if self.current_values.Status == 0:
+            if self.current_values.State == 0:
                 self._close_saving_file()
-                print(f'CH{self.num}: Sequence terminated')
                 break
             # Stop current technique if any software limit is reached
             if self._check_software_limits():
+                print('Software limits met') # debug print
                 self.end_technique()
             # Sleep before retriving next measrued data
             time.sleep(sleep_time)
@@ -128,9 +130,8 @@ class Channel:
         # Get data from instrument ADC
         self._get_data()
         # Convert ADC numbers to physical values
-        self.latest_data = self._convert_buffer_to_physical_values(self.data_buffer)
-        # Write on open file
-        self._write_latest_data_to_file(self.latest_data)
+        latest_data = self._get_converted_buffer()
+        return latest_data
 
     def _get_data(self):
         ''' 
@@ -143,7 +144,7 @@ class Channel:
         '''
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(self.bio_device.device_id, self.num)
 
-    def _convert_buffer_to_physical_values(self):
+    def _get_converted_buffer(self):
         '''
         Convert digitalized signal from ADC to physical values.
 
@@ -158,7 +159,7 @@ class Channel:
         if self.data_info.TechniqueID != 100:
             I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,3]) for i in range(0, self.data_info.NbRows)]) 
         else:
-            I = np.array([0]*len(self.Ewe))
+            I = np.array([0]*len(Ewe))
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
@@ -194,10 +195,10 @@ class Channel:
             if quantity_value is None:
                 continue
             if operator == '<' and quantity_value >= threshold:
-                return False
+                return True
             elif operator == '>' and quantity_value <= threshold:
-                return False
-        return True
+                return True
+        return False
 
     def set_condition_on_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
         '''
@@ -239,22 +240,25 @@ class Channel:
     def _create_saving_file(self):       
         self.saving_file = open(self.saving_path + '/measurement_data.txt', 'w+') 
         # Write headers
-        self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num') #!!! Include the possibility to add Ece and Aux
+        self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num\n') #!!! Include the possibility to add Ece and Aux
 
-    def _write_latest_data_to_file(self, data):
-        technique_num = self.current_tech_index * np.ones(len(data[0]))
-        loop_num = self.data_info.loop * np.ones(len(data[0]))
+    def _write_latest_data_to_file(self):
+        technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
+        loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
         # Concatenate measurement values and technique data. The use of if statment
         # allows to include also the case of recorder Ece and Auxiliary input
-        for i in len(data):
-            data_to_save = np.concatenate((data[i]), axis=1)
-        data_to_save = np.concatenate((data_to_save, technique_num, loop_num), axis =1) 
+        # for i in self.latest_data:
+        #     data_to_save = np.concatenate((self.latest_data[i]), axis=1)
+        data_to_save = np.hstack((self.latest_data[0],self.latest_data[1], self.latest_data[2]))
+        data_to_save = np.hstack((data_to_save, technique_num, loop_num)) 
         # Acquire the lock to avoid the file to be red while writin and cause data corruption
-        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1) # ? Maybe this is note necessary
+        # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1) # ? Maybe this is note necessary
         # Write data to saving_file
-        data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e')
+        data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e') # Old approach
+        self.saving_file.write('\n')
+        # np.savetxt(self.saving_file, data_to_save, delimiter='\t', fmt='%4.3e')
         # Release the lock
-        msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)
+        # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)
         self.saving_file.flush()
 
     def _close_saving_file(self):
@@ -266,9 +270,9 @@ class Channel:
         # the closing function should be move in the stop() method.
         self.metadata_file = open(self.saving_path + '/experiment_metadata.txt', 'w')
         # File title
-        self.metadata_file.write('pyBioLogic metadata file\n')
+        self.metadata_file.write('PYECLAB METADATA FILE\n')
         # Information of the starting time
-        self.starting_time = now()
+        self.starting_time = datetime.now()
         self.metadata_file.write(f"\n Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
         self.metadata_file.write(f"\n Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
         # Information of the saving file name
