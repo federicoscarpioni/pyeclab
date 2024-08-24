@@ -13,6 +13,11 @@ from liveplot import LivePlot
 
 # ! Add a logger
 
+''' 
+!!! Works only for dt of 1 second of the potentiost. The problem is how to 
+!!! save correctly a matrix of values instead of an array
+'''
+
 ChannelOptions = namedtuple('ChannelOptions', ['experiment_name'])
 
 class Channel:
@@ -43,9 +48,9 @@ class Channel:
     def set_hardware_config(self):
         ...
 
-    def load_sequence(self, sequence): 
+    def load_sequence(self, sequence, ask_ok = False): 
         self.sequence = sequence
-        self.bio_device.load_sequence(self.num, self.sequence, display=True) 
+        self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok) 
 
     def import_sequence(self, json_file_path): 
         with open('json_file_path', 'r') as sequence_json:
@@ -66,8 +71,10 @@ class Channel:
         # Start collecting data from the device
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
-        print(f'CH{self.num}: Experiment started')
+        # Initialize liveplot
         if self.do_live_plot: self.start_live_plot()
+        print(f'CH{self.num}: Experiment started')
+        
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
@@ -113,11 +120,14 @@ class Channel:
             self._write_latest_data_to_file()
             # Print latest values 
             if self.print_values : self._print_current_values()
+            # Update plot
+            # self.liveplot.update_plot()
             # Check if the technique has changed on the instrument
             self._monitoring_sequnce_progression()
             # Brake the loop if sequence is terminates
             if self.current_values.State == 0:
                 self._close_saving_file()
+                print(f'CH{self.num} > Measure terminated')
                 break
             # Stop current technique if any software limit is reached
             if self._check_software_limits():
@@ -256,7 +266,7 @@ class Channel:
         # Write data to saving_file
         data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e') # Old approach
         self.saving_file.write('\n')
-        # np.savetxt(self.saving_file, data_to_save, delimiter='\t', fmt='%4.3e')
+        # np.savetxt(self.saving_file, data_to_save, delimiter = '\t', fmt= '%4.3e') # This numpy version doesn't work for some reason
         # Release the lock
         # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)
         self.saving_file.flush()
@@ -273,11 +283,11 @@ class Channel:
         self.metadata_file.write('PYECLAB METADATA FILE\n')
         # Information of the starting time
         self.starting_time = datetime.now()
-        self.metadata_file.write(f"\n Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-        self.metadata_file.write(f"\n Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
+        self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
+        self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
         # Information of the saving file name
-        self.metadata_file.write(f'\nExperiment name : {self.experiment_name}')
-        self.metadata_file.write(f'\nSaving file path : {self.saving_path}')
+        self.metadata_file.write(f'Experiment name : {self.experiment_name}\n')
+        self.metadata_file.write(f'Saving file path : {self.saving_path}\n')
         # !!! Print all the information of the techniques in the sequence
         # ! Add information on the device, channel number, cell name and user comments
         # ! Add the list of condition checked by the software
