@@ -29,7 +29,7 @@ functions, only one is abilitated. For most battery-related reasearch that is
 enough.
 
 For each technique are provided:
-- A dataclass XXX_params for storing all the parameters
+- A dictionary XXX_params for storing all the parameters
 - A function convert_XXX_ecc_params to create the parameters object
 - A function make_XXX_tech to create the namedtuple
 
@@ -40,6 +40,8 @@ from kbio_api import KBIO_api
 from api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from dataclasses import dataclass
 from collections import namedtuple
+import tech_names as tn
+
 
 
 #=== Auxiliary functions ======================================================#
@@ -93,6 +95,66 @@ def reset_duration(api, technique, tech_id):
 # ? technique object. A function is probably correct since the final data structure
 # ? to be used is a namedtuple. On the other side I like the compactness of this 
 # ? approach. The methods related to one technique are all together as methods.
+
+@ dataclass
+class OCV:
+    duration  : float
+    record_dt : float
+    record_dE : float
+    E_range   : int
+    bandwidth : int
+
+    def __postinit__(self):
+        self.param_names = tn.OCV_parm_names
+
+    def choose_ecc_file(self, device):
+        # .ecc file names
+        ocv3_tech_file   = "ocv.ecc"
+        ocv4_tech_file   = "ocv4.ecc"
+        # pick the correct ecc file based on the instrument family
+        self.ecc_file = ocv3_tech_file if device.is_VMP3 else ocv4_tech_file
+
+    def make_ecc_params(self, device):
+        p_duration = make_ecc_parm(device, OCV_parm_names['duration'], parameters.duration)
+        p_record = make_ecc_parm(device, OCV_parm_names['record_dt'], parameters.record_dt)
+        p_erange = make_ecc_parm(device, OCV_parm_names['E_range'], parameters.e_range)
+        p_band = make_ecc_parm(device, OCV_parm_names['bandwidth'], parameters.bandwidth)
+        self.ecc_parms_OCV = make_ecc_parms(device,
+                                            p_duration,
+                                            p_record,
+                                            p_erange, 
+                                            p_band)
+
+    def make_tech(self, device):
+        self.choose_ecc_file(device)
+        self.make_ecc_params(device)
+        
+
+
+    # def OCV_tech(api,is_VMP3, parameters):
+    #     ecc_file = choose_ecc_file_name(is_VMP3)
+    #     # Dictionary of parameters used to call the labrary later
+        
+    #     OCV_parm_names = make_OCV_param_names()
+        
+    #     p_duration = make_ecc_parm(api, OCV_parm_names['duration'], parameters.duration)
+    #     p_record = make_ecc_parm(api, OCV_parm_names['record_dt'], parameters.record_dt)
+    #     p_erange = make_ecc_parm(api, OCV_parm_names['E_range'], parameters.e_range)
+    #     p_band = make_ecc_parm(api, OCV_parm_names['bandwidth'], parameters.bandwidth)
+            
+    #     ecc_parms_OCV = make_ecc_parms(api,
+    #                                 p_duration,
+    #                                 p_record,
+    #                                 p_erange, 
+    #                                 p_band)
+    
+    #     # Use namedtuple to store the data to upload to BioLogic FPGA
+    #     OCV_tech = namedtuple('OCV_tech', 'ecc_file ecc_params user_params')
+    #     ocv_tech = OCV_tech(ecc_file_OCV, ecc_parms_OCV, parameters)
+    #     return ocv_tech
+    
+    # return OCV_tech(device.api, device.is_VMP3, paramters)
+
 
 @dataclass
 class OCV_params :
