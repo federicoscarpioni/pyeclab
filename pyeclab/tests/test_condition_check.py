@@ -60,5 +60,5 @@ channel1=Channel(device,
                  )
 channel1.load_sequence(sequence, ask_ok=False)
 # Set conditions on the voltage
-channel1.set_condition_avarage('Ewe', '>', 0.005, 3)
+channel1.set_condition(1,'Ewe', '>', 0.005)
 channel1.start()

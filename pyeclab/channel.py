@@ -197,22 +197,23 @@ class Channel:
 
     ## Methods for software controll ##          
     
-    def set_condition(self, quantity:str, operator:str, threshold:float):
-        self.conditions.append((quantity, operator, threshold))
+    def set_condition(self, technique_index: int, quantity:str, operator:str, threshold:float):
+        self.conditions.append((technique_index,quantity, operator, threshold))
     
     def _check_software_limits(self):
         '''
         Check if a certain condition (< or > of a trashold value) is met for a 
         value of the sampled data over a certain number of points.
         '''
-        for quantity, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-            if quantity_value is None:
-                continue
-            if operator == '>' and quantity_value >= threshold:
-                return True
-            elif operator == '<' and quantity_value <= threshold:
-                return True
+        for technique_index, quantity, operator, threshold in self.conditions:              # ? Can I manually add other attributes to current_values for the quantities that are missing?
+            if self.data_info.TechniqueIndex == technique_index:    
+                quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+                if quantity_value is None:
+                    continue
+                if operator == '>' and quantity_value >= threshold:
+                    return True
+                elif operator == '<' and quantity_value <= threshold:
+                    return True
         return False
 
     def set_condition_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
