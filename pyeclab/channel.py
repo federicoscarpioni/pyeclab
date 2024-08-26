@@ -39,7 +39,7 @@ class Channel:
         self.print_values     = do_print_values
         self.do_live_plot     = do_live_plot
         self.conditions       = []
-        self.conditions_on_avarage = []
+        self.conditions_avarage = []
         self.current_tech_index = 0 # I don't like to have this attribute, it is needed only for the very first main loop beacause it is not yet created
         self.is_running      = False
 
@@ -133,6 +133,9 @@ class Channel:
             if self._check_software_limits():
                 print('Software limits met') # debug print
                 self.end_technique()
+            if self._check_software_limits_avarage():
+                print('Software limits avarage met') # debug print
+                self.end_technique()    
             # Sleep before retriving next measrued data
             time.sleep(sleep_time)
 
@@ -187,7 +190,9 @@ class Channel:
             self.is_running = True
         # Check if a new technique is running
         if self.current_tech_index != new_tech_index : 
-            if self.debug: print(f'> CH{self.num} msg: new technique ongoing detected by the software')
+            print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
+            self.current_tech_index = new_tech_index
+
 
 
     ## Methods for software controll ##          
@@ -204,19 +209,19 @@ class Channel:
             quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if quantity_value is None:
                 continue
-            if operator == '<' and quantity_value >= threshold:
+            if operator == '>' and quantity_value >= threshold:
                 return True
-            elif operator == '>' and quantity_value <= threshold:
+            elif operator == '<' and quantity_value <= threshold:
                 return True
         return False
 
-    def set_condition_on_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
+    def set_condition_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
         '''
         latest_points is a circular buffer in the form of deque. It is saved in 
         the condition tuple.
         '''
         latest_points = deque(maxlen = points_avarage)
-        self.conditions.append((quantity, operator, threshold, latest_points))
+        self.conditions_avarage.append((quantity, operator, threshold, latest_points))
 
     def _update_value_buffer(self, quantity:str, buffer : deque):
         buffer.append(getattr(self.latest_data, quantity, None))
@@ -229,17 +234,17 @@ class Channel:
         Check if a certain condition (< or > of a trashold value) is met for the
         avarage value of a sampled data over a certain number of points.
         '''
-        for quantity, operator, threshold, latest_points in self.conditions_on_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
+        for quantity, operator, threshold, latest_points in self.conditions_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
             quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if quantity_value is None:
                 continue
             self._update_value_buffer(quantity, latest_points)
             avarage_value = self._get_avarage(latest_points)
-            if operator == '<' and avarage_value >= threshold:
-                return False
-            elif operator == '>' and avarage_value <= threshold:
-                return False
-        return True    
+            if operator == '>' and avarage_value >= threshold:
+                return True
+            elif operator == '<' and avarage_value <= threshold:
+                return True
+        return False    
 
 
     ## Methods for saving data ##   
@@ -259,13 +264,20 @@ class Channel:
         # allows to include also the case of recorder Ece and Auxiliary input
         # for i in self.latest_data:
         #     data_to_save = np.concatenate((self.latest_data[i]), axis=1)
-        data_to_save = np.hstack((self.latest_data[0],self.latest_data[1], self.latest_data[2]))
-        data_to_save = np.hstack((data_to_save, technique_num, loop_num)) 
+        # data_to_save = np.hstack((self.latest_data[0],self.latest_data[1], self.latest_data[2]))
+        # data_to_save = np.hstack((data_to_save, technique_num, loop_num)) 
+        data_to_save = np.column_stack((self.latest_data[0],
+                                        self.latest_data[1], 
+                                        self.latest_data[2],
+                                        technique_num, 
+                                        loop_num))
+        # print(data_to_save.shape)
         # Acquire the lock to avoid the file to be red while writin and cause data corruption
         # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1) # ? Maybe this is note necessary
         # Write data to saving_file
-        data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e') # Old approach
-        self.saving_file.write('\n')
+        # data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e') # Old approach
+        # self.saving_file.write('\n')
+        np.savetxt(self.saving_file, data_to_save, fmt= '%4.3e', delimiter= '\t')
         # np.savetxt(self.saving_file, data_to_save, delimiter = '\t', fmt= '%4.3e') # This numpy version doesn't work for some reason
         # Release the lock
         # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)

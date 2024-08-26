@@ -23,8 +23,9 @@ class LivePlot():
         # Move the cursor after the firt line that contains the header
         # self.channel.saving_file.readline()
         # self.last_position = self.channel.saving_file.tell()
+        self.to_minutes = False
+        self.to_hours = False
         
-        # self.last_position = 1
         # Create the figure    
         self.fig, (self.ax, self.ax2) = plt.subplots(2)
         self._initialize_figure()
@@ -99,31 +100,30 @@ class LivePlot():
         if type(new_data) != type(None) and not new_data.empty: 
             time_data = np.append(self.line.get_xdata(), new_data.iloc[:,0])
             Ewe_data = np.append(self.line.get_ydata(), new_data.iloc[:,1])
-            I_data = np.append(self.line2.get_ydata(), new_data.iloc[:,2])
+            I_data = np.append(self.line2.get_ydata(), new_data.iloc[:,2]*1000)
             # Plot the new data
-            # After 90 minutes plot in hours
-            if time_data[-1]>5400:
-                self.line.set_data(time_data/3600, Ewe_data)
-                self.line2.set_data(time_data/3600, I_data/1000)
-                self.ax.set_xlabel('Time / hour', fontsize=12)
-                self.ax2.set_xlabel('Time / hour', fontsize=12)
-            # After 120 second plot in minutes
-            elif time_data[-1]>120: 
-                self.line.set_data(time_data/60, Ewe_data)
-                self.line2.set_data(time_data/60, I_data/1000)
-                self.ax.set_xlabel('Time / min', fontsize=12)
-                self.ax2.set_xlabel('Time / hour', fontsize=12)
+            # # After 90 minutes plot in hours
+            # if time_data[-1]>5400:
+            #     self.line.set_data(time_data/3600, Ewe_data)
+            #     self.line2.set_data(time_data/3600, I_data)
+            #     self.ax2.set_xlabel('Time / hour', fontsize=12)
+            # # After 120 second plot in minutes
+            # elif time_data[-1]>120: 
+            #     self.line.set_data(time_data/60, Ewe_data)
+            #     self.line2.set_data(time_data/60, I_data)
+            #     self.ax2.set_xlabel('Time / min', fontsize=12)
             # Plot in seconds
-            else:
-                self.line.set_data (time_data, Ewe_data)
-                self.line2.set_data(time_data, I_data/1000)
-                self.ax.set_xlabel('Time / sec', fontsize=12)
-                self.ax2.set_xlabel('Time / hour', fontsize=12)
+            # else:
+            self.line.set_data (time_data, Ewe_data)
+            self.line2.set_data(time_data, I_data)
+            self.ax2.set_xlabel('Time / sec', fontsize=12)
+                
             self.ax.relim()
             self.ax2.relim()
             self.ax.autoscale_view()
             self.ax2.autoscale_view()
         if self.channel.current_values.State == 0:
+            # Stop the animation if the channel is not active
             self.ani.event_source.stop()
             
     # Set up plot to call animate() function periodically

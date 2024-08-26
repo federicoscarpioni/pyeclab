@@ -86,76 +86,9 @@ def reset_duration(api, technique, tech_id):
     p_current_steps.append( make_ecc_parm(api, parameters['vs_init'], technique.user_params.vs_init, idx ) )
     return make_ecc_parms(api,*p_current_steps)
 
-#------------------------------------------------------------------------------#
+#=== Techniques definition functions =========================================#
 
-#=== Open Circuit Voltage =====================================================#
-
-# ? I don't know if this is the correct approach and if dataclasses is the correct structure
-# ? The idea is to input the parameters in my object and obtain directly the 
-# ? technique object. A function is probably correct since the final data structure
-# ? to be used is a namedtuple. On the other side I like the compactness of this 
-# ? approach. The methods related to one technique are all together as methods.
-
-@ dataclass
-class OCV:
-    duration  : float
-    record_dt : float
-    record_dE : float
-    E_range   : int
-    bandwidth : int
-
-    def __postinit__(self):
-        self.param_names = tn.OCV_parm_names
-
-    def choose_ecc_file(self, device):
-        # .ecc file names
-        ocv3_tech_file   = "ocv.ecc"
-        ocv4_tech_file   = "ocv4.ecc"
-        # pick the correct ecc file based on the instrument family
-        self.ecc_file = ocv3_tech_file if device.is_VMP3 else ocv4_tech_file
-
-    def make_ecc_params(self, device):
-        p_duration = make_ecc_parm(device, OCV_parm_names['duration'], parameters.duration)
-        p_record = make_ecc_parm(device, OCV_parm_names['record_dt'], parameters.record_dt)
-        p_erange = make_ecc_parm(device, OCV_parm_names['E_range'], parameters.e_range)
-        p_band = make_ecc_parm(device, OCV_parm_names['bandwidth'], parameters.bandwidth)
-        self.ecc_parms_OCV = make_ecc_parms(device,
-                                            p_duration,
-                                            p_record,
-                                            p_erange, 
-                                            p_band)
-
-    def make_tech(self, device):
-        self.choose_ecc_file(device)
-        self.make_ecc_params(device)
-        
-
-
-    # def OCV_tech(api,is_VMP3, parameters):
-    #     ecc_file = choose_ecc_file_name(is_VMP3)
-    #     # Dictionary of parameters used to call the labrary later
-        
-    #     OCV_parm_names = make_OCV_param_names()
-        
-    #     p_duration = make_ecc_parm(api, OCV_parm_names['duration'], parameters.duration)
-    #     p_record = make_ecc_parm(api, OCV_parm_names['record_dt'], parameters.record_dt)
-    #     p_erange = make_ecc_parm(api, OCV_parm_names['E_range'], parameters.e_range)
-    #     p_band = make_ecc_parm(api, OCV_parm_names['bandwidth'], parameters.bandwidth)
-            
-    #     ecc_parms_OCV = make_ecc_parms(api,
-    #                                 p_duration,
-    #                                 p_record,
-    #                                 p_erange, 
-    #                                 p_band)
-    
-    #     # Use namedtuple to store the data to upload to BioLogic FPGA
-    #     OCV_tech = namedtuple('OCV_tech', 'ecc_file ecc_params user_params')
-    #     ocv_tech = OCV_tech(ecc_file_OCV, ecc_parms_OCV, parameters)
-    #     return ocv_tech
-    
-    # return OCV_tech(device.api, device.is_VMP3, paramters)
-
-
+# ------OCV------- #
 @dataclass
 class OCV_params :
     duration  : float
@@ -197,8 +130,7 @@ def OCV_tech(api,is_VMP3, parameters):
     return ocv_tech
 
 
-#=== Chrono-Potentiometry with Potential Limitations ==========================#
-
+# ------CPLIM------- #
 @dataclass
 class CPLIM_params :
     current        : float
@@ -215,15 +147,11 @@ class CPLIM_params :
     limit_variable : int
     limit_values   : float
     bandwidth      : int
+    # analog_filter  : int
 
-#------------------------------------------------------------------------------#
 
-def convert_CPLIM_params_ecc(parameters):
-    '''
-    Create parameters object from user values
-    '''
-
-    # Create dictionary with BioLogic parameters name
+def make_CPLIM_ecc_params(api, parameters):
+    # dictionary of CP parameters (non exhaustive)
     CPLIM_parm_names = {
         'current_step':  ECC_parm("Current_step", float),
         'step_duration': ECC_parm("Duration_step", float),
@@ -239,28 +167,29 @@ def convert_CPLIM_params_ecc(parameters):
         'test1_config':  ECC_parm("Test1_Config", int),
         'test1_value':   ECC_parm("Test1_Value", float),
         'bandwidth':     ECC_parm('Bandwidth', int),
+        # 'analog_filter': ECC_parm('Filter', int)
     }
     
-    # Convert user values to BioLogic parameters
-    idx = 0 # This way only one setp is allowed
+    idx = 0 # Only one current step is used 
     p_current_steps  = list()
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['current_step'], parameters.current, idx ) )
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['step_duration'], parameters.duration, idx ) )
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['vs_init'], parameters.vs_init, idx ) )
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['exit_cond'], parameters.exit_cond, idx) )
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['test1_config'], parameters.limit_variable, idx ) )
-    p_current_steps.append( make_ecc_parm(CPLIM_parm_names['test1_value'], parameters.limit_values, idx ) )
-    p_nb_steps       = make_ecc_parm(CPLIM_parm_names['nb_steps'], parameters.nb_steps )
-    p_record_dt      = make_ecc_parm(CPLIM_parm_names['record_dt'], parameters.record_dt )
-    p_record_dE      = make_ecc_parm(CPLIM_parm_names['record_dE'], parameters.record_dE )
-    p_xctr           = make_ecc_parm(CPLIM_parm_names['xctr'], parameters.xctr )
-    p_repeat         = make_ecc_parm(CPLIM_parm_names['repeat'], parameters.repeat )
-    p_IRange         = make_ecc_parm(CPLIM_parm_names['i_range'], KBIO.I_RANGE[parameters.i_range].value )
-    p_ERange         = make_ecc_parm(CPLIM_parm_names['e_range'], KBIO.E_RANGE[parameters.e_range].value)
-    p_band           = make_ecc_parm(CPLIM_parm_names['bandwidth'], parameters.bandwidth )
-    
-    # Create parameters object
-    ecc_parms_CPLIM  = make_ecc_parms(*p_current_steps, 
+    p_current_steps.append( make_ecc_parm(api, CPLIM_parm_names['current_step'], parameters.current, idx ) )
+    p_current_steps.append( make_ecc_parm(api, CPLIM_parm_names['step_duration'], parameters.duration, idx ) )
+    p_current_steps.append( make_ecc_parm(api, CPLIM_parm_names['vs_init'], parameters.vs_init, idx ) )
+    p_current_steps.append( make_ecc_parm(api, CPLIM_parm_names['exit_cond'], parameters.exit_cond, idx) )
+    p_current_steps.append( make_ecc_parm( api, CPLIM_parm_names['test1_config'], parameters.limit_variable, idx ) )
+    p_current_steps.append( make_ecc_parm( api, CPLIM_parm_names['test1_value'], parameters.limit_values, idx ) )
+    p_nb_steps       = make_ecc_parm( api, CPLIM_parm_names['nb_steps'], parameters.nb_steps )
+    p_record_dt      = make_ecc_parm( api, CPLIM_parm_names['record_dt'], parameters.record_dt )
+    p_record_dE      = make_ecc_parm( api, CPLIM_parm_names['record_dE'], parameters.record_dE )
+    p_xctr           = make_ecc_parm( api, CPLIM_parm_names['xctr'], parameters.xctr )
+    p_repeat         = make_ecc_parm( api, CPLIM_parm_names['repeat'], parameters.repeat )
+    p_IRange         = make_ecc_parm( api, CPLIM_parm_names['i_range'], parameters.i_range)
+    p_ERange         = make_ecc_parm( api, CPLIM_parm_names['e_range'], parameters.e_range)
+    p_band           = make_ecc_parm( api, CPLIM_parm_names['bandwidth'], parameters.bandwidth )
+    # p_filter         = make_ecc_parm( api, CPLIM_parm_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
+    # make the technique parameter array
+    ecc_parms_CPLIM  = make_ecc_parms(api,  
+                                      *p_current_steps, 
                                       p_nb_steps, 
                                       p_record_dt, 
                                       p_record_dE, 
@@ -268,35 +197,30 @@ def convert_CPLIM_params_ecc(parameters):
                                       p_ERange, 
                                       p_repeat,
                                       p_xctr,
-                                      p_band)
-    
+                                      p_band,
+                                      # p_filter,
+                                      )
     return ecc_parms_CPLIM
 
-#------------------------------------------------------------------------------#
-
-def make_CPLIM_tech(is_VMP3, parameters):
-    '''
-    Create a named tuple with technique file name converted parameters and user 
-    parameters.
-    '''
-
+    
+def CPLIM_tech(api, is_VMP3, parameters):
     # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
     cplim3_tech_file = "cplimit.ecc"
     cplim4_tech_file = "cplimit4.ecc"
     
-    # Pick the correct ecc file based on the instrument family
+    # pick the correct ecc file based on the instrument family
     tech_file_CPLIM = cplim3_tech_file if is_VMP3 else cplim4_tech_file
     
-    # Convert user parameters to ecc_parms parameter object
-    ecc_parms_CPLIM = convert_CPLIM_params_ecc(parameters)
+    # Define parameters for loading in the device using the templates
+    ecc_parms_CPLIM = make_CPLIM_ecc_params(api, parameters)
     
-    # Store ecc file and parameters in namedtuple
     CPLIM_tech = namedtuple('CPLIM_tech', 'ecc_file ecc_params user_params')
     cplim_tech = CPLIM_tech(tech_file_CPLIM, ecc_parms_CPLIM, parameters)
     
     return cplim_tech
 
-#=== Chrono-Amperometry =======================================================#
+
+# ------CA------- #
 
 @dataclass
 class CA_params :
@@ -313,13 +237,9 @@ class CA_params :
     xctr      : int
     bandwidth : int
 
-#------------------------------------------------------------------------------#
 
-def convert_CA_params_ecc(parameters):
-    '''
-    Create parameters object from user values
-    '''
-    # Create dictionary with BioLogic parameters name
+def make_CA_ecc_params(api, parameters):
+    # dictionary of CP parameters (non exhaustive)
     CA_parm_names = {
         'voltage_step':  ECC_parm("Voltage_step", float),
         'step_duration': ECC_parm("Duration_step", float),
@@ -334,24 +254,22 @@ def convert_CA_params_ecc(parameters):
         'xctr':          ECC_parm("xctr",int),
         'bandwidth':     ECC_parm('Bandwidth', int),
     }
-
-    # Convert user values to BioLogic parameters
-    idx = 0 # This way only one setp is allowed 
+    idx = 0 # Only one current step is used 
     p_voltage_steps  = list()
-    p_voltage_steps.append( make_ecc_parm(CA_parm_names['voltage_step'], parameters.voltage, idx ) )
-    p_voltage_steps.append( make_ecc_parm(CA_parm_names['step_duration'], parameters.duration, idx ) )
-    p_voltage_steps.append( make_ecc_parm(CA_parm_names['vs_init'], parameters.vs_init, idx ) )
-    p_nb_steps       = make_ecc_parm(CA_parm_names['nb_steps'], parameters.nb_steps )
-    p_record_dt      = make_ecc_parm(CA_parm_names['record_dt'], parameters.record_dt )
-    p_record_dI      = make_ecc_parm(CA_parm_names['record_dI'], parameters.record_dI )
-    p_xctr           = make_ecc_parm(CA_parm_names['xctr'], parameters.xctr )
-    p_repeat         = make_ecc_parm(CA_parm_names['repeat'], parameters.repeat )
-    p_IRange         = make_ecc_parm(CA_parm_names['i_range'], KBIO.I_RANGE[parameters.i_range].value )
-    p_ERange         = make_ecc_parm(CA_parm_names['e_range'], KBIO.E_RANGE[parameters.e_range].value)
-    p_band           = make_ecc_parm(CA_parm_names['bandwidth'], parameters.bandwidth )
-    
-    # Create parameters object
-    ecc_parms_CA = make_ecc_parms(*p_voltage_steps, # all array type paramaters goes together
+    p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['voltage_step'], parameters.voltage, idx ) )
+    p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['step_duration'], parameters.duration, idx ) )
+    p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['vs_init'], parameters.vs_init, idx ) )
+    p_nb_steps       = make_ecc_parm( api, CA_parm_names['nb_steps'], parameters.nb_steps )
+    p_record_dt      = make_ecc_parm( api, CA_parm_names['record_dt'], parameters.record_dt )
+    p_record_dI      = make_ecc_parm( api, CA_parm_names['record_dI'], parameters.record_dI )
+    p_xctr           = make_ecc_parm( api, CA_parm_names['xctr'], parameters.xctr )
+    p_repeat         = make_ecc_parm( api, CA_parm_names['repeat'], parameters.repeat )
+    p_IRange         = make_ecc_parm( api, CA_parm_names['i_range'], parameters.i_range)
+    p_ERange         = make_ecc_parm(api,  CA_parm_names['e_range'], parameters.e_range)
+    p_band           = make_ecc_parm( api, CA_parm_names['bandwidth'], parameters.bandwidth )
+    # make the technique parameter array
+    ecc_parms_CA = make_ecc_parms(api,  
+                                  *p_voltage_steps, # all array type paramaters goes together
                                   p_nb_steps, 
                                   p_record_dt, 
                                   p_record_dI,
@@ -360,82 +278,108 @@ def convert_CA_params_ecc(parameters):
                                   p_repeat,
                                   p_xctr,
                                   p_band)
-    
     return ecc_parms_CA
 
-#------------------------------------------------------------------------------#
 
-def make_CA_tech(is_VMP3, parameters):
-    '''
-    Create a named tuple with technique file name converted parameters and user 
-    parameters.
-    '''
-
-    # Name of the dll for the CA technique (for both types of instruments VMP3/VSP300)
+def CA_tech(api, is_VMP3, parameters):
+    # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
     cplim3_tech_file = "ca.ecc"
     cplim4_tech_file = "ca4.ecc"
 
     # pick the correct ecc file based on the instrument family
     tech_file_CA = cplim3_tech_file if is_VMP3 else cplim4_tech_file
+    # Define parameters for loading in the device using the templates
+    ecc_parms_CA = make_CA_ecc_params(api, parameters)
     
-    # Convert user parameters to ecc_parms parameter object
-    ecc_parms_CA = convert_CA_params_ecc(parameters)
-    
-    # Store ecc file and parameters in namedtuple
     CA_tech = namedtuple('CA_tech', 'ecc_file ecc_params user_params')
     ca_tech = CA_tech(tech_file_CA, ecc_parms_CA, parameters)
     
     return ca_tech
 
-#=== Loop =====================================================================#
+# ------Loop------- #
 
 @dataclass
 class LOOP_params :
     repeat_N  : int
     loop_start : int
 
-#------------------------------------------------------------------------------#
 
-def convert_LOOP_params_ecc(parameters):
-    '''
-    Create parameters object from user values
-    '''
-    # Create dictionary with BioLogic parameters name
+def make_loop_ecc_params(api, parameters):
+    # Dictionary of parameters used to call the labrary later
     loop_parms = {
         'reapeat' :    ECC_parm("loop_N_times", int),
         'loop_start' : ECC_parm('protocol_number', int),
     }
 
-    # Convert user values to BioLogic parameters
-    p_repeat_N     = make_ecc_parm(loop_parms['reapeat'], parameters.repeat_N)
-    p_loop_start   = make_ecc_parm(loop_parms['loop_start'], parameters.loop_start)
+    p_repeat_N     = make_ecc_parm(api, loop_parms['reapeat'], parameters.repeat_N)
+    p_loop_start   = make_ecc_parm(api, loop_parms['loop_start'], parameters.loop_start)
     
-    # Create parameters object
-    ecc_parms_loop = make_ecc_parms(p_repeat_N, 
+    ecc_parms_loop = make_ecc_parms(api, p_repeat_N, 
                                     p_loop_start)
-    
     return ecc_parms_loop
+    
 
-#------------------------------------------------------------------------------#
-
-def make_LOOP_tech(is_VMP3, parameters):
-    '''
-    Create a named tuple with technique file name converted parameters and user 
-    parameters.
-    '''
-
-    # Name of the dll for the loop technique (for both types of instruments VMP3/VSP300)
+def loop_tech(api, is_VMP3, parameters):
+    # .ecc file names
     loop3_tech_file   = "loop.ecc"
     loop4_tech_file   = "loop4.ecc"
+    
 
-    # Pick the correct ecc file based on the instrument family
+    # pick the correct ecc file based on the instrument family
     tech_file_loop = loop3_tech_file if is_VMP3 else loop4_tech_file
     
-    # Convert user parameters to ecc_parms parameter object
-    ecc_parms_loop = convert_LOOP_params_ecc(parameters)
+    ecc_parms_loop = make_loop_ecc_params(api, parameters)
     
-    # Store ecc file and parameters in namedtuple
     LOOP_tech = namedtuple('LOOP_tech', 'ecc_file ecc_params user_params')
     loop_tech = LOOP_tech(tech_file_loop, ecc_parms_loop, parameters)
     
     return loop_tech
+
+#  !!! From old module. Must review them later
+# def duration_to_1s(api, technique, tech_id):
+#     new_duration = 1
+#     parameters={
+#         'current_step':  ECC_parm("Current_step", float),
+#         'voltage_step':  ECC_parm("Voltage_step", float),
+#         'step_duration': ECC_parm("Duration_step", float),
+#         'vs_init':       ECC_parm("vs_initial", bool),
+#         }
+#     idx = 0 # Only one current step is used 
+#     p_current_steps  = list()
+#     if tech_id == 155:
+#        p_current_steps.append( make_ecc_parm(api, parameters['current_step'], technique.user_params.current, idx ) )
+#     elif tech_id == 101:
+#        p_current_steps.append( make_ecc_parm(api, parameters['voltage_step'], technique.user_params.voltage, idx ) )
+#     p_current_steps.append( make_ecc_parm(api, parameters['step_duration'], new_duration, idx ) )
+#     p_current_steps.append( make_ecc_parm(api, parameters['vs_init'], technique.user_params.vs_init, idx ) )
+#     return make_ecc_parms(api,*p_current_steps)
+
+
+# def reset_duration(api, technique, tech_id):
+#     parameters={
+#         'current_step':  ECC_parm("Current_step", float),
+#         'voltage_step':  ECC_parm("Voltage_step", float),
+#         'step_duration': ECC_parm("Duration_step", float),
+#         'vs_init':       ECC_parm("vs_initial", bool),}
+#     idx = 0 # Only one current step is used 
+#     p_current_steps  = list()
+#     if tech_id == 155:
+#        p_current_steps.append( make_ecc_parm(api, parameters['current_step'], technique.user_params.current, idx ) )
+#     elif tech_id == 101:
+#        p_current_steps.append( make_ecc_parm(api, parameters['voltage_step'], technique.user_params.voltage, idx ) )
+#     p_current_steps.append( make_ecc_parm(api, parameters['step_duration'], technique.user_params.duration, idx ) )
+#     p_current_steps.append( make_ecc_parm(api, parameters['vs_init'], technique.user_params.vs_init, idx ) )
+#     return make_ecc_parms(api,*p_current_steps)
+
+# def update_CA_voltage(api, Ewe, technique):
+#     CA_parm_names = {
+#         'voltage_step':  ECC_parm("Voltage_step", float),
+#         'step_duration': ECC_parm("Duration_step", float),
+#         'vs_init':       ECC_parm("vs_initial", bool),
+#         }
+#     idx = 0 # Only one current step is used 
+#     p_voltage_steps  = list()
+#     p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['voltage_step'], Ewe, idx ) )
+#     p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['step_duration'], technique.user_params.duration, idx ) )
+#     p_voltage_steps.append( make_ecc_parm(api, CA_parm_names['vs_init'], technique.user_params.vs_init, idx ) )
+#     return make_ecc_parms(api,*p_voltage_steps)

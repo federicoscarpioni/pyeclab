@@ -14,8 +14,10 @@ passed as a list to the load_sequence() method of the BiologiDevice class.
 '''
 
 import tech_names as tn
-from api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
+from api.kbio_tech import make_ecc_parm, make_ecc_parms
+import tech_names as tnames
 from dataclasses import dataclass
+
 
 @ dataclass
 class OCV:
@@ -36,10 +38,10 @@ class OCV:
         self.ecc_file = ocv3_tech_file if device.is_VMP3 else ocv4_tech_file
 
     def make_ecc_params(self, device):
-        p_duration = make_ecc_parm(device, OCV_parm_names['duration'], self.duration)
-        p_record = make_ecc_parm(device, OCV_parm_names['record_dt'], self.record_dt)
-        p_erange = make_ecc_parm(device, OCV_parm_names['E_range'], self.e_range)
-        p_band = make_ecc_parm(device, OCV_parm_names['bandwidth'], self.bandwidth)
+        p_duration = make_ecc_parm(device, tnames.OCV_parm_names['duration'], self.duration)
+        p_record = make_ecc_parm(device, tnames.OCV_parm_names['record_dt'], self.record_dt)
+        p_erange = make_ecc_parm(device, tnames.OCV_parm_names['E_range'], self.e_range)
+        p_band = make_ecc_parm(device, tnames.OCV_parm_names['bandwidth'], self.bandwidth)
         self.ecc_parms_OCV = make_ecc_parms(device,
                                             p_duration,
                                             p_record,
