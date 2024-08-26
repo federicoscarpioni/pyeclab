@@ -97,11 +97,11 @@ class Channel:
                                         set_duration_to_1s(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
                                         self.sequence[self.current_tech_index].ecc_file)
         
-        self.bio_device.UpdateParameters(self.bio_device.device_id,
-                                        self.num,
-                                        self.current_tech_index,
-                                        reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-                                        self.sequence[self.current_tech_index].ecc_file)
+        # self.bio_device.UpdateParameters(self.bio_device.device_id,
+        #                                 self.num,
+        #                                 self.current_tech_index,
+        #                                 reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
+        #                                 self.sequence[self.current_tech_index].ecc_file)
     
     def _print_current_values(self):
         print(f"CH{self.num} > Ewe: {self.current_values.Ewe:4.3e} V | I: {self.current_values.I:4.3e} mA | Tech_ID: {TECH_ID(self.data_info.TechniqueID).name} | Tech_indx: {self.data_info.TechniqueIndex} | loop: {self.data_info.loop}")
@@ -221,10 +221,11 @@ class Channel:
         the condition tuple.
         '''
         latest_points = deque(maxlen = points_avarage)
-        self.conditions_avarage.append((quantity, operator, threshold, latest_points))
+        self.conditions_avarage.append((quantity, operator, threshold,points_avarage, latest_points))
 
-    def _update_value_buffer(self, quantity:str, buffer : deque):
-        buffer.append(getattr(self.latest_data, quantity, None))
+    def _update_value_buffer(self, buffer, data):
+        buffer.append(data)
+        return buffer
 
     def _get_avarage(self, buffer):
         return np.sum(buffer)/len(buffer)
@@ -234,11 +235,13 @@ class Channel:
         Check if a certain condition (< or > of a trashold value) is met for the
         avarage value of a sampled data over a certain number of points.
         '''
-        for quantity, operator, threshold, latest_points in self.conditions_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
+        for quantity, operator, threshold, points_avarage, latest_points in self.conditions_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
             quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if quantity_value is None:
                 continue
-            self._update_value_buffer(quantity, latest_points)
+            latest_points = self._update_value_buffer(latest_points, quantity_value)
+            if len(latest_points)<points_avarage:
+                continue
             avarage_value = self._get_avarage(latest_points)
             if operator == '>' and avarage_value >= threshold:
                 return True
