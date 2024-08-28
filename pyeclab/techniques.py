@@ -36,7 +36,7 @@ For each technique are provided:
 '''
 
 import api.kbio_types as KBIO
-from kbio_api import KBIO_api
+from api.kbio_api import KBIO_api
 from api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from dataclasses import dataclass
 from collections import namedtuple

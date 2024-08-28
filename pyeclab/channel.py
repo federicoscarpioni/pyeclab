@@ -79,7 +79,6 @@ class Channel:
     def stop(self):
         self.bio_device.stop_channel(self.num)
         self._get_measurement_values() # ? There shoudl be still the latest values to retrive
-        self._close_saving_file()
         print(f'CH{self.num}: interrupted by the user')  
 
     def start_live_plot(self):

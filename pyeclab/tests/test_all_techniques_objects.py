@@ -9,24 +9,24 @@ binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 # Istantiate device class
 device = BiologicDevice(ip_address, binary_path = binary_path)
 # Create OCV technique
-duration_OCV = 10
-dt_OCV       = 0.01
+duration_OCV = 60*60*1
+dt_OCV       = 1
 E_range      = 0
 bw           = 4
 OCV_user_params = tech.OCV_params(duration_OCV, dt_OCV, E_range, bw)
 OCV_tech = tech.OCV_tech(device, device.is_VMP3, OCV_user_params)
 # Create CP technique
 repeat_count   = 0
-record_dt      = 0.01
+record_dt      = 1
 record_dE      = 1        # Volts
-current        = 0.000001    # Ampers
-duration_CP    = 10        # Seconds (sec * min * hours)
+current        = 0    # Ampers
+duration_CP    = 60*60*1        # Seconds (sec * min * hours)
 limit_E_crg    = 0b11111
 E_lim_high     = 5        # Volts
 E_lim_low      = -5         # Volts
-i_range        = 5
+i_range        = 6
 exit_cond      = 1
-xctr           = 0
+xctr           = 0b00001000
 CP_user_params = tech.CPLIM_params(current, 
                                      duration_CP, 
                                      False, 
@@ -46,8 +46,8 @@ CP_tech = tech.CPLIM_tech(device, device.is_VMP3, CP_user_params)
 #---CA1---#
 repeat_count   = 0
 record_dI      = 1   # Ampers
-voltage        = 0.1   # Volts
-duration_CA    = 10     # Seconds (sec * min * hours)
+voltage        = 0   # Volts
+duration_CA    = 60*60*1     # Seconds (sec * min * hours)
 CA_user_params    = tech.CA_params(voltage, 
                                   duration_CA, 
                                   False, 
@@ -67,9 +67,9 @@ tech_index_start   = 0
 LOOP_user_params = tech.LOOP_params(number_repetition, tech_index_start)
 LOOP_tech    = tech.loop_tech(device, device.is_VMP3, LOOP_user_params)
 # Make sequence
-sequence = [OCV_tech, CP_tech, LOOP_tech]
+sequence = [CP_tech]
 # Istantiate channel
-test_options = ChannelOptions('2408261122_test_capacitive_behaviour_high_fs')
+test_options = ChannelOptions('2408281137_test_CP_full_dummy_3electrodes_pico_connected_sine_wave_smaller_IRange')
 channel1=Channel(device,
                  1,
                  'E:/Experimental_data/Federico/2024/python_software_test',
@@ -77,5 +77,5 @@ channel1=Channel(device,
                  do_live_plot = True,
                  do_print_values = False,
                  )
-channel1.load_sequence(sequence, ask_ok=True)
+channel1.load_sequence(sequence, ask_ok=False)
 channel1.start()

@@ -10,9 +10,9 @@ and decoding experiment records.
 """
 
 from dataclasses import dataclass
-from kbio_api import KBIO_api as api
-import kbio_types as KBIO
-from tech_types import TECH_ID
+from api.kbio_api import KBIO_api as api
+import api.kbio_types as KBIO
+from api.tech_types import TECH_ID
 
 @dataclass
 class ECC_parm :
