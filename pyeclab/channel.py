@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from collections import namedtuple, deque
 from threading import Thread
-import msvcrt
+from np_rw_buffer import RingBuffer
 import time
 from device import BiologicDevice
 from techniques import set_duration_to_1s, reset_duration
@@ -14,7 +14,7 @@ from liveplot import LivePlot
 # ! Add a logger
 
 ''' 
-!!! Works only for dt of 1 second of the potentiost. The problem is how to 
+!!! Works only for dt of 1 second of the potentiostat. The problem is how to 
 !!! save correctly a matrix of values instead of an array
 '''
 
@@ -27,26 +27,53 @@ class Channel:
                  channel_num : int, 
                  saving_dir : str,
                  channel_options : namedtuple,
-                 do_live_plot : bool = True, # ? Deside which naming convention to use for booleans
-                 do_record_Ece : bool = False,
-                 do_record_analog_in1 : bool = False,
-                 do_record_analog_in2 : bool = False,
-                 do_print_values : bool  = False):
-        self.bio_device       = bio_device
-        self.num              = channel_num
-        self.experiment_name  = channel_options.experiment_name # ? maybe I can save directly the whole options
-        self.saving_path      = saving_dir + '/' + self.experiment_name
-        self.print_values     = do_print_values
-        self.do_live_plot     = do_live_plot
-        self.conditions       = []
-        self.conditions_avarage = []
-        self.current_tech_index = 0 # I don't like to have this attribute, it is needed only for the very first main loop beacause it is not yet created
-        self.is_running      = False
+                 is_live_plotting : bool = True, # ? Deside which naming convention to use for booleans
+                 is_recording_Ece : bool = False,
+                 is_external_controlled : bool = False,
+                 is_recording_analog_In1 : bool = False,
+                 is_recording_analog_In2 : bool = False,
+                 is_charge_recorded: bool = True,
+                 is_printing_values : bool  = False,
+                 callbacks = []):
+        self.bio_device              = bio_device
+        self.num                     = channel_num
+        # Saving details
+        self.experiment_name         = channel_options.experiment_name # ? maybe I can save directly the whole options
+        self.saving_path             = saving_dir + '/' + self.experiment_name
+        # Class behaviour
+        self.print_values            = is_printing_values
+        self.is_live_plotting        = is_live_plotting
+        self.callbacks               = callbacks
+        # Hardware setting
+        self.conditions              = []
+        self.conditions_average      = []
+        self.current_tech_index      = 0 # I don't like to have this attribute, it is needed only for the very first main loop beacause it is not yet created
+        self.is_running              = False
+        self.is_recording_Ece        = is_recording_Ece
+        self.is_external_controlled  = is_external_controlled
+        self.is_recording_analog_In1 = is_recording_analog_In1
+        self.is_recording_analog_In2 = is_recording_analog_In2
+        self.is_charge_recorded      = is_charge_recorded
+        self.xtr_param               = self.generate_xctr_param()
+
+
 
     ## Methods for setting hardware for the experiment ##
 
     def set_hardware_config(self):
         ...
+
+    def generate_xctr_param(self):
+        bitfield = 0
+        bitfield |= self.is_recording_Ece << 0  # Record Ece at bit position 1
+        bitfield |= self.is_recording_analog_In1 << 1  # Record Analog IN1 at bit position 2
+        bitfield |= self.is_recording_analog_In2 << 2  # Record Analog IN2 at bit position 3
+        bitfield |= self.is_external_controlled << 3  # Enable External ctrl at bit position 4
+        # bit 5 is reserved
+        # No information for bit position 6 (Record Control), assuming not needed
+        bitfield |= self.is_charge_recorded << 6  # Record Charge at bit position 7
+        # No information for bit position 8 (Record IRange), assuming not needed
+        return bitfield
 
     def load_sequence(self, sequence, ask_ok = False): 
         self.sequence = sequence
@@ -72,7 +99,7 @@ class Channel:
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         # Initialize liveplot
-        if self.do_live_plot: self.start_live_plot()
+        if self.is_live_plotting: self.start_live_plot()
         print(f'CH{self.num}: Experiment started')
         
 
@@ -108,7 +135,7 @@ class Channel:
 
     ## Methods for managing data collaction in the main loop ##
 
-    def _retrive_data_loop(self, sleep_time = 1):
+    def _retrive_data_loop(self, sleep_time = 0.1):
         '''
         Retrives latest measurement data from the BioLogic device, converts and 
         saves. The sequence progression is also monitored.
@@ -122,7 +149,7 @@ class Channel:
             # Update plot
             # self.liveplot.update_plot()
             # Check if the technique has changed on the instrument
-            self._monitoring_sequnce_progression()
+            self._monitoring_sequence_progression()
             # Brake the loop if sequence is terminates
             if self.current_values.State == 0:
                 self._close_saving_file()
@@ -176,20 +203,25 @@ class Channel:
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
  
-    def _monitoring_sequnce_progression(self):
+    def _monitoring_sequence_progression(self):
         '''
-        This methods checks when a new technique is started in the instrument. This
-        can be used to add new beahviours to the application.
+        This method checks when a new technique is started in the instrument. This
+        can be used to add new behaviours to the application.
         '''
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id    = self.data_info.TechniqueID
-        if self.is_running == False:
+        if not self.is_running:
             self.current_tech_index = new_tech_index
             self.current_tech_id    = new_tech_id
             self.is_running = True
         # Check if a new technique is running
-        if self.current_tech_index != new_tech_index : 
+        if self.current_tech_index != new_tech_index :
+            # Execute external callbacks
+            for callback in self.callbacks:
+                if callable(callback):
+                    callback()
             print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
+            self.current_tech_id = new_tech_id
             self.current_tech_index = new_tech_index
 
 
@@ -217,14 +249,13 @@ class Channel:
 
     def set_condition_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
         '''
-        latest_points is a circular buffer in the form of deque. It is saved in 
-        the condition tuple.
+        latest_points is a circular buffer. It is saved in the condition tuple.
         '''
-        latest_points = deque(maxlen = points_avarage)
-        self.conditions_avarage.append((quantity, operator, threshold,points_avarage, latest_points))
+        latest_points = RingBuffer(points_avarage)
+        self.conditions_average.append((quantity, operator, threshold,points_avarage, latest_points))
 
     def _update_value_buffer(self, buffer, data):
-        buffer.append(data)
+        buffer.write(data)
         return buffer
 
     def _get_avarage(self, buffer):
@@ -235,7 +266,7 @@ class Channel:
         Check if a certain condition (< or > of a trashold value) is met for the
         avarage value of a sampled data over a certain number of points.
         '''
-        for quantity, operator, threshold, points_avarage, latest_points in self.conditions_avarage:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
+        for quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
             quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
             if quantity_value is None:
                 continue
@@ -258,32 +289,50 @@ class Channel:
     def _create_saving_file(self):       
         self.saving_file = open(self.saving_path + '/measurement_data.txt', 'w+') 
         # Write headers
-        self.saving_file.write('Time/s\tVoltage/V\tCurrent/A\tTechnique_num\tLoop_num\n') #!!! Include the possibility to add Ece and Aux
+        if self.is_recording_Ece and self.is_charge_recorded:
+            self.saving_file.write('Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n')
+        elif self.is_recording_Ece:
+            self.saving_file.write('Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n')
+        elif self.is_charge_recorded:
+            self.saving_file.write('Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n')
+        else:
+            self.saving_file.write('Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n')
 
     def _write_latest_data_to_file(self):
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
         loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
-        # Concatenate measurement values and technique data. The use of if statment
-        # allows to include also the case of recorder Ece and Auxiliary input
-        # for i in self.latest_data:
-        #     data_to_save = np.concatenate((self.latest_data[i]), axis=1)
-        # data_to_save = np.hstack((self.latest_data[0],self.latest_data[1], self.latest_data[2]))
-        # data_to_save = np.hstack((data_to_save, technique_num, loop_num)) 
-        data_to_save = np.column_stack((self.latest_data[0],
-                                        self.latest_data[1], 
-                                        self.latest_data[2],
-                                        technique_num, 
-                                        loop_num))
-        # print(data_to_save.shape)
-        # Acquire the lock to avoid the file to be red while writin and cause data corruption
-        # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_LOCK, 1) # ? Maybe this is note necessary
-        # Write data to saving_file
-        # data_to_save.tofile(self.saving_file, sep= '\t', format = '%4.3e') # Old approach
-        # self.saving_file.write('\n')
+
+        # !!! This block of logic statement is horrible, there must be a better solution! Also, this is not including Auxiliary In record
+        if self.is_recording_Ece and self.is_charge_recorded:
+            data_to_save = np.column_stack((self.latest_data[0],
+                                            self.latest_data[1],
+                                            self.latest_data[2],
+                                            self.latest_data[3],
+                                            self.latest_data[4],
+                                            technique_num,
+                                            loop_num))
+        elif self.is_recording_Ece:
+            data_to_save = np.column_stack((self.latest_data[0],
+                                            self.latest_data[1],
+                                            self.latest_data[2],
+                                            self.latest_data[3],
+                                            technique_num,
+                                            loop_num))
+        elif self.is_charge_recorded:
+            data_to_save = np.column_stack((self.latest_data[0],
+                                            self.latest_data[1],
+                                            self.latest_data[2],
+                                            self.latest_data[3],
+                                            technique_num,
+                                            loop_num))
+        else:
+            data_to_save = np.column_stack((self.latest_data[0],
+                                            self.latest_data[1],
+                                            self.latest_data[2],
+                                            technique_num,
+                                            loop_num))
+
         np.savetxt(self.saving_file, data_to_save, fmt= '%4.3e', delimiter= '\t')
-        # np.savetxt(self.saving_file, data_to_save, delimiter = '\t', fmt= '%4.3e') # This numpy version doesn't work for some reason
-        # Release the lock
-        # msvcrt.locking(self.saving_file.fileno(), msvcrt.LK_UNLCK, 1)
         self.saving_file.flush()
 
     def _close_saving_file(self):
