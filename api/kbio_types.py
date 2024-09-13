@@ -16,7 +16,7 @@ from math import nan
 from enum import Enum, EnumMeta
 from dataclasses import dataclass
 
-from api.c_utils import *
+from pyeclab.api.c_utils import *
 
 #==============================================================================#
 

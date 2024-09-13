@@ -1,4 +1,4 @@
-from api.kbio_tech import ECC_parm
+from pyeclab.api.kbio_tech import ECC_parm
 
 OCV_parm_names = {
             'duration':  ECC_parm("Rest_time_T", float),

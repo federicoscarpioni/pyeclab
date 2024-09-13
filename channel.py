@@ -6,10 +6,10 @@ from collections import namedtuple, deque
 from threading import Thread
 from np_rw_buffer import RingBuffer
 import time
-from device import BiologicDevice
-from techniques import set_duration_to_1s, reset_duration
-from api.tech_types import TECH_ID
-from liveplot import LivePlot
+from pyeclab.device import BiologicDevice
+from pyeclab.techniques import set_duration_to_1s, reset_duration
+from pyeclab.api.tech_types import TECH_ID
+from pyeclab.liveplot import LivePlot
 
 # ! Add a logger
 
@@ -32,7 +32,7 @@ class Channel:
                  is_external_controlled : bool = False,
                  is_recording_analog_In1 : bool = False,
                  is_recording_analog_In2 : bool = False,
-                 is_charge_recorded: bool = True,
+                 is_charge_recorded: bool = False,
                  is_printing_values : bool  = False,
                  callbacks = []):
         self.bio_device              = bio_device
@@ -44,10 +44,11 @@ class Channel:
         self.print_values            = is_printing_values
         self.is_live_plotting        = is_live_plotting
         self.callbacks               = callbacks
+        self.current_tech_index      = 0 
+        self.current_loop            = 0
         # Hardware setting
         self.conditions              = []
         self.conditions_average      = []
-        self.current_tech_index      = 0 # I don't like to have this attribute, it is needed only for the very first main loop beacause it is not yet created
         self.is_running              = False
         self.is_recording_Ece        = is_recording_Ece
         self.is_external_controlled  = is_external_controlled
@@ -153,6 +154,7 @@ class Channel:
             # Brake the loop if sequence is terminates
             if self.current_values.State == 0:
                 self._close_saving_file()
+                self._execute_callbacks()
                 print(f'CH{self.num} > Measure terminated')
                 break
             # Stop current technique if any software limit is reached
@@ -202,7 +204,12 @@ class Channel:
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I # !!! I think is better to output a named tuple
- 
+    
+    def _execute_callbacks(self):
+        for callback in self.callbacks:
+            if callable(callback):
+                callback()
+    
     def _monitoring_sequence_progression(self):
         '''
         This method checks when a new technique is started in the instrument. This
@@ -210,19 +217,19 @@ class Channel:
         '''
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id    = self.data_info.TechniqueID
+        new_loop       = self.data_info.loop
         if not self.is_running:
-            self.current_tech_index = new_tech_index
-            self.current_tech_id    = new_tech_id
             self.is_running = True
         # Check if a new technique is running
-        if self.current_tech_index != new_tech_index :
-            # Execute external callbacks
-            for callback in self.callbacks:
-                if callable(callback):
-                    callback()
+        if self.current_loop != new_loop : #and self.current_tech_index != new_tech_index :
+            self.current_tech_index = new_tech_index
+            self.current_tech_id    = new_tech_id
+            self.current_loop = self.data_info.loop
+            self._execute_callbacks()
             print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
             self.current_tech_id = new_tech_id
             self.current_tech_index = new_tech_index
+            self.current_loop = new_loop
 
 
 

@@ -18,7 +18,7 @@ OCV_tech = tech.OCV_tech(device, device.is_VMP3, OCV_user_params)
 # Create CP technique
 repeat_count   = 0
 record_dt      = 1
-record_dE      = 1        # Volts
+record_dE      = 1    # Volts
 current        = 0    # Ampers
 duration_CP    = 60*60*1        # Seconds (sec * min * hours)
 limit_E_crg    = 0b11111
@@ -67,9 +67,9 @@ tech_index_start   = 0
 LOOP_user_params = tech.LOOP_params(number_repetition, tech_index_start)
 LOOP_tech    = tech.loop_tech(device, device.is_VMP3, LOOP_user_params)
 # Make sequence
-sequence = [CP_tech]
+sequence = [CA_tech]
 # Istantiate channel
-test_options = ChannelOptions('2408281137_test_CP_full_dummy_3electrodes_pico_connected_sine_wave_smaller_IRange')
+test_options = ChannelOptions('2408290727_test_CA_full_dummy_3electrodes_pico_multisine')
 channel1=Channel(device,
                  1,
                  'E:/Experimental_data/Federico/2024/python_software_test',

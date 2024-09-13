@@ -1,9 +1,9 @@
 '''
 This module
 '''
-from api.kbio_api import KBIO_api
-import api.kbio_types as types
-from api.c_utils import c_is_64b
+from pyeclab.api.kbio_api import KBIO_api
+import pyeclab.api.kbio_types as types
+from pyeclab.api.c_utils import c_is_64b
 import logging
 
 
@@ -84,7 +84,9 @@ class BiologicDevice(KBIO_api):
         def start_channel(self,channel) :
             self.StartChannel(self.device_id, channel)
             print(f'> Started channel {channel}')
-            
+        
+        # !!! Implement start_channels for channel synchronization    
+        
         def stop_channel(self, channel):
             self.StopChannel(self.device_id, channel)
             print(f'> Channel {channel} stopped')
