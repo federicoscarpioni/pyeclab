@@ -222,7 +222,6 @@ class Channel:
             self.is_running = True
         # Check if a new technique is running
         if self.current_loop != new_loop : #and self.current_tech_index != new_tech_index :
-            print('New loop identified')
             self.current_tech_index = new_tech_index
             self.current_tech_id    = new_tech_id
             self.current_loop = self.data_info.loop
