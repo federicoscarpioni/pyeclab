@@ -20,8 +20,50 @@ from pyeclab.liveplot import LivePlot
 
 ChannelOptions = namedtuple('ChannelOptions', ['experiment_name'])
 
+class HardwareConfigManger:
+    def set_hardware_config(self, ...):
+        ...
+
+    def generate_xctr_param(self, ...):
+        ...
+
+class ExperimentManager:
+    def start(self, ...):
+        ...
+
+    def stop(self, ...):
+        ...
+
+class DataManager:
+    def __init__(self, saving_dir):
+        self.saving_dir = saving_dir
+
+    def create_exp_folder(self, ...):
+        ...
+
+    def write_data_to_file(self, ...):
+        ...
+
+class ConditionChecker:
+    def set_condition(self, ...):
+        ...
+
+    def check_limits(self, ...):
+        ...
+
 class Channel:
     
+    # New to implement:
+    # def __init__(self, bio_device, channel_num, saving_dir, channel_options,
+    #              hardware_manager, experiment_manager, data_manager, condition_checker):
+    #     self.bio_device = bio_device
+    #     self.num = channel_num
+    #     self.hardware_manager = hardware_manager
+    #     self.experiment_manager = experiment_manager
+    #     self.data_manager = data_manager
+    #     self.condition_checker = condition_checker
+    #     ...
+
     def __init__(self,
                  bio_device : BiologicDevice, 
                  channel_num : int, 
