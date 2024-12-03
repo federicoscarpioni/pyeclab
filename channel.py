@@ -136,6 +136,14 @@ class Channel:
 
     ## Methods for managing data collaction in the main loop ##
 
+    def _final_actions(self):
+        '''
+        Operations to perfom when the sequence is completed.
+        '''
+        self._close_saving_file()
+        self._execute_callbacks()
+        print(f'CH{self.num} > Measure terminated')
+    
     def _retrive_data_loop(self, sleep_time = 0.1):
         '''
         Retrives latest measurement data from the BioLogic device, converts and 
@@ -153,9 +161,7 @@ class Channel:
             self._monitoring_sequence_progression()
             # Brake the loop if sequence is terminates
             if self.current_values.State == 0:
-                self._close_saving_file()
-                self._execute_callbacks()
-                print(f'CH{self.num} > Measure terminated')
+                self._final_actions()
                 break
             # Stop current technique if any software limit is reached
             if self._check_software_limits():
@@ -210,6 +216,12 @@ class Channel:
             if callable(callback):
                 callback()
     
+    def _update_sequence_trakers(self):
+        self.current_tech_index = self.data_info.TechniqueIndex
+        self.current_tech_id    = self.data_info.TechniqueID
+        self.current_loop       = self.data_info.loop
+        
+    
     def _monitoring_sequence_progression(self):
         '''
         This method checks when a new technique is started in the instrument. This
@@ -221,15 +233,15 @@ class Channel:
         if not self.is_running:
             self.is_running = True
         # Check if a new technique is running
-        if self.current_loop != new_loop : #and self.current_tech_index != new_tech_index :
-            self.current_tech_index = new_tech_index
-            self.current_tech_id    = new_tech_id
-            self.current_loop = self.data_info.loop
+        if self.current_loop != new_loop or self.current_tech_index != new_tech_index :
+            self._update_sequence_trakers()
             self._execute_callbacks()
             print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
-            self.current_tech_id = new_tech_id
-            self.current_tech_index = new_tech_index
-            self.current_loop = new_loop
+            # self.current_tech_id = new_tech_id
+            # self.current_tech_index = new_tech_index
+            # self.current_loop = new_loop
+            
+            print(f'real loop is {self.current_loop}, real current technique is {self.current_tech_index}' )
 
 
 
