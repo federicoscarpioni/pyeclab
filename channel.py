@@ -20,36 +20,36 @@ from pyeclab.liveplot import LivePlot
 
 ChannelOptions = namedtuple('ChannelOptions', ['experiment_name'])
 
-class HardwareConfigManger:
-    def set_hardware_config(self, ...):
-        ...
+# class HardwareConfigManger:
+#     def set_hardware_config(self, ...):
+#         ...
 
-    def generate_xctr_param(self, ...):
-        ...
+#     def generate_xctr_param(self, ...):
+#         ...
 
-class ExperimentManager:
-    def start(self, ...):
-        ...
+# class ExperimentManager:
+#     def start(self, ...):
+#         ...
 
-    def stop(self, ...):
-        ...
+#     def stop(self, ...):
+#         ...
 
-class DataManager:
-    def __init__(self, saving_dir):
-        self.saving_dir = saving_dir
+# class DataManager:
+#     def __init__(self, saving_dir):
+#         self.saving_dir = saving_dir
 
-    def create_exp_folder(self, ...):
-        ...
+#     def create_exp_folder(self, ...):
+#         ...
 
-    def write_data_to_file(self, ...):
-        ...
+#     def write_data_to_file(self, ...):
+#         ...
 
-class ConditionChecker:
-    def set_condition(self, ...):
-        ...
+# class ConditionChecker:
+#     def set_condition(self, ...):
+#         ...
 
-    def check_limits(self, ...):
-        ...
+#     def check_limits(self, ...):
+#         ...
 
 class Channel:
     
@@ -258,7 +258,7 @@ class Channel:
             if callable(callback):
                 callback()
     
-    def _update_sequence_trakers(self):
+    def _update_sequence_trackers(self):
         self.current_tech_index = self.data_info.TechniqueIndex
         self.current_tech_id    = self.data_info.TechniqueID
         self.current_loop       = self.data_info.loop
@@ -276,7 +276,7 @@ class Channel:
             self.is_running = True
         # Check if a new technique is running
         if self.current_loop != new_loop or self.current_tech_index != new_tech_index :
-            self._update_sequence_trakers()
+            self._update_sequence_trackers()
             self._execute_callbacks()
             print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
             # self.current_tech_id = new_tech_id
