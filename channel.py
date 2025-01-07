@@ -275,15 +275,10 @@ class Channel:
         if not self.is_running:
             self.is_running = True
         # Check if a new technique is running
-        if self.current_loop != new_loop or self.current_tech_index != new_tech_index :
+        if self.current_loop != new_loop or self.current_tech_index != new_tech_index : # the second condition should be sufficient...
             self._update_sequence_trackers()
             self._execute_callbacks()
             print(f'> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})')
-            # self.current_tech_id = new_tech_id
-            # self.current_tech_index = new_tech_index
-            # self.current_loop = new_loop
-            
-            print(f'real loop is {self.current_loop}, real current technique is {self.current_tech_index}' )
 
 
 
