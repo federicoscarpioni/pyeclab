@@ -4,7 +4,15 @@ from datetime import datetime
 from pathlib import Path
 from collections import namedtuple, deque
 from threading import Thread
-from np_rw_buffer import RingBuffer
+
+try:
+    from np_rw_buffer import RingBuffer
+except ImportError:
+    _has_buffer = False
+    print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
+else:
+    _has_buffer = True
+
 import time
 from pyeclab.device import BiologicDevice
 from pyeclab.techniques import set_duration_to_1s, reset_duration
@@ -328,6 +336,10 @@ class Channel:
         """
         latest_points is a circular buffer. It is saved in the condition tuple.
         """
+        if not _has_buffer:
+            raise ImportError(
+                "The optional dependency 'np-rw-buffer' is required to do this, install it with 'pip install pyeclab[buffer]'"
+            )
         latest_points = RingBuffer(points_avarage)
         self.conditions_average.append((quantity, operator, threshold, points_avarage, latest_points))
 

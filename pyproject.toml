@@ -19,6 +19,9 @@ dependencies = [
 license = "MIT"
 license-files = ["LICENSE"]
 
+[project.optional-dependencies]
+buffer = ["np-rw-ringbuffer"]
+
 [project.urls]
 Repository = "https://github.com/federicoscarpioni/pyeclab.git"
 Issues = "https://github.com/federicoscarpioni/pyeclab/issues"
