@@ -1,9 +1,16 @@
-import numpy as np
 import json
+import time
+from collections import deque, namedtuple
 from datetime import datetime
 from pathlib import Path
-from collections import namedtuple, deque
 from threading import Thread
+
+import numpy as np
+
+from pyeclab.api.tech_types import TECH_ID
+from pyeclab.device import BiologicDevice
+from pyeclab.liveplot import LivePlot
+from pyeclab.techniques import reset_duration, set_duration_to_1s
 
 try:
     from np_rw_buffer import RingBuffer
@@ -12,12 +19,6 @@ except ImportError:
     print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
 else:
     _has_buffer = True
-
-import time
-from pyeclab.device import BiologicDevice
-from pyeclab.techniques import set_duration_to_1s, reset_duration
-from pyeclab.api.tech_types import TECH_ID
-from pyeclab.liveplot import LivePlot
 
 # ! Add a logger
 

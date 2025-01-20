@@ -1,6 +1,7 @@
 import time
-from pyeclab.device import BiologicDevice
+
 import pyeclab.techniques as tech
+from pyeclab.device import BiologicDevice
 
 # IP address of the instrument
 ip_address = "172.28.26.11"

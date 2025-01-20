@@ -10,8 +10,9 @@ and decoding experiment records.
 """
 
 from dataclasses import dataclass
-from pyeclab.api.kbio_api import KBIO_api as api
+
 import pyeclab.api.kbio_types as KBIO
+from pyeclab.api.kbio_api import KBIO_api as api
 from pyeclab.api.tech_types import TECH_ID
 
 

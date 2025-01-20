@@ -23,9 +23,8 @@ This behaviour can be overriden in the BL_xxx functions with an abort flag set t
 from array import array
 
 import pyeclab.api.kbio_types as KBIO
-
 from pyeclab.api.c_utils import *
-from pyeclab.api.utils import pp_plural, warn_diff, exception_brief
+from pyeclab.api.utils import exception_brief, pp_plural, warn_diff
 
 # ==============================================================================#
 

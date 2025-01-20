@@ -2,10 +2,11 @@
 This module
 """
 
-from pyeclab.api.kbio_api import KBIO_api
+import logging
+
 import pyeclab.api.kbio_types as types
 from pyeclab.api.c_utils import c_is_64b
-import logging
+from pyeclab.api.kbio_api import KBIO_api
 
 
 class BiologicDevice(KBIO_api):

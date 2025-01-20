@@ -35,13 +35,13 @@ For each technique are provided:
 
 """
 
+from collections import namedtuple
+from dataclasses import dataclass
+
 import pyeclab.api.kbio_types as KBIO
+import pyeclab.tech_names as tn
 from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
-from dataclasses import dataclass
-from collections import namedtuple
-import pyeclab.tech_names as tn
-
 
 # === Auxiliary functions ======================================================#
 

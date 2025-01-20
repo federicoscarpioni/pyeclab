@@ -12,9 +12,9 @@ the _pack_ attribute in the Structures.
 
 """
 
-from math import nan
-from enum import Enum, EnumMeta
 from dataclasses import dataclass
+from enum import Enum, EnumMeta
+from math import nan
 
 from pyeclab.api.c_utils import *
 

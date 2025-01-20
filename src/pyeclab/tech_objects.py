@@ -13,10 +13,11 @@ Having one dataclass per technique allows to concatante techniques into a sequen
 passed as a list to the load_sequence() method of the BiologiDevice class.
 """
 
-import pyeclab.tech_names as tn
-from pyeclab.api.kbio_tech import make_ecc_parm, make_ecc_parms
-import pyeclab.tech_names as tnames
 from dataclasses import dataclass
+
+import pyeclab.tech_names as tn
+import pyeclab.tech_names as tnames
+from pyeclab.api.kbio_tech import make_ecc_parm, make_ecc_parms
 
 
 @dataclass

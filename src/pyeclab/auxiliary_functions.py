@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
+
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 # ------------------------------------------------------------------------------#
