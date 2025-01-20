@@ -1,0 +1,34 @@
+[project]
+name = "pyeclab"
+version = "0.1.0"
+description = "A Python wrapper around the EC-Lab SDK for the control of BioLogic potentiostats."
+authors = [
+    {name = "Federico Scarpioni", email = "federicoscarpioni@gmail.com"},
+    {name = "Jan Conen", email = "janconen@posteo.de"},
+]
+maintainers = [
+    {name = "Federico Scarpioni", email = "federicoscarpioni@gmail.com"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "matplotlib",
+    "pandas",
+    "numpy",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.urls]
+Repository = "https://github.com/federicoscarpioni/pyeclab.git"
+Issues = "https://github.com/federicoscarpioni/pyeclab/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "S", "UP"]
