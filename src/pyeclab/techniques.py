@@ -37,8 +37,10 @@ For each technique are provided:
 
 from collections import namedtuple
 from dataclasses import dataclass
+from enum import Enum
+from wsgiref.validate import validator
 
-from attrs import define
+from attrs import define, field, validators
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.device import BiologicDevice
@@ -135,18 +137,32 @@ def OCV_tech(api, is_VMP3, parameters):
 
 
 # ------CPLIM------- #
+
+
+class EXIT_COND(Enum):
+    NEXT_STEP = 0
+    NEXT_TECHNIQUE = 1
+    STOP_EXPERIMENT = 2
+
+
 @define
 class CPLIM_params:
     current: float
-    duration: float
+    duration: float = field(validator=validators.ge(0))
     vs_init: bool
-    nb_steps: int
-    record_dt: float
-    record_dE: float
-    repeat: int
-    i_range: KBIO.I_RANGE
+    nb_steps: int = field(validator=validators.and_(validators.ge(0), validators.le(19)))
+    record_dt: float = field(validator=validators.ge(0))
+    record_dE: float = field(validator=validators.ge(0))
+    repeat: int = field(validator=validators.ge(0))
+    i_range: KBIO.I_RANGE = field()
+
+    @i_range.validator
+    def check(self, attribute, value):
+        if value == KBIO.I_RANGE.I_RANGE_AUTO:
+            raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
+
     e_range: KBIO.E_RANGE
-    exit_cond: int
+    exit_cond: EXIT_COND
     limit_variable: int
     limit_values: float
     bandwidth: KBIO.BANDWIDTH
@@ -182,7 +198,7 @@ def make_CPLIM_ecc_params(api: BiologicDevice, parameters: CPLIM_params):
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["current_step"], parameters.current, idx))
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["step_duration"], parameters.duration, idx))
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["vs_init"], parameters.vs_init, idx))
-    p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["exit_cond"], parameters.exit_cond, idx))
+    p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["exit_cond"], parameters.exit_cond.value, idx))
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["test1_config"], parameters.limit_variable, idx))
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["test1_value"], parameters.limit_values, idx))
     p_nb_steps = make_ecc_parm(api, CPLIM_parm_names["nb_steps"], parameters.nb_steps)
