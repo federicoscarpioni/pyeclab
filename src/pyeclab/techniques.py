@@ -38,6 +38,8 @@ For each technique are provided:
 from collections import namedtuple
 from dataclasses import dataclass
 
+from attrs import define
+
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.device import BiologicDevice
 import pyeclab.tech_names as tn
@@ -133,7 +135,7 @@ def OCV_tech(api, is_VMP3, parameters):
 
 
 # ------CPLIM------- #
-@dataclass(kw_only=True)
+@define
 class CPLIM_params:
     current: float
     duration: float
