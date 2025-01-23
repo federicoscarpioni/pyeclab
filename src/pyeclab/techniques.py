@@ -133,7 +133,7 @@ def OCV_tech(api, is_VMP3, parameters):
 
 
 # ------CPLIM------- #
-@dataclass
+@dataclass(kw_only=True)
 class CPLIM_params:
     current: float
     duration: float
@@ -145,10 +145,10 @@ class CPLIM_params:
     i_range: int
     e_range: int
     exit_cond: int
-    xctr: int | None = None
     limit_variable: int
     limit_values: float
     bandwidth: int
+    xctr: int | None = None
     # analog_filter  : int
 
 
