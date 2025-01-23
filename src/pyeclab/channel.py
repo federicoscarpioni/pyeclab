@@ -86,7 +86,7 @@ class Channel:
         is_recording_analog_In2: bool = False,
         is_charge_recorded: bool = False,
         is_printing_values: bool = False,
-        callbacks=[],
+        callbacks: list | None = None,
     ):
         self.bio_device = bio_device
         self.num = channel_num
@@ -96,7 +96,7 @@ class Channel:
         # Class behaviour
         self.print_values = is_printing_values
         self.is_live_plotting = is_live_plotting
-        self.callbacks = callbacks
+        self.callbacks = [] if callbacks is None else callbacks
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
@@ -339,7 +339,8 @@ class Channel:
         """
         if not _has_buffer:
             raise ImportError(
-                "The optional dependency 'np-rw-buffer' is required to do this, install it with 'pip install pyeclab[buffer]'"
+                """The optional dependency 'np-rw-buffer' is required to do this, 
+                install it with 'pip install pyeclab[buffer]'"""
             )
         latest_points = RingBuffer(points_avarage)
         self.conditions_average.append((quantity, operator, threshold, points_avarage, latest_points))
