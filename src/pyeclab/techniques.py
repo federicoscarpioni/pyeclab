@@ -39,6 +39,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 
 import pyeclab.api.kbio_types as KBIO
+from pyeclab.device import BiologicDevice
 import pyeclab.tech_names as tn
 from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
@@ -144,14 +145,14 @@ class CPLIM_params:
     i_range: int
     e_range: int
     exit_cond: int
-    xctr: int
+    xctr: int | None = None
     limit_variable: int
     limit_values: float
     bandwidth: int
     # analog_filter  : int
 
 
-def make_CPLIM_ecc_params(api, parameters):
+def make_CPLIM_ecc_params(api: BiologicDevice, parameters: CPLIM_params):
     # dictionary of CP parameters (non exhaustive)
     CPLIM_parm_names = {
         "current_step": ECC_parm("Current_step", float),
@@ -182,15 +183,13 @@ def make_CPLIM_ecc_params(api, parameters):
     p_nb_steps = make_ecc_parm(api, CPLIM_parm_names["nb_steps"], parameters.nb_steps)
     p_record_dt = make_ecc_parm(api, CPLIM_parm_names["record_dt"], parameters.record_dt)
     p_record_dE = make_ecc_parm(api, CPLIM_parm_names["record_dE"], parameters.record_dE)
-    p_xctr = make_ecc_parm(api, CPLIM_parm_names["xctr"], parameters.xctr)
     p_repeat = make_ecc_parm(api, CPLIM_parm_names["repeat"], parameters.repeat)
     p_IRange = make_ecc_parm(api, CPLIM_parm_names["i_range"], parameters.i_range)
     p_ERange = make_ecc_parm(api, CPLIM_parm_names["e_range"], parameters.e_range)
     p_band = make_ecc_parm(api, CPLIM_parm_names["bandwidth"], parameters.bandwidth)
     # p_filter         = make_ecc_parm( api, CPLIM_parm_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
     # make the technique parameter array
-    ecc_parms_CPLIM = make_ecc_parms(
-        api,
+    parms = [
         *p_current_steps,
         p_nb_steps,
         p_record_dt,
@@ -198,14 +197,22 @@ def make_CPLIM_ecc_params(api, parameters):
         p_IRange,
         p_ERange,
         p_repeat,
-        p_xctr,
         p_band,
         # p_filter,
+    ]
+
+    if parameters.xctr:
+        p_xctr = make_ecc_parm(api, CPLIM_parm_names["xctr"], parameters.xctr)
+        parms.append(p_xctr)
+
+    ecc_parms_CPLIM = make_ecc_parms(
+        api,
+        *parms,
     )
     return ecc_parms_CPLIM
 
 
-def CPLIM_tech(api, is_VMP3, parameters):
+def CPLIM_tech(api: BiologicDevice, is_VMP3: bool, parameters: CPLIM_params):
     # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
     cplim3_tech_file = "cplimit.ecc"
     cplim4_tech_file = "cplimit4.ecc"
