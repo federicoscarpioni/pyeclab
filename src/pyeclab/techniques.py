@@ -142,12 +142,12 @@ class CPLIM_params:
     record_dt: float
     record_dE: float
     repeat: int
-    i_range: int
-    e_range: int
+    i_range: KBIO.I_RANGE
+    e_range: KBIO.E_RANGE
     exit_cond: int
     limit_variable: int
     limit_values: float
-    bandwidth: int
+    bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
     # analog_filter  : int
 
@@ -172,6 +172,9 @@ def make_CPLIM_ecc_params(api: BiologicDevice, parameters: CPLIM_params):
         # 'analog_filter': ECC_parm('Filter', int)
     }
 
+    if parameters.i_range == KBIO.I_RANGE.I_RANGE_AUTO:
+        raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
+
     idx = 0  # Only one current step is used
     p_current_steps = list()
     p_current_steps.append(make_ecc_parm(api, CPLIM_parm_names["current_step"], parameters.current, idx))
@@ -184,9 +187,9 @@ def make_CPLIM_ecc_params(api: BiologicDevice, parameters: CPLIM_params):
     p_record_dt = make_ecc_parm(api, CPLIM_parm_names["record_dt"], parameters.record_dt)
     p_record_dE = make_ecc_parm(api, CPLIM_parm_names["record_dE"], parameters.record_dE)
     p_repeat = make_ecc_parm(api, CPLIM_parm_names["repeat"], parameters.repeat)
-    p_IRange = make_ecc_parm(api, CPLIM_parm_names["i_range"], parameters.i_range)
-    p_ERange = make_ecc_parm(api, CPLIM_parm_names["e_range"], parameters.e_range)
-    p_band = make_ecc_parm(api, CPLIM_parm_names["bandwidth"], parameters.bandwidth)
+    p_IRange = make_ecc_parm(api, CPLIM_parm_names["i_range"], parameters.i_range.value)
+    p_ERange = make_ecc_parm(api, CPLIM_parm_names["e_range"], parameters.e_range.value)
+    p_band = make_ecc_parm(api, CPLIM_parm_names["bandwidth"], parameters.bandwidth.value)
     # p_filter         = make_ecc_parm( api, CPLIM_parm_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
     # make the technique parameter array
     parms = [
