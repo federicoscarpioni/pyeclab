@@ -147,6 +147,7 @@ class Channel:
         self._save_exp_metadata()
         # self._save_sequence_json()
         # Start channel on the device
+        self.first_loop = True
         self.bio_device.start_channel(self.num)
         # Start collecting data from the device
         loop_thread = Thread(target=self._retrive_data_loop)
@@ -170,6 +171,8 @@ class Channel:
         duration to the value of 1 second (This is a workaround for the lack
         of a specific function in the EC-Lab SDK).
         """
+        logger.debug(f"From end_technique: {self.data_info.TechniqueID=}")
+        logger.debug(f"From end_technique: {self.current_tech_id=}")
         self.bio_device.UpdateParameters(
             self.bio_device.device_id,
             self.num,
@@ -242,7 +245,7 @@ class Channel:
         When retriving latest agglomerated data from the instrument, the api will
         return three objects:
         current_values = current values of the measurement
-        data_info = info on  the technique that is running and on the buffer content
+        data_info = info on  the technique that is running and on the buffer content, e.g. TechniqueID
         data_buffer = data in a one dimension
         See the EC-Lab Development Kit manual for details on the data structures.
         """
@@ -265,7 +268,7 @@ class Channel:
             [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
         )
         # Convert buffer numbers in real values, I is 0 for OCV (ID 100)
-        if self.data_info.TechniqueID != 100:
+        if self.data_info.TechniqueID != TECH_ID.OCV.value:
             I = np.array(
                 [self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)]
             )
@@ -288,12 +291,15 @@ class Channel:
     def _update_sequence_trackers(self):
         self.current_tech_index = self.data_info.TechniqueIndex
         self.current_tech_id = self.data_info.TechniqueID
+        logger.debug(f"From _update_sequence_trackers:\n{self.current_tech_id=}\n{self.data_info.TechniqueID}")
         self.current_loop = self.data_info.loop
 
     def _monitoring_sequence_progression(self):
         """
         This method checks when a new technique is started in the instrument. This
         can be used to add new behaviours to the application.
+
+        Currently doesn't execute on first loop!
         """
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id = self.data_info.TechniqueID
@@ -302,8 +308,9 @@ class Channel:
             self.is_running = True
         # Check if a new technique is running
         if (
-            self.current_loop != new_loop or self.current_tech_index != new_tech_index
+            self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True
         ):  # the second condition should be sufficient...
+            self.first_loop = False
             self._update_sequence_trackers()
             self._execute_callbacks()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
