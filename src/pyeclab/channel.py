@@ -4,6 +4,7 @@ from collections import deque, namedtuple
 from datetime import datetime
 from pathlib import Path
 from threading import Thread
+import logging
 
 import numpy as np
 
@@ -11,6 +12,8 @@ from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
 from pyeclab.liveplot import LivePlot
 from pyeclab.techniques import reset_duration, set_duration_to_1s
+
+logger = logging.getLogger("pyeclab")
 
 try:
     from np_rw_buffer import RingBuffer
@@ -201,6 +204,7 @@ class Channel:
         Retrives latest measurement data from the BioLogic device, converts and
         saves. The sequence progression is also monitored.
         """
+        logger.debug("Starting Data Loop (_retrieve_data_loop)")
         while True:
             self.latest_data = self._get_measurement_values()
             # Write latest data to open saving file
@@ -245,6 +249,7 @@ class Channel:
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(
             self.bio_device.device_id, self.num
         )
+        logger.debug("Got Data:\n{self.data_info}")
 
     def _get_converted_buffer(self):
         """
