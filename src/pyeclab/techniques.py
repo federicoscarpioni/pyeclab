@@ -43,6 +43,7 @@ from wsgiref.validate import validator
 from attrs import define, field, validators
 
 import pyeclab.api.kbio_types as KBIO
+from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
 import pyeclab.tech_names as tn
 from pyeclab.api.kbio_api import KBIO_api
@@ -65,12 +66,17 @@ def set_duration_to_1s(api, technique, tech_id):
     }
     idx = 0  # Only one current step is used
     p_current_steps = list()
-    if tech_id == 155:
+    if tech_id == TECH_ID.CPLIMIT.value:
         p_current_steps.append(make_ecc_parm(api, parameters["current_step"], technique.user_params.current, idx))
-    elif tech_id == 101:
+
+    elif tech_id == TECH_ID.CA.value:
         p_current_steps.append(make_ecc_parm(api, parameters["voltage_step"], technique.user_params.voltage, idx))
+
+    if tech_id != TECH_ID.OCV.value:
+        p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.user_params.vs_init, idx))
+
     p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], new_duration, idx))
-    p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.user_params.vs_init, idx))
+
     return make_ecc_parms(api, *p_current_steps)
 
 
