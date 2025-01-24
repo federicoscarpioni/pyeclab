@@ -249,7 +249,7 @@ class Channel:
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(
             self.bio_device.device_id, self.num
         )
-        logger.debug("Got Data:\n{self.data_info}")
+        logger.debug(f"Got Data:\n{self.data_info}")
 
     def _get_converted_buffer(self):
         """
