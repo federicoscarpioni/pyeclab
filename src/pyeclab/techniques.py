@@ -146,7 +146,7 @@ class EXIT_COND(Enum):
 
 
 @define(kw_only=True)
-class CPLIM:
+class CpLim:
     device: BiologicDevice
     current: float
     duration: float = field(validator=validators.ge(0))
@@ -170,7 +170,7 @@ class CPLIM:
     xctr: int | None = None
     # analog_filter  : int
 
-    def _make_cplim_parms(self):
+    def make_cplim_parms(self):
         # dictionary of CP parameters (non exhaustive)
         CPLIM_parm_names = {
             "current_step": ECC_parm("Current_step", float),
@@ -230,7 +230,7 @@ class CPLIM:
         tech_file_CPLIM = cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
         # Define parameters for loading in the device using the templates
-        ecc_parms_CPLIM = self._make_cplim_parms()
+        ecc_parms_CPLIM = self.make_cplim_parms()
 
         CPLIM_tech = namedtuple("CPLIM_tech", "ecc_file ecc_params")
         return CPLIM_tech(tech_file_CPLIM, ecc_parms_CPLIM)
