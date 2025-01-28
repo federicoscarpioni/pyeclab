@@ -233,6 +233,28 @@ class Channel:
         '''
         self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(self.bio_device.device_id, self.num)
 
+    def _get_converted_buffer_base(self, buffer):
+        Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)])
+        I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)]) if self.data_info.TechniqueID != 100 else np.array([0] * len(Ewe))
+        t = np.array([(((buffer[i, 0] << 32) + buffer[i, 1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I
+
+    def _get_converted_buffer_with_charge(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, q
+
+    def _get_converted_buffer_with_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, Ece
+
+    def _get_converted_buffer_with_charge_and_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 7]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, Ece, q
+
     def _get_converted_buffer(self):
         '''
         Convert digitalized signal from ADC to physical values.
@@ -244,20 +266,16 @@ class Channel:
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
         # Convert voltage buffer numbers in real values
         Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,2]) for i in range(0, self.data_info.NbRows)])
-        # Convert buffer numbers in real values, I is 0 for OCV (ID 100)
-        if self.data_info.TechniqueID != 100:
-            I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,3]) for i in range(0, self.data_info.NbRows)]) 
-            if self.is_charge_recorded:
-                q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
-            elif self.is_charge_recorded:
-                Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
+        # Convert buffer numbers in real values
+        if self.is_charge_recorded and self.is_recording_Ece:
+            return self._get_converted_buffer_with_charge_and_Ece(buffer)
+        elif self.is_charge_recorded:
+            return self._get_converted_buffer_with_charge(buffer)
+        elif self.is_recording_Ece:
+            return self._get_converted_buffer_with_Ece(buffer)
         else:
-            if self.is_recording_Ece:
-                Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
-            I = np.array([0]*len(Ewe))
-        # Convert time in seconds
-        t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
-        return t, Ewe, I # !!! I think is better to output a named tuple
+            return self._get_converted_buffer_base(buffer)
+        
     
     def _execute_callbacks(self):
         for callback in self.callbacks:
