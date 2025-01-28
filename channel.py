@@ -97,7 +97,7 @@ class Channel:
         self.is_recording_analog_In1 = is_recording_analog_In1
         self.is_recording_analog_In2 = is_recording_analog_In2
         self.is_charge_recorded      = is_charge_recorded
-        self.xtr_param               = self.generate_xctr_param()
+        self.xtr_param               = self.generate_xctr_param() # This parameter is valid only for premium potentiostat
 
 
 
@@ -247,7 +247,13 @@ class Channel:
         # Convert buffer numbers in real values, I is 0 for OCV (ID 100)
         if self.data_info.TechniqueID != 100:
             I = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,3]) for i in range(0, self.data_info.NbRows)]) 
+            if self.is_charge_recorded:
+                q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
+            elif self.is_charge_recorded:
+                Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
         else:
+            if self.is_recording_Ece:
+                Ewe = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i,6]) for i in range(0, self.data_info.NbRows)])
             I = np.array([0]*len(Ewe))
         # Convert time in seconds
         t = np.array([(((buffer[i,0] << 32) + buffer[i,1]) * self.current_values.TimeBase) + self.data_info.StartTime for i in range(0, self.data_info.NbRows)])
