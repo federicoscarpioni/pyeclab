@@ -15,6 +15,7 @@ dependencies = [
     "matplotlib",
     "pandas",
     "numpy",
+    "attrs",
 ]
 license = "MIT"
 license-files = ["LICENSE"]

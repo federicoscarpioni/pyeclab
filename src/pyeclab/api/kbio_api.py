@@ -21,10 +21,13 @@ This behaviour can be overriden in the BL_xxx functions with an abort flag set t
 """
 
 from array import array
+import logging
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.c_utils import *
 from pyeclab.api.utils import exception_brief, pp_plural, warn_diff
+
+logger = logging.getLogger("pyeclab")
 
 # ==============================================================================#
 
@@ -235,6 +238,8 @@ class KBIO_api:
         cols = di.NbCols
         size = rows * cols
         db = array("L", pb[:size])
+
+        logger.debug(f"Getting Data in kbio:\n {di}")
 
         # return CurrentValues, DataInfo, Data Records
         return cv, di, db
