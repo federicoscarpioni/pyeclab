@@ -241,18 +241,18 @@ class Channel:
 
     def _get_converted_buffer_with_charge(self, buffer):
         t, Ewe, I = self._get_converted_buffer_base(buffer)
-        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I, q
 
     def _get_converted_buffer_with_Ece(self, buffer):
         t, Ewe, I = self._get_converted_buffer_base(buffer)
-        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I, Ece
 
     def _get_converted_buffer_with_charge_and_Ece(self, buffer):
         t, Ewe, I = self._get_converted_buffer_base(buffer)
-        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
-        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 7]) for i in range(0, self.data_info.NbRows)])
+        Ece = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
         return t, Ewe, I, Ece, q
 
     def _get_converted_buffer(self):
@@ -339,7 +339,7 @@ class Channel:
         return buffer
 
     def _get_avarage(self, buffer):
-        return np.sum(buffer)/len(buffer)
+        return np.sum(buffer.get_data())/len(buffer.get_data())
         
     def _check_software_limits_avarage(self):
         '''
