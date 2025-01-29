@@ -21,7 +21,7 @@ i_range        = 9
 exit_cond      = 1
 E_range        = 1
 bw             = 4
-xctr           = 0b01001000
+xctr           = 0b01001001
 CP_user_params = tech.CPLIM_params(current, 
                                      duration_CP, 
                                      False, 
@@ -44,9 +44,10 @@ channel1=Channel(device,
                  1,
                  'E:/Experimental_data/Federico/2025/python_software_test',
                  test_options,
-                 is_live_plotting = False,
+                 is_live_plotting = True,
                  is_printing_values = False,
-                 is_charge_recorded = True
+                 is_charge_recorded = True,
+                 is_recording_Ece = True
                  )
 channel1.load_sequence(sequence_test, ask_ok=True)
 channel1.start()
