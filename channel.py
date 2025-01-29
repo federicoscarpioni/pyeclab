@@ -7,6 +7,7 @@ from threading import Thread
 from np_rw_buffer import RingBuffer
 import time
 from pyeclab.device import BiologicDevice
+import pyeclab.techniques
 from pyeclab.techniques import set_duration_to_1s, reset_duration
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.liveplot import LivePlot
@@ -86,7 +87,7 @@ class Channel:
         self.print_values            = is_printing_values
         self.is_live_plotting        = is_live_plotting
         self.callbacks               = callbacks
-        self.current_tech_index      = 0 
+        self.current_tech_index      = 0
         self.current_loop            = 0
         # Hardware setting
         self.conditions              = []
@@ -121,6 +122,8 @@ class Channel:
     def load_sequence(self, sequence, ask_ok = False): 
         self.sequence = sequence
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok) 
+            
+            
 
     def import_sequence(self, json_file_path): 
         with open('json_file_path', 'r') as sequence_json:
@@ -298,6 +301,7 @@ class Channel:
         new_loop       = self.data_info.loop
         if not self.is_running:
             self.is_running = True
+            self.current_tech_id = new_tech_id
         # Check if a new technique is running
         if self.current_loop != new_loop or self.current_tech_index != new_tech_index : # the second condition should be sufficient...
             self._update_sequence_trackers()
@@ -322,21 +326,28 @@ class Channel:
                 if quantity_value is None:
                     continue
                 if operator == '>' and quantity_value >= threshold:
+                    print(f'{quantity} > {quantity_value} in technique {technique_index}')
                     return True
                 elif operator == '<' and quantity_value <= threshold:
+                    print(f'{quantity} < {quantity_value} in technique {technique_index}')
                     return True
-        return False
+        return False # Do I need to keep this return?
+    
 
-    def set_condition_avarage(self, quantity:str, operator:str, threshold:float, points_avarage:int):
+    def set_condition_avarage(self, technique_index: int, quantity:str, operator:str, threshold:float, points_avarage:int):
         '''
         latest_points is a circular buffer. It is saved in the condition tuple.
         '''
         latest_points = RingBuffer(points_avarage)
-        self.conditions_average.append((quantity, operator, threshold,points_avarage, latest_points))
+        self.conditions_average.append((technique_index, quantity, operator, threshold,points_avarage, latest_points))
 
     def _update_value_buffer(self, buffer, data):
-        buffer.write(data)
+        buffer.write(data, error = False)
         return buffer
+    
+    def _reset_buffer_avarage(self):
+        for technique_index, quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:
+            latest_points.read()
 
     def _get_avarage(self, buffer):
         return np.sum(buffer.get_data())/len(buffer.get_data())
@@ -346,8 +357,10 @@ class Channel:
         Check if a certain condition (< or > of a trashold value) is met for the
         avarage value of a sampled data over a certain number of points.
         '''
-        for quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
+        for technique_index, quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:   # ? Can I manually add other attributes to current_values for the quantities that are missing?
             quantity_value = getattr(self.current_values, quantity, None) # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            if self.current_tech_index != technique_index:
+                continue
             if quantity_value is None:
                 continue
             latest_points = self._update_value_buffer(latest_points, quantity_value)
@@ -355,10 +368,15 @@ class Channel:
                 continue
             avarage_value = self._get_avarage(latest_points)
             if operator == '>' and avarage_value >= threshold:
+                print(f'{quantity} > {avarage_value} in technique {technique_index}')
+                self._reset_buffer_avarage()
                 return True
             elif operator == '<' and avarage_value <= threshold:
+                print(f'{quantity} < {avarage_value} in technique {technique_index}')
+                self._reset_buffer_avarage()
                 return True
-        return False    
+        return False
+           
 
 
     ## Methods for saving data ##   
