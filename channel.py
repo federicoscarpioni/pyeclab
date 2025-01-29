@@ -166,11 +166,11 @@ class Channel:
                                         set_duration_to_1s(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
                                         self.sequence[self.current_tech_index].ecc_file)
         
-        # self.bio_device.UpdateParameters(self.bio_device.device_id,
-        #                                 self.num,
-        #                                 self.current_tech_index,
-        #                                 reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-        #                                 self.sequence[self.current_tech_index].ecc_file)
+        self.bio_device.UpdateParameters(self.bio_device.device_id,
+                                        self.num,
+                                        self.current_tech_index,
+                                        reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
+                                        self.sequence[self.current_tech_index].ecc_file)
     
     def _print_current_values(self):
         print(f"CH{self.num} > Ewe: {self.current_values.Ewe:4.3e} V | I: {self.current_values.I:4.3e} mA | Tech_ID: {TECH_ID(self.data_info.TechniqueID).name} | Tech_indx: {self.data_info.TechniqueIndex} | loop: {self.data_info.loop}")
