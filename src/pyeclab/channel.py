@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import json
 import time
 from collections import deque, namedtuple
@@ -6,6 +7,7 @@ from pathlib import Path
 from threading import Thread
 import logging
 
+from attrs import define
 import numpy as np
 
 from pyeclab.api.tech_types import TECH_ID
@@ -60,8 +62,48 @@ ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
 #     def set_condition(self, ...):
 #         ...
 
+
 #     def check_limits(self, ...):
 #         ...
+
+
+class AbstractWriter(ABC):
+    @abstractmethod
+    def write(self, data) -> None: ...
+
+    @abstractmethod
+    def instantiate(self) -> None: ...
+
+
+@define
+class FileWriter(AbstractWriter):
+    """"""
+
+    file_dir: Path
+    experiment_name: str
+    current_cycle: int = 0
+    current_state: int = 0
+
+    def write(self, data):
+        """Write to file"""
+        raise NotImplementedError
+
+    def instantiate(self):
+        """Create dir"""
+
+
+@define
+class SqlWriter(AbstractWriter):
+    """"""
+
+    db: Path
+    experiment_name: str
+    current_cycle: int = 0
+    current_state: int = 0
+
+    def write(self, data):
+        """Write to DB"""
+        raise NotImplementedError
 
 
 class Channel:
