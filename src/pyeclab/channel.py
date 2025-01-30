@@ -22,6 +22,7 @@ try:
 except ImportError:
     _has_buffer = False
     print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
+    logger.info("np_rw_buffer not imported.")
 else:
     _has_buffer = True
 
