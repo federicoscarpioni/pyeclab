@@ -27,7 +27,7 @@ E_lim_low = -5  # Volts
 i_range = 6
 exit_cond = 1
 xctr = 0b00001000
-CP_user_params = tech.CPLIM_params(
+CP_user_params = tech.CpLim(
     current,
     duration_CP,
     False,
