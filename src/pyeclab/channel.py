@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import json
 import time
 from collections import deque, namedtuple
@@ -5,7 +6,9 @@ from datetime import datetime
 from pathlib import Path
 from threading import Thread
 import logging
+import sqlite3
 
+from attrs import define
 import numpy as np
 
 from pyeclab.api.tech_types import TECH_ID
@@ -20,6 +23,7 @@ try:
 except ImportError:
     _has_buffer = False
     print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
+    logger.info("np_rw_buffer not imported.")
 else:
     _has_buffer = True
 
@@ -60,8 +64,86 @@ ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
 #     def set_condition(self, ...):
 #         ...
 
+
 #     def check_limits(self, ...):
 #         ...
+
+
+@define
+class Data:
+    time: float
+    voltage: float
+    current: float
+    technique_num: int
+    loop_num: int
+    user_cycle: int
+
+
+class AbstractWriter(ABC):
+    @abstractmethod
+    def write(self, data: Data) -> None: ...
+
+    @abstractmethod
+    def instantiate(self) -> None: ...
+
+    @abstractmethod
+    def close(self) -> None: ...
+
+
+@define
+class FileWriter(AbstractWriter):
+    """"""
+
+    file_dir: Path
+    experiment_name: str
+    current_cycle: int = 0
+    current_state: int = 0
+
+    def write(self, data):
+        """Write to file"""
+        raise NotImplementedError
+
+    def instantiate(self):
+        """Create dir"""
+
+
+@define
+class SqlWriter(AbstractWriter):
+    """"""
+
+    db: Path
+    experiment_name: str
+    current_cycle: int = 0
+    current_state: int = 0
+
+    def write(self, data: Data):
+        """Write to DB"""
+        cur = self.conn.cursor()
+        insert_data = (
+            self.experiment_name,
+            data.time,
+            data.voltage,
+            data.current,
+            data.technique_num,
+            data.loop_num,
+            data.user_cycle,
+        )
+        cur.execute(
+            "INSERT INTO ?(?,?,?,?,?,?)",
+            insert_data,
+        )
+
+    def instantiate(self) -> None:
+        """Create DB/Table and create connection."""
+        self.conn = sqlite3.connect(self.db)
+        cur = self.conn.cursor()
+        stmt = "CREATE TABLE IF NOT EXISTS ?(id INTEGER PRIMARY KEY AUTOINCREMENT, time REAL, current REAL, voltage REAL, technique_num INTEGER, loop_num INTEGER, user_cycle INTEGER, user_state TEXT)"
+        cur.execute(stmt, self.experiment_name)
+        self.conn.commit()
+
+    def close(self) -> None:
+        """Close the DB connection"""
+        self.conn.close()
 
 
 class Channel:
