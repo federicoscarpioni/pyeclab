@@ -27,7 +27,7 @@ class ECC_parm:
 # functions to build the technique ECC parameters (structure+contents)
 
 
-def make_ecc_parm(api, ecc_parm, value=0, index=0):
+def make_ecc_parm(api, ecc_parm, value: float = 0, index=0):
     """Given an ECC_parm template, create and return an EccParam, with its value and optional index."""
     parm = KBIO.EccParam()
     # BL_Define<xxx>Parameter
