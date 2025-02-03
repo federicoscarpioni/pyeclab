@@ -239,7 +239,9 @@ class KBIO_api:
         size = rows * cols
         db = array("L", pb[:size])
 
-        logger.debug(f"Getting Data in kbio:\n {di}")
+        logger.debug(f"Getting DataBuffer in kbio:\n {db=}")
+        logger.debug(f"Getting DataInfo in kbio:\n {di=}")
+        logger.debug(f"Getting CurrentValues in kbio:\n {cv=}")
 
         # return CurrentValues, DataInfo, Data Records
         return cv, di, db
