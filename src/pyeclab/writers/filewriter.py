@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Iterable, Sequence
 
 from attrs import define
 import numpy as np
@@ -23,7 +24,7 @@ class FileWriter(AbstractWriter):
     append: bool = False
     overwrite: bool = True
 
-    def write(self, data: np.typing.ArrayLike):
+    def write(self, data: np.typing.NDArray):
         """Write to file"""
         if len(data) != self.data_length:
             raise ValueError("Data of wrong length supplied.")
@@ -32,7 +33,7 @@ class FileWriter(AbstractWriter):
             np.savetxt(self.file, data, fmt="%4.3e", delimiter="\t")
             self.file.flush()
 
-    def instantiate(self, structure: list[str]):
+    def instantiate(self, structure: Sequence[str]):
         """Create dir"""
         self._create_exp_folder()
         self._create_file(structure)
@@ -45,7 +46,7 @@ class FileWriter(AbstractWriter):
     def _create_exp_folder(self):
         Path(self.file_dir).mkdir(parents=True, exist_ok=True)
 
-    def _create_file(self, structure: list[str]):
+    def _create_file(self, structure: Sequence[str]):
         """Create the file in the specified write mode and add a header line."""
         file_path = self.file_dir / self.experiment_name / "measurement_data.txt"
         if self.append:
