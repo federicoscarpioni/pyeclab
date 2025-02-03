@@ -7,7 +7,7 @@ For usage in your project you can install this package with
 
 `pip install "pyeclab @ git+https://github.com/federicoscarpioni/pyeclab.git"` (Stable)
 
-`pip install "pyeclab @ git+https://github.com/jco-c/pyeclab.git"` (New version for alternate setup)
+`pip install "pyeclab @ git+https://github.com/federicoscarpioni/pyeclab.git@refactoring"` (Development version)
 
 You can add the project to your dependencies by using:
 ```toml
