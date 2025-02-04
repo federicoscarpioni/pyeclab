@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import json
 import time
 from collections import deque, namedtuple
@@ -6,15 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from threading import Thread
 import logging
-import sqlite3
 
-from attrs import define
 import numpy as np
 
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
 from pyeclab.liveplot import LivePlot
 from pyeclab.techniques import reset_duration, set_duration_to_1s
+from pyeclab.writers.abstractwriter import AbstractWriter
 
 logger = logging.getLogger("pyeclab")
 
@@ -69,9 +67,6 @@ ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
 #         ...
 
 
-
-
-
 class Channel:
     # New to implement:
     # def __init__(self, bio_device, channel_num, saving_dir, channel_options,
@@ -90,6 +85,7 @@ class Channel:
         channel_num: int,
         saving_dir: str,
         channel_options: namedtuple,
+        writer: AbstractWriter,
         is_live_plotting: bool = True,  # ? Deside which naming convention to use for booleans
         is_recording_Ece: bool = False,
         is_external_controlled: bool = False,
@@ -102,6 +98,7 @@ class Channel:
         self.bio_device = bio_device
         self.num = channel_num
         # Saving details
+        self.writer = writer
         self.experiment_name = channel_options.experiment_name  # ? maybe I can save directly the whole options
         self.saving_path = saving_dir + "/" + self.experiment_name
         # Class behaviour
@@ -150,6 +147,7 @@ class Channel:
 
     def start(self):
         # Save experiment data
+        self._instantiate_writer()
         self._create_exp_folder()
         self._create_saving_file()
         self._save_exp_metadata()
@@ -402,6 +400,19 @@ class Channel:
         return False
 
     ## Methods for saving data ##
+
+    def _instantiate_writer(self):
+        structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
+
+        if self.is_recording_Ece and self.is_charge_recorded:
+            structure.insert(3, "Ece/V")
+            structure.insert(4, "Q/C")
+        elif self.is_recording_Ece:
+            structure.insert(3, "Ece/V")
+        elif self.is_charge_recorded:
+            structure.insert(3, "Q/C")
+
+        self.writer.instantiate(structure)
 
     def _create_exp_folder(self):
         Path(self.saving_path).mkdir(parents=True, exist_ok=True)
