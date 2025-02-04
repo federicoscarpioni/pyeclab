@@ -496,45 +496,7 @@ class Channel:
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
         loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
 
-        # !!! This block of logic statement is horrible, there must be a better solution! Also, this is not including Auxiliary In record
-        if self.is_recording_Ece and self.is_charge_recorded:
-            data_to_save = np.column_stack(
-                (
-                    self.latest_data[0],
-                    self.latest_data[1],
-                    self.latest_data[2],
-                    self.latest_data[3],
-                    self.latest_data[4],
-                    technique_num,
-                    loop_num,
-                )
-            )
-        elif self.is_recording_Ece:
-            data_to_save = np.column_stack(
-                (
-                    self.latest_data[0],
-                    self.latest_data[1],
-                    self.latest_data[2],
-                    self.latest_data[3],
-                    technique_num,
-                    loop_num,
-                )
-            )
-        elif self.is_charge_recorded:
-            data_to_save = np.column_stack(
-                (
-                    self.latest_data[0],
-                    self.latest_data[1],
-                    self.latest_data[2],
-                    self.latest_data[3],
-                    technique_num,
-                    loop_num,
-                )
-            )
-        else:
-            data_to_save = np.column_stack(
-                (self.latest_data[0], self.latest_data[1], self.latest_data[2], technique_num, loop_num)
-            )
+        data_to_save = np.column_stack((*self.latest_data, technique_num, loop_num))
 
         np.savetxt(self.saving_file, data_to_save, fmt="%4.3e", delimiter="\t")
         self.saving_file.flush()
