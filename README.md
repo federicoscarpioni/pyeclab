@@ -35,3 +35,10 @@ allow-direct-references = true
 Matplotlib sometimes doesn't find the needed TCL-library, then it might be necessary to specify the path as env-variable, e.g.:
 
 `$env:TCL_LIBRARY="C:\Users\*USERNAME*\AppData\Local\Programs\Python\Python313\tcl\tcl8.6"`
+
+
+## Caveats
+
+### External Control for essential devices
+
+The xctr-parameters are not available for essential devices through the Developers package, even though they are available through EC-Lab.
