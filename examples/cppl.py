@@ -1,5 +1,5 @@
 from pyeclab.device import BiologicDevice
-from pyeclab.techniques import EXIT_COND, OCV_params, OCV_tech, CpLim
+from pyeclab.techniques.techniques import EXIT_COND, OCV_params, OCV_tech, CpLim
 from pyeclab.channel import Channel, ChannelOptions
 from pyeclab.api.kbio_types import I_RANGE, E_RANGE, BANDWIDTH
 
