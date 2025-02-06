@@ -1,6 +1,6 @@
 import time
 
-import pyeclab.techniques as tech
+import pyeclab.techniques.techniques as tech
 from pyeclab.device import BiologicDevice
 
 # IP address of the instrument

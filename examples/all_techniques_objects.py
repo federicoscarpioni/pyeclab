@@ -1,4 +1,4 @@
-import pyeclab.techniques as tech
+import pyeclab.techniques.techniques as tech
 from pyeclab.channel import Channel, ChannelOptions
 from pyeclab.device import BiologicDevice
 
