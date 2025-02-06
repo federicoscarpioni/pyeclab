@@ -13,8 +13,8 @@ import numpy as np
 
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
-from pyeclab.liveplot import LivePlot
-from pyeclab.techniques import reset_duration, set_duration_to_1s
+from pyeclab.channel.liveplot import LivePlot
+from pyeclab.techniques.techniques import reset_duration, set_duration_to_1s
 
 logger = logging.getLogger("pyeclab")
 
