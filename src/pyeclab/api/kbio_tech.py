@@ -1,7 +1,7 @@
-""" Bio-Logic OEM package python API.
+"""Bio-Logic OEM package python API.
 
-MODIFIED 03/04/2024 - Removed the argument 'api' from the functions and added 
-imported directly here in the library instead of main script (like in the api 
+MODIFIED 03/04/2024 - Removed the argument 'api' from the functions and added
+imported directly here in the library instead of main script (like in the api
 examples)
 
 This module contains support functions when building technique parameters,
@@ -10,19 +10,24 @@ and decoding experiment records.
 """
 
 from dataclasses import dataclass
-from pyeclab.api.kbio_api import KBIO_api as api
+
 import pyeclab.api.kbio_types as KBIO
+from pyeclab.api.kbio_api import KBIO_api as api
 from pyeclab.api.tech_types import TECH_ID
 
+
 @dataclass
-class ECC_parm :
+class ECC_parm:
     """ECC param template"""
+
     label: str
     type_: type
 
+
 # functions to build the technique ECC parameters (structure+contents)
 
-def make_ecc_parm (api, ecc_parm, value=0, index=0) :
+
+def make_ecc_parm(api, ecc_parm, value: float = 0, index=0):
     """Given an ECC_parm template, create and return an EccParam, with its value and optional index."""
     parm = KBIO.EccParam()
     # BL_Define<xxx>Parameter
@@ -30,22 +35,25 @@ def make_ecc_parm (api, ecc_parm, value=0, index=0) :
     api.DefineParameter(ecc_parm.label, ecc_parm.type_(value), index, parm)
     return parm
 
-def make_ecc_parms (api, *ecc_parm_list) :
+
+def make_ecc_parms(api, *ecc_parm_list):
     """Create an EccParam array from an EccParam list, and return an EccParams refering to it."""
     nb_parms = len(ecc_parm_list)
     parms_array = KBIO.ECC_PARM_ARRAY(nb_parms)
 
-    for i,parm in enumerate(ecc_parm_list) :
+    for i, parm in enumerate(ecc_parm_list):
         parms_array[i] = parm
 
     parms = KBIO.EccParams(nb_parms, parms_array)
     return parms
 
+
 # function to handle records from a running experiment
 
-def print_experiment_data (api, data) :
+
+def print_experiment_data(api, data):
     """Unpack the experiment data, decode it according to the technique, display it,
-       then return the experiment status """
+    then return the experiment status"""
 
     current_values, data_info, data_record = data
 
@@ -56,12 +64,12 @@ def print_experiment_data (api, data) :
 
     # synthetic info for current record
     info = {
-      'tb': current_values.TimeBase,
-      'ix': data_info.TechniqueIndex,
-      'tech': tech_name,
-      'proc': data_info.ProcessIndex,
-      'loop': data_info.loop,
-      'skip': data_info.IRQskipped,
+        "tb": current_values.TimeBase,
+        "ix": data_info.TechniqueIndex,
+        "tech": tech_name,
+        "proc": data_info.ProcessIndex,
+        "loop": data_info.loop,
+        "skip": data_info.IRQskipped,
     }
 
     print("> data info :")
@@ -69,45 +77,42 @@ def print_experiment_data (api, data) :
 
     ix = 0
 
-    for _ in range(data_info.NbRows) :
-
-        if tech_name == 'OCV' :
-
+    for _ in range(data_info.NbRows):
+        if tech_name == "OCV":
             # progress through record
             inx = ix + data_info.NbCols
 
             # extract timestamp and one row
-            t_high, t_low, *row =  data_record[ix:inx]
+            t_high, t_low, *row = data_record[ix:inx]
 
             nb_words = len(row)
-            if nb_words == 1 :
+            if nb_words == 1:
                 vmp3 = False
-            elif nb_words == 2 :
+            elif nb_words == 2:
                 vmp3 = True
-            else :
+            else:
                 raise RuntimeError(f"{tech_name} : unexpected record length ({nb_words})")
-    
+
             # compute timestamp in seconds
             t_rel = (t_high << 32) + t_low
             t = current_values.TimeBase * t_rel
-    
+
             # Ewe is a float
             Ewe = api.ConvertNumericIntoSingle(row[0])
 
-            parsed_row = {'t': t , 'Ewe': Ewe}
+            parsed_row = {"t": t, "Ewe": Ewe}
 
-            if vmp3 :
+            if vmp3:
                 # Ece is a float
                 Ece = api.ConvertNumericIntoSingle(row[1])
-                parsed_row['Ece'] = Ece
+                parsed_row["Ece"] = Ece
 
-        elif tech_name == 'CP' :
-
+        elif tech_name == "CP":
             inx = ix + data_info.NbCols
-            t_high, t_low, *row =  data_record[ix:inx]
+            t_high, t_low, *row = data_record[ix:inx]
 
             nb_words = len(row)
-            if nb_words != 3 :
+            if nb_words != 3:
                 raise RuntimeError(f"{tech_name} : unexpected record length ({nb_words})")
 
             # Ewe is a float
@@ -118,20 +123,19 @@ def print_experiment_data (api, data) :
 
             # technique cycle is an integer
             cycle = row[2]
-    
+
             # compute timestamp in seconds
             t_rel = (t_high << 32) + t_low
             t = current_values.TimeBase * t_rel
-    
-            parsed_row = {'t': t , 'Ewe': Ewe, 'I': I, 'cycle': cycle}
 
-        else :
+            parsed_row = {"t": t, "Ewe": Ewe, "I": I, "cycle": cycle}
 
+        else:
             # besides the previous 2 known techniques, this is provided
             # to show a raw dump of the record
             inx = ix + data_info.NbCols
-            row =  data_record[ix:inx]
-            parsed_row = [ f"0x{word:08X}" for word in row ]
+            row = data_record[ix:inx]
+            parsed_row = [f"0x{word:08X}" for word in row]
 
         print("> data record :")
         print(parsed_row)
@@ -139,4 +143,3 @@ def print_experiment_data (api, data) :
         ix = inx
 
     return status
-
