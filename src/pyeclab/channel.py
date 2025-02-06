@@ -193,7 +193,7 @@ class Channel:
         self.is_recording_analog_In1 = is_recording_analog_In1
         self.is_recording_analog_In2 = is_recording_analog_In2
         self.is_charge_recorded = is_charge_recorded
-        self.xtr_param = self.generate_xctr_param()
+        self.xtr_param = self.generate_xctr_param()  # This parameter is valid only for premium potentiostat
 
     ## Methods for setting hardware for the experiment ##
 
@@ -263,11 +263,13 @@ class Channel:
             self.sequence[self.current_tech_index].ecc_file,
         )
 
-        # self.bio_device.UpdateParameters(self.bio_device.device_id,
-        #                                 self.num,
-        #                                 self.current_tech_index,
-        #                                 reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-        #                                 self.sequence[self.current_tech_index].ecc_file)
+        self.bio_device.UpdateParameters(
+            self.bio_device.device_id,
+            self.num,
+            self.current_tech_index,
+            reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
+            self.sequence[self.current_tech_index].ecc_file,
+        )
 
     def _print_current_values(self):
         print(
@@ -336,6 +338,80 @@ class Channel:
         )
         logger.debug(f"Got Data:\n{self.data_info}")
 
+    def _get_converted_buffer_base(self, buffer):
+        Ewe = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
+        )
+        I = (
+            np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)])
+            if self.data_info.TechniqueID != 100
+            else np.array([0] * len(Ewe))
+        )
+        t = np.array(
+            [
+                (((buffer[i, 0] << 32) + buffer[i, 1]) * self.current_values.TimeBase) + self.data_info.StartTime
+                for i in range(0, self.data_info.NbRows)
+            ]
+        )
+        return t, Ewe, I
+
+    def _get_converted_buffer_with_charge(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, q
+
+    def _get_converted_buffer_with_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
+        )
+        return t, Ewe, I, Ece
+
+    def _get_converted_buffer_with_charge_and_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
+        )
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, Ece, q
+
+    def _get_converted_buffer_base(self, buffer):
+        Ewe = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
+        )
+        I = (
+            np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)])
+            if self.data_info.TechniqueID != 100
+            else np.array([0] * len(Ewe))
+        )
+        t = np.array(
+            [
+                (((buffer[i, 0] << 32) + buffer[i, 1]) * self.current_values.TimeBase) + self.data_info.StartTime
+                for i in range(0, self.data_info.NbRows)
+            ]
+        )
+        return t, Ewe, I
+
+    def _get_converted_buffer_with_charge(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, q
+
+    def _get_converted_buffer_with_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
+        )
+        return t, Ewe, I, Ece
+
+    def _get_converted_buffer_with_charge_and_Ece(self, buffer):
+        t, Ewe, I = self._get_converted_buffer_base(buffer)
+        Ece = np.array(
+            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
+        )
+        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
+        return t, Ewe, I, Ece, q
+
     def _get_converted_buffer(self):
         """
         Convert digitalized signal from ADC to physical values.
@@ -349,21 +425,15 @@ class Channel:
         Ewe = np.array(
             [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
         )
-        # Convert buffer numbers in real values, I is 0 for OCV (ID 100)
-        if self.data_info.TechniqueID != TECH_ID.OCV.value:
-            I = np.array(
-                [self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)]
-            )
+        # Convert buffer numbers in real values
+        if self.is_charge_recorded and self.is_recording_Ece:
+            return self._get_converted_buffer_with_charge_and_Ece(buffer)
+        elif self.is_charge_recorded:
+            return self._get_converted_buffer_with_charge(buffer)
+        elif self.is_recording_Ece:
+            return self._get_converted_buffer_with_Ece(buffer)
         else:
-            I = np.array([0] * len(Ewe))
-        # Convert time in seconds
-        t = np.array(
-            [
-                (((buffer[i, 0] << 32) + buffer[i, 1]) * self.current_values.TimeBase) + self.data_info.StartTime
-                for i in range(0, self.data_info.NbRows)
-            ]
-        )
-        return t, Ewe, I  # !!! I think is better to output a named tuple
+            return self._get_converted_buffer_base(buffer)
 
     def _execute_callbacks(self):
         for callback in self.callbacks:
@@ -388,6 +458,7 @@ class Channel:
         new_loop = self.data_info.loop
         if not self.is_running:
             self.is_running = True
+            self.current_tech_id = new_tech_id
         # Check if a new technique is running
         if (
             self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True
@@ -425,33 +496,40 @@ class Channel:
                     return True
                 elif operator == "<" and quantity_value <= threshold:
                     return True
-        return False
+        return False  # Do I need to keep this return?
 
-    def set_condition_avarage(self, quantity: str, operator: str, threshold: float, points_avarage: int):
-        """
-        latest_points is a circular buffer. It is saved in the condition tuple.
-        """
-        if not _has_buffer:
-            raise ImportError(
-                """The optional dependency 'np-rw-buffer' is required to do this, 
-                install it with 'pip install pyeclab[buffer]'"""
-            )
-        latest_points = RingBuffer(points_avarage)
-        self.conditions_average.append((quantity, operator, threshold, points_avarage, latest_points))
+    def set_condition_avarage(
+        self, technique_index: int, quantity: str, operator: str, threshold: float, points_avarage: int
+    ):
+        '''
+            latest_points is a circular buffer. It is saved in the condition tuple.
+            """
+            if not _has_buffer:
+                raise ImportError(
+                    """The optional dependency 'np-rw-buffer' is required to do this,
+                    install it with 'pip install pyeclab[buffer]'"""
+                )
+            latest_points = RingBuffer(points_avarage)
+            self.conditions_average.append((technique_index, quantity, operator, threshold,points_avarage, latest_points))
 
-    def _update_value_buffer(self, buffer, data):
-        buffer.write(data)
-        return buffer
+        def _update_value_buffer(self, buffer, data):
+            buffer.write(data, error = False)
+            return buffer
 
-    def _get_avarage(self, buffer):
-        return np.sum(buffer) / len(buffer)
+        def _reset_buffer_avarage(self):
+            for technique_index, quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:
+                latest_points.read()
 
-    def _check_software_limits_avarage(self):
-        """
-        Check if a certain condition (< or > of a trashold value) is met for the
-        avarage value of a sampled data over a certain number of points.
-        """
+        def _get_avarage(self, buffer):
+            return np.sum(buffer.get_data())/len(buffer.get_data())
+
+        def _check_software_limits_avarage(self):
+            """
+            Check if a certain condition (< or > of a trashold value) is met for the
+            avarage value of a sampled data over a certain number of points.
+        '''
         for (
+            technique_index,
             quantity,
             operator,
             threshold,
@@ -463,6 +541,8 @@ class Channel:
             quantity_value = getattr(
                 self.current_values, quantity, None
             )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+            if self.current_tech_index != technique_index:
+                continue
             if quantity_value is None:
                 continue
             latest_points = self._update_value_buffer(latest_points, quantity_value)
