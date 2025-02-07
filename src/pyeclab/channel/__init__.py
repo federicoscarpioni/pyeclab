@@ -36,37 +36,77 @@ else:
 
 ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
 
-# class HardwareConfigManger:
-#     def set_hardware_config(self, ...):
-#         ...
+class SavingManager:
+    'Manages the storage of data and metadata into a txt file or sql database.'
+    
+    def __init__(self, path):
+        self.path = path
 
-#     def generate_xctr_param(self, ...):
-#         ...
+    def save_metadata(self, channel):
+        with open(self.path + "/experiment_metadata.txt", "w") as txtfile:
+            # File title
+            txtfile.write("PYECLAB METADATA FILE\n")
+            # Information of the starting time
+            txtfile = datetime.now()
+            txtfile.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
+            txtfile.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
+            # Information of the saving file name
+            txtfile.write(f"Experiment name : {self.experiment_name}\n")
+            txtfile.write(f"Saving file path : {self.path}\n")
+            # ! Add information on the method of saving (txt or sql database)
+            # !!! Print all the information of the techniques in the sequence
+            # ! Add information on the device, channel number, cell name and user comments
+            # ! Add the list of condition checked by the software
+    
+    def create_exp_folder(self):
+        Path(self.path).mkdir(parents=True, exist_ok=True)
 
-# class ExperimentManager:
-#     def start(self, ...):
-#         ...
+    def create_saving_file(self, channel):
+        self.saving_file = open(self.path + "/measurement_data.txt", "w+")
+        # Write headers
+        if self.channel.is_recording_Ece and self.channel.is_charge_recorded:
+            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
+        elif self.channel.is_recording_Ece:
+            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
+        elif self.channel.is_charge_recorded:
+            self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
+        else:
+            self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
+    
+    def close_saving_file(self):
+        self.saving_file.close()
 
-#     def stop(self, ...):
-#         ...
-
-# class DataManager:
-#     def __init__(self, saving_dir):
-#         self.saving_dir = saving_dir
-
-#     def create_exp_folder(self, ...):
-#         ...
-
-#     def write_data_to_file(self, ...):
-#         ...
-
-# class ConditionChecker:
-#     def set_condition(self, ...):
-#         ...
+    
+class HardwareConfig:
+    'See page 153 of the manual'
+    def set_CE2ground(self):
+        ...
+    def set_controlled_potential(self):
+        ...
 
 
-#     def check_limits(self, ...):
-#         ...
+class SequenceConfig:
+    'This will handle the GUI element for an esier creation of sequences of techinques'
+    def GUI(self):
+        ...
+    def load_sequence_json(self):
+        ...
+    def save_sequence_json(self, path):
+        json_file_path = self.saving_path + "/sequence.json"
+        with open(json_file_path, "w") as json_file:
+            json.dump(self.sequence, json_file)
+
+
+class SoftwareLimitsManager:
+    '''
+    Create software limits for voltage working electrode, voltagecounter 
+    electrode, capacity, or other external input (AUX1 or 2).
+     '''
+    ...
+
+
+class SequenceMonitor:
+    ...
 
 
 @define
@@ -520,20 +560,20 @@ class Channel:
 
     ## Methods for saving data ##
 
-    def _create_exp_folder(self):
-        Path(self.saving_path).mkdir(parents=True, exist_ok=True)
+    # def _create_exp_folder(self):
+    #     Path(self.saving_path).mkdir(parents=True, exist_ok=True)
 
-    def _create_saving_file(self):
-        self.saving_file = open(self.saving_path + "/measurement_data.txt", "w+")
-        # Write headers
-        if self.is_recording_Ece and self.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
-        elif self.is_recording_Ece:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
-        elif self.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
-        else:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
+    # def _create_saving_file(self):
+    #     self.saving_file = open(self.saving_path + "/measurement_data.txt", "w+")
+    #     # Write headers
+    #     if self.is_recording_Ece and self.is_charge_recorded:
+    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
+    #     elif self.is_recording_Ece:
+    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
+    #     elif self.is_charge_recorded:
+    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
+    #     else:
+    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
 
     def _write_latest_data_to_file(self):
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
@@ -544,32 +584,32 @@ class Channel:
         np.savetxt(self.saving_file, data_to_save, fmt="%4.3e", delimiter="\t")
         self.saving_file.flush()
 
-    def _close_saving_file(self):
-        self.saving_file.close()
+    # def _close_saving_file(self):
+    #     self.saving_file.close()
 
-    def _save_exp_metadata(self):
-        # Note: I am not using the 'with' constructor here because I assume I
-        # might want to update the metada if some event happen. In that case,
-        # the closing function should be move in the stop() method.
-        self.metadata_file = open(self.saving_path + "/experiment_metadata.txt", "w")
-        # File title
-        self.metadata_file.write("PYECLAB METADATA FILE\n")
-        # Information of the starting time
-        self.starting_time = datetime.now()
-        self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-        self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
-        # Information of the saving file name
-        self.metadata_file.write(f"Experiment name : {self.experiment_name}\n")
-        self.metadata_file.write(f"Saving file path : {self.saving_path}\n")
-        # !!! Print all the information of the techniques in the sequence
-        # ! Add information on the device, channel number, cell name and user comments
-        # ! Add the list of condition checked by the software
-        self.metadata_file.close()
+    # def _save_exp_metadata(self):
+    #     # Note: I am not using the 'with' constructor here because I assume I
+    #     # might want to update the metada if some event happen. In that case,
+    #     # the closing function should be move in the stop() method.
+    #     self.metadata_file = open(self.saving_path + "/experiment_metadata.txt", "w")
+    #     # File title
+    #     self.metadata_file.write("PYECLAB METADATA FILE\n")
+    #     # Information of the starting time
+    #     self.starting_time = datetime.now()
+    #     self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
+    #     self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
+    #     # Information of the saving file name
+    #     self.metadata_file.write(f"Experiment name : {self.experiment_name}\n")
+    #     self.metadata_file.write(f"Saving file path : {self.saving_path}\n")
+    #     # !!! Print all the information of the techniques in the sequence
+    #     # ! Add information on the device, channel number, cell name and user comments
+    #     # ! Add the list of condition checked by the software
+    #     self.metadata_file.close()
 
-    def _save_sequence_json(self):
-        json_file_path = self.saving_path + "/sequence.json"
-        with open(json_file_path, "w") as json_file:
-            json.dump(self.sequence, json_file)
+    # def _save_sequence_json(self):
+    #     json_file_path = self.saving_path + "/sequence.json"
+    #     with open(json_file_path, "w") as json_file:
+    #         json.dump(self.sequence, json_file)
 
     # ---- Methods to be reviewed ---- #
 
