@@ -1,9 +1,10 @@
 from datetime import datetime
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Iterable, Sequence
 
 import numpy as np
-from attrs import define
+from attrs import define, field
 
 
 @define
@@ -19,12 +20,13 @@ class FileWriter:
     append: bool = False
     overwrite: bool = True
 
+    file: TextIOWrapper | None = field(init=False, default=None)
+    data_length: int | None = field(init=False, default=None)
+
     def write(self, data: np.typing.NDArray):
         """Write to file"""
-        if len(data) != self.data_length:
-            raise ValueError("Data of wrong length supplied.")
 
-        if len(data) > 0:
+        if self.file:
             np.savetxt(self.file, data, fmt="%4.3e", delimiter="\t")
             self.file.flush()
 
@@ -57,6 +59,7 @@ class FileWriter:
     def _create_file(self, structure: Sequence[str]):
         """Create the file in the specified write mode and add a header line."""
         file_path = self.file_dir / self.experiment_name / "measurement_data.txt"
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         if self.append:
             self.file = open(file_path, "a")
         elif self.overwrite:
@@ -66,9 +69,11 @@ class FileWriter:
 
         if not self.append:
             self.file.write("\t".join(structure) + "\n")
+            self.file.flush()
 
     def _close_saving_file(self):
-        self.file.close()
+        if self.file:
+            self.file.close()
 
     def _save_exp_metadata(self):
         # Note: I am not using the 'with' constructor here because I assume I

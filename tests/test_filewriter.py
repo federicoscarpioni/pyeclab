@@ -1,4 +1,6 @@
 from datetime import datetime
+
+import numpy as np
 from pyeclab.channel.writers.filewriter import FileWriter
 from pytest import fixture
 
@@ -36,12 +38,42 @@ def test_metadata_creation(writer):
 
 
 def test_file_header_creation(writer):
-    pass
+    structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
+    writer.instantiate(structure)
+
+    file_path = writer.file_dir / writer.experiment_name / "measurement_data.txt"
+    with open(file_path) as f:
+        line = f.read()
+
+    assert line == "Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n"
 
 
-def test_file_content_handling_single_line(writer):
-    pass
+@fixture
+def writer_instantiated(writer):
+    structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
+    writer.instantiate(structure)
+    return writer
 
 
-def test_file_content_handling_multi_line(writer):
-    pass
+def test_file_content_handling_single_line(writer_instantiated):
+    data = np.column_stack([0.0, 0.0003009, 0.0, 0, 0])
+    writer_instantiated.write(data)
+
+    file_path = writer_instantiated.file_dir / writer_instantiated.experiment_name / "measurement_data.txt"
+    with open(file_path) as f:
+        lines = f.readlines()
+
+    assert lines[1] == "0.000e+00	3.009e-04	0.000e+00	0.000e+00	0.000e+00\n"
+
+
+def test_file_content_handling_multi_line(writer_instantiated):
+    data = np.column_stack(
+        [[0.0, 0.0003009, 0.0, 0, 0], [0.00012, 1.147, 0.0009218, 0, 0], [0.00016, 1.61, 0.001085, 0, 0]]
+    ).transpose()
+    writer_instantiated.write(data)
+
+    file_path = writer_instantiated.file_dir / writer_instantiated.experiment_name / "measurement_data.txt"
+    with open(file_path) as f:
+        lines = f.readlines()
+
+    assert lines[1] == "0.000e+00	3.009e-04	0.000e+00	0.000e+00	0.000e+00\n"
