@@ -182,7 +182,7 @@ class ChronoPotentiometryWithLimits:
     # analog_filter  : int
 
     def make_cplim_parms(self):
-        # dictionary of CP parameters (non exhaustive)
+        # dictionary of CPLIM parameters (non exhaustive)
         CPLIM_parm_names = {
             "current_step": ECC_parm("Current_step", float),
             "step_duration": ECC_parm("Duration_step", float),
@@ -230,7 +230,7 @@ class ChronoPotentiometryWithLimits:
             self.device,
             *p_current_steps,
         )
-        return ecc_parms_CPLIM
+        return ecc_parms_cplim
 
     def make_technique(self):
         # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
@@ -243,8 +243,8 @@ class ChronoPotentiometryWithLimits:
         # Define parameters for loading in the device using the templates
         ecc_parms_CPLIM = self.make_cplim_parms()
 
-        CPLIM_tech = namedtuple("CPLIM_tech", "ecc_file ecc_params")
-        return CPLIM_tech(tech_file_CPLIM, ecc_parms_CPLIM)
+        CplimTech = namedtuple("CplimTech", "ecc_file ecc_params")
+        return CplimTech(tech_file_CPLIM, ecc_parms_CPLIM)
 
 
 # ------CA------- #
