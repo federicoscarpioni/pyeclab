@@ -1,5 +1,7 @@
+from datetime import datetime
 import sqlite3
 from pathlib import Path
+from collections.abc import Sequence
 
 from attrs import define
 
@@ -28,10 +30,10 @@ class SqlWriter:
             insert_data,
         )
 
-    def write_metadata(self, data: dict):
+    def write_metadata(self, data: dict[str, str | int | float | datetime]):
         raise NotImplementedError()
 
-    def instantiate(self) -> None:
+    def instantiate(self, structure: Sequence[str]) -> None:
         """Create DB/Table and create connection."""
         self.conn = sqlite3.connect(self.db)
         cur = self.conn.cursor()
