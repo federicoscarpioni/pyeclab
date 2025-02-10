@@ -13,6 +13,7 @@ from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 from pyeclab.techniques.exit_cond import EXIT_COND
 
+
 @define(kw_only=True)
 class ChronoAmperometry:
     device:BiologicDevice
@@ -31,9 +32,12 @@ class ChronoAmperometry:
     #         raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
 
     e_range: KBIO.E_RANGE
-    exit_cond: EXIT_COND
+    exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
     bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
+    ecc_file : str | None = field(init = False, default = None)
+    ecc_params : list | None = field(init = False, default = None)
+
 
     def make_ca_params(self):
         # dictionary of CP parameters (non exhaustive)
@@ -53,16 +57,16 @@ class ChronoAmperometry:
         }
         idx = 0  # Only one current step is used
         p_voltage_steps = list()
-        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["voltage_step"], parameters.voltage, idx))
-        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["step_duration"], parameters.duration, idx))
-        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["vs_init"], parameters.vs_init, idx))
-        p_nb_steps = make_ecc_parm(self.device, ca_param_names["nb_steps"], parameters.nb_steps)
-        p_record_dt = make_ecc_parm(self.device, ca_param_names["record_dt"], parameters.record_dt)
-        p_record_dI = make_ecc_parm(self.device, ca_param_names["record_dI"], parameters.record_dI)
-        p_repeat = make_ecc_parm(self.device, ca_param_names["repeat"], parameters.repeat)
-        p_IRange = make_ecc_parm(self.device, ca_param_names["i_range"], parameters.i_range)
-        p_ERange = make_ecc_parm(self.device, ca_param_names["e_range"], parameters.e_range)
-        p_band = make_ecc_parm(self.device, ca_param_names["bandwidth"], parameters.bandwidth)
+        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["voltage_step"], self.voltage, idx))
+        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["step_duration"], self.duration, idx))
+        p_voltage_steps.append(make_ecc_parm(self.device, ca_param_names["vs_init"], self.vs_init, idx))
+        p_nb_steps = make_ecc_parm(self.device, ca_param_names["nb_steps"], self.nb_steps)
+        p_record_dt = make_ecc_parm(self.device, ca_param_names["record_dt"], self.record_dt)
+        p_record_dI = make_ecc_parm(self.device, ca_param_names["record_dI"], self.record_dI)
+        p_repeat = make_ecc_parm(self.device, ca_param_names["repeat"], self.repeat)
+        p_IRange = make_ecc_parm(self.device, ca_param_names["i_range"], self.i_range.value)
+        p_ERange = make_ecc_parm(self.device, ca_param_names["e_range"], self.e_range.value)
+        p_band = make_ecc_parm(self.device, ca_param_names["bandwidth"], self.bandwidth.value)
         # make the technique parameter array
         ecc_parms_ca = make_ecc_parms(
             self.device,
@@ -81,16 +85,16 @@ class ChronoAmperometry:
 
         return ecc_parms_ca
 
-    def make_technique(self):
+    def choose_ecc_file(self):
         # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
         cplim3_tech_file = "ca.ecc"
         cplim4_tech_file = "ca4.ecc"
 
         # pick the correct ecc file based on the instrument family
-        tech_file_ca = cplim3_tech_file if is_VMP3 else cplim4_tech_file
+        return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-        # Define parameters for loading in the device using the templates
-        ecc_parms_ca = self.make_ca_params()
 
-        CaTech = namedtuple("CaTech", "ecc_file ecc_params user_params")
-        return CaTech(tech_file_ca, ecc_parms_ca, parameters)
+
+    def make_technique(self):
+        self.ecc_file = self.choose_ecc_file()   
+        self.ecc_params = self.make_ca_params()
