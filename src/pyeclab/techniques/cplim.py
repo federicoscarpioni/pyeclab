@@ -31,14 +31,15 @@ class ChronoPotentiometryWithLimits:
     #         raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
 
     e_range: KBIO.E_RANGE
-    exit_cond: EXIT_COND
-    limit_variable: int
+    exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
+    limit_variable: int 
     limit_values: float
     bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
-    # analog_filter  : int
+    ecc_file : str | None = field(init = False, default = None)
+    ecc_params : list | None = field(init = False, default = None)
 
-    def make_cplim_parms(self):
+    def make_cplim_params(self):
         # dictionary of CPLIM parameters (non exhaustive)
         cplim_param_names = {
             "current_step": ECC_parm("Current_step", float),
@@ -76,9 +77,8 @@ class ChronoPotentiometryWithLimits:
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value))
-        # p_filter         = make_ecc_parm( api, cplim_param_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
-        # make the technique parameter array
 
+        # Make the technique parameter array
         if self.xctr:
             p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
             p_current_steps.append(p_xctr)
@@ -89,16 +89,14 @@ class ChronoPotentiometryWithLimits:
         )
         return ecc_parms_cplim
 
-    def make_technique(self):
-        # Name of the dll for the CPLIM technique (for both types of instruments VMP3/VSP300)
+    def choose_ecc_file(self):
+        # Name of the dll for the OCV technique (for both types of instruments VMP3/VSP300)
         cplim3_tech_file = "cplimit.ecc"
         cplim4_tech_file = "cplimit4.ecc"
+        # Pick the correct ecc file based on the instrument family
+        return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-        # pick the correct ecc file based on the instrument family
-        tech_file_cplim = cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-        # Define parameters for loading in the device using the templates
-        ecc_parms_cplim = self.make_cplim_parms()
-
-        CplimTech = namedtuple("CplimTech", "ecc_file ecc_params")
-        return CplimTech(tech_file_cplim, ecc_parms_cplim)
+    def make_technique(self):
+        self.ecc_file = self.choose_ecc_file()   
+        self.ecc_params = self.make_cplim_params()
