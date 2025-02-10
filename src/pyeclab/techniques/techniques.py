@@ -189,7 +189,7 @@ class ChronoPotentiometryWithLimits:
 
     def make_cplim_parms(self):
         # dictionary of CPLIM parameters (non exhaustive)
-        CPLIM_parm_names = {
+        cplim_param_names = {
             "current_step": ECC_parm("Current_step", float),
             "step_duration": ECC_parm("Duration_step", float),
             "vs_init": ECC_parm("vs_initial", bool),
@@ -212,24 +212,24 @@ class ChronoPotentiometryWithLimits:
 
         idx = 0  # Only one current step is used
         p_current_steps = list()
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["current_step"], self.current, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["step_duration"], self.duration, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["vs_init"], self.vs_init, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["exit_cond"], self.exit_cond.value, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["test1_config"], self.limit_variable, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["test1_value"], self.limit_values, idx))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["nb_steps"], self.nb_steps))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["record_dt"], self.record_dt))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["record_dE"], self.record_dE))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["repeat"], self.repeat))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["i_range"], self.i_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["e_range"], self.e_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, CPLIM_parm_names["bandwidth"], self.bandwidth.value))
-        # p_filter         = make_ecc_parm( api, CPLIM_parm_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["current_step"], self.current, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["step_duration"], self.duration, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["vs_init"], self.vs_init, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["exit_cond"], self.exit_cond.value, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_config"], self.limit_variable, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_value"], self.limit_values, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["nb_steps"], self.nb_steps))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["record_dt"], self.record_dt))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["record_dE"], self.record_dE))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["repeat"], self.repeat))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value))
+        # p_filter         = make_ecc_parm( api, cplim_param_names['analog_filter'], 0)#KBIO.FILTER[parameters.analog_filter].value)
         # make the technique parameter array
 
         if self.xctr:
-            p_xctr = make_ecc_parm(self.device, CPLIM_parm_names["xctr"], self.xctr)
+            p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
             p_current_steps.append(p_xctr)
 
         ecc_parms_CPLIM = make_ecc_parms(
