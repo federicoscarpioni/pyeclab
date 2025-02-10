@@ -22,6 +22,7 @@ license-files = ["LICENSE"]
 
 [project.optional-dependencies]
 buffer = ["np-rw-ringbuffer"]
+dev = ["pytest"]
 
 [project.urls]
 Repository = "https://github.com/federicoscarpioni/pyeclab.git"
@@ -35,4 +36,4 @@ build-backend = "hatchling.build"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "S", "UP"]
+select = ["B", "E", "F", "S", "UP"]
