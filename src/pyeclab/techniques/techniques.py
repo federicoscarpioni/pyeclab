@@ -232,7 +232,7 @@ class ChronoPotentiometryWithLimits:
             p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
             p_current_steps.append(p_xctr)
 
-        ecc_parms_CPLIM = make_ecc_parms(
+        ecc_parms_cplim = make_ecc_parms(
             self.device,
             *p_current_steps,
         )
@@ -244,13 +244,13 @@ class ChronoPotentiometryWithLimits:
         cplim4_tech_file = "cplimit4.ecc"
 
         # pick the correct ecc file based on the instrument family
-        tech_file_CPLIM = cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
+        tech_file_cplim = cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
         # Define parameters for loading in the device using the templates
-        ecc_parms_CPLIM = self.make_cplim_parms()
+        ecc_parms_cplim = self.make_cplim_parms()
 
         CplimTech = namedtuple("CplimTech", "ecc_file ecc_params")
-        return CplimTech(tech_file_CPLIM, ecc_parms_CPLIM)
+        return CplimTech(tech_file_cplim, ecc_parms_cplim)
 
 
 # ------CA------- #
