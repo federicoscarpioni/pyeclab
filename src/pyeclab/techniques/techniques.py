@@ -157,7 +157,7 @@ class EXIT_COND(Enum):
 
 
 @define(kw_only=True)
-class CpLim:
+class ChronoPotentiometryWithLimits:
     device: BiologicDevice
     current: float
     duration: float = field(validator=validators.ge(0))
