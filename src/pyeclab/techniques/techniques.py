@@ -108,44 +108,7 @@ def reset_duration(api, technique, tech_id):
 
 # === Techniques definition functions =========================================#
 
-
-# ------OCV------- #
-@dataclass
-class OCV_params:
-    duration: float
-    record_dt: float
-    e_range: float
-    bandwidth: int
-
-
-def OCV_tech(api, is_VMP3, parameters):
-    # .ecc file names
-    ocv3_tech_file = "ocv.ecc"
-    ocv4_tech_file = "ocv4.ecc"
-    # Dictionary of parameters used to call the labrary later
-    OCV_parm_names = {
-        "duration": ECC_parm("Rest_time_T", float),
-        "record_dt": ECC_parm("Record_every_dT", float),
-        "record_dE": ECC_parm("Record_every_dE", float),
-        "E_range": ECC_parm("E_Range", int),
-        "bandwidth": ECC_parm("Bandwidth", int),
-    }
-    # pick the correct ecc file based on the instrument family
-    tech_file_OCV = ocv3_tech_file if is_VMP3 else ocv4_tech_file
-
-    p_duration = make_ecc_parm(api, OCV_parm_names["duration"], parameters.duration)
-    p_record = make_ecc_parm(api, OCV_parm_names["record_dt"], parameters.record_dt)
-    p_erange = make_ecc_parm(api, OCV_parm_names["E_range"], parameters.e_range)
-    p_band = make_ecc_parm(api, OCV_parm_names["bandwidth"], parameters.bandwidth)
-
-    ecc_parms_OCV = make_ecc_parms(api, p_duration, p_record, p_erange, p_band)
-
-    # Use namedtuple to store the data to upload to BioLogic FPGA
-    OCV_tech = namedtuple("OCV_tech", "ecc_file ecc_params user_params")
-    ocv_tech = OCV_tech(tech_file_OCV, ecc_parms_OCV, parameters)
-
-    return ocv_tech
-
+# ------ OCV ------- #
 
 @define(kw_only=True)
 class OpenCircuitVoltage:
