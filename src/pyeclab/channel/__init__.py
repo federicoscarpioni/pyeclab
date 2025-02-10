@@ -36,9 +36,10 @@ else:
 
 ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
 
+
 class SavingManager:
-    'Manages the storage of data and metadata into a txt file or sql database.'
-    
+    "Manages the storage of data and metadata into a txt file or sql database."
+
     def __init__(self, path):
         self.path = path
 
@@ -57,7 +58,7 @@ class SavingManager:
             # !!! Print all the information of the techniques in the sequence
             # ! Add information on the device, channel number, cell name and user comments
             # ! Add the list of condition checked by the software
-    
+
     def create_exp_folder(self):
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
@@ -72,25 +73,23 @@ class SavingManager:
             self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
         else:
             self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
-    
+
     def close_saving_file(self):
         self.saving_file.close()
 
-    
+
 class HardwareConfig:
-    'See page 153 of the manual'
-    def set_CE2ground(self):
-        ...
-    def set_controlled_potential(self):
-        ...
+    "See page 153 of the manual"
+
+    def set_CE2ground(self): ...
+    def set_controlled_potential(self): ...
 
 
 class SequenceConfig:
-    'This will handle the GUI element for an esier creation of sequences of techinques'
-    def GUI(self):
-        ...
-    def load_sequence_json(self):
-        ...
+    "This will handle the GUI element for an esier creation of sequences of techinques"
+
+    def GUI(self): ...
+    def load_sequence_json(self): ...
     def save_sequence_json(self, path):
         json_file_path = self.saving_path + "/sequence.json"
         with open(json_file_path, "w") as json_file:
@@ -98,15 +97,15 @@ class SequenceConfig:
 
 
 class SoftwareLimitsManager:
-    '''
-    Create software limits for voltage working electrode, voltagecounter 
+    """
+    Create software limits for voltage working electrode, voltagecounter
     electrode, capacity, or other external input (AUX1 or 2).
-     '''
+    """
+
     ...
 
 
-class SequenceMonitor:
-    ...
+class SequenceMonitor: ...
 
 
 @define
@@ -202,16 +201,16 @@ class Channel:
         self,
         bio_device: BiologicDevice,
         channel_num: int,
-        saving_dir: str,
-        channel_options: namedtuple,
-        is_live_plotting: bool = True,  # ? Deside which naming convention to use for booleans
-        is_recording_Ece: bool = False,
-        is_external_controlled: bool = False,
-        is_recording_analog_In1: bool = False,
-        is_recording_analog_In2: bool = False,
-        is_charge_recorded: bool = False,
+        saving_dir: str,  # writer
+        channel_options: namedtuple,  # writer
+        is_live_plotting: bool = True,  # plot  # ? Deside which naming convention to use for booleans
+        is_recording_Ece: bool = False,  # exp
+        is_external_controlled: bool = False,  # exp
+        is_recording_analog_In1: bool = False,  # exp
+        is_recording_analog_In2: bool = False,  # exp
+        is_charge_recorded: bool = False,  # exp
         is_printing_values: bool = False,
-        callbacks: list | None = None,
+        callbacks: list | None = None,  # callbacks
     ):
         self.bio_device = bio_device
         self.num = channel_num
