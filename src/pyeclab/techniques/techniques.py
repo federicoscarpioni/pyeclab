@@ -147,6 +147,49 @@ def OCV_tech(api, is_VMP3, parameters):
     return ocv_tech
 
 
+@define(kw_only=True)
+class OpenCircuitVoltage:
+    device: BiologicDevice
+    duration: float
+    record_dt: float
+    e_range: KBIO.E_RANGE
+    bandwidth: KBIO.BANDWIDTH
+
+    def make_ocv_params(self):
+        # List of OCV parameters
+        OCV_parm_names = {
+        "duration": ECC_parm("Rest_time_T", float),
+        "record_dt": ECC_parm("Record_every_dT", float),
+        "record_dE": ECC_parm("Record_every_dE", float),
+        "E_range": ECC_parm("E_Range", int),
+        "bandwidth": ECC_parm("Bandwidth", int),
+        }
+
+        p_duration = make_ecc_parm(api, OCV_parm_names["duration"], parameters.duration)
+        p_record = make_ecc_parm(api, OCV_parm_names["record_dt"], parameters.record_dt)
+        p_erange = make_ecc_parm(api, OCV_parm_names["E_range"], parameters.e_range)
+        p_band = make_ecc_parm(api, OCV_parm_names["bandwidth"], parameters.bandwidth)
+
+        return make_ecc_parms(api, p_duration, p_record, p_erange, p_band)
+        return ecc_parms_ocv
+
+    def  make_technique(self):
+
+        # Name of the dll for the OCV technique (for both types of instruments VMP3/VSP300)
+        ocv3_tech_file = "ocv.ecc"
+        ocv4_tech_file = "ocv4.ecc"
+
+        # pick the correct ecc file based on the instrument family
+        tech_file_ocv = ocv3_tech_file if is_VMP3 else ocv4_tech_file
+
+        # Define parameters for loading in the device using the templates
+        ecc_parms_ocv = self.make_ocv_params()
+        
+        OcvTech = namedtuple("OcvTech", "ecc_file ecc_params user_params")
+        return OcvTech(tech_file_ocv, ecc_parms_OCV, parameters)
+
+
+
 # ------CPLIM------- #
 
 
