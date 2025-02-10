@@ -24,13 +24,14 @@ class FileWriter:
     data_length: int | None = field(init=False, default=None)
 
     def write(self, data: np.typing.NDArray):
-        """Write to file"""
+        """Write to one or multiple rows of data to file."""
 
         if self.file:
             np.savetxt(self.file, data, fmt="%4.3e", delimiter="\t")
             self.file.flush()
 
     def write_metadata(self, data: dict[str, str | int | float | datetime]):
+        """Write Metadata to file."""
         file_path = self.file_dir / self.experiment_name / "metadata.txt"
         lines = []
         for k, v in data.items():
@@ -72,24 +73,6 @@ class FileWriter:
             self.file.flush()
 
     def _close_saving_file(self):
+        """Close file if open."""
         if self.file:
             self.file.close()
-
-    def _save_exp_metadata(self):
-        # Note: I am not using the 'with' constructor here because I assume I
-        # might want to update the metada if some event happen. In that case,
-        # the closing function should be move in the stop() method.
-        self.metadata_file = open(self.saving_path + "/experiment_metadata.txt", "w")
-        # File title
-        self.metadata_file.write("PYECLAB METADATA FILE\n")
-        # Information of the starting time
-        self.starting_time = datetime.now()
-        self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-        self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
-        # Information of the saving file name
-        self.metadata_file.write(f"Experiment name : {self.experiment_name}\n")
-        self.metadata_file.write(f"Saving file path : {self.saving_path}\n")
-        # !!! Print all the information of the techniques in the sequence
-        # ! Add information on the device, channel number, cell name and user comments
-        # ! Add the list of condition checked by the software
-        self.metadata_file.close()
