@@ -8,11 +8,10 @@ from attrs import define, field, validators
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
-import pyeclab.tech_names as tn
 from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
-from exit_cond import EXIT_COND
+from pyeclab.techniques.exit_cond import EXIT_COND
 
 @define(kw_only=True)
 class ChronoPotentiometryWithLimits:
@@ -26,10 +25,10 @@ class ChronoPotentiometryWithLimits:
     repeat: int = field(validator=validators.ge(0))
     i_range: KBIO.I_RANGE = field()
 
-    @i_range.validator
-    def check(self, attribute, value):
-        if value == KBIO.I_RANGE.I_RANGE_AUTO:
-            raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
+    # @i_range.validator
+    # def check(self, attribute, value):
+    #     if value == KBIO.I_RANGE.I_RANGE_AUTO:
+    #         raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
 
     e_range: KBIO.E_RANGE
     exit_cond: EXIT_COND

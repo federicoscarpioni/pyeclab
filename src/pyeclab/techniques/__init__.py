@@ -35,8 +35,8 @@ For each technique are provided:
 
 """
 
-from functions import set_duration_to_1s, reset_duration
-from ocv import OpenCircuitVoltage
-from cplim import ChronoPotentiometryWithLimits
-from ca import ChronoAmperometry
-from loop import Loop
+from pyeclab.techniques.functions import set_duration_to_1s, reset_duration
+from pyeclab.techniques.ocv import OpenCircuitVoltage
+from pyeclab.techniques.cplim import ChronoPotentiometryWithLimits
+from pyeclab.techniques.ca import ChronoAmperometry
+from pyeclab.techniques.loop import Loop
