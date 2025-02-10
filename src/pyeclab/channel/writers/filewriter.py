@@ -1,7 +1,7 @@
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 from attrs import define, field
