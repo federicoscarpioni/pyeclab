@@ -125,3 +125,5 @@ def test_file_content_handling_multi_line(writer_instantiated):
         lines = f.readlines()
 
     assert lines[1] == "0.000e+00	3.009e-04	0.000e+00	0.000e+00	0.000e+00\n"
+    assert lines[2] == "1.200e-04	1.147e+00	9.218e-04	0.000e+00	0.000e+00\n"
+    assert lines[3] == "1.600e-04	1.610e+00	1.085e-03	0.000e+00	0.000e+00\n"
