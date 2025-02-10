@@ -120,7 +120,7 @@ class OpenCircuitVoltage:
 
     def make_ocv_params(self):
         # List of OCV parameters
-        OCV_parm_names = {
+        ocv_param_names = {
         "duration": ECC_parm("Rest_time_T", float),
         "record_dt": ECC_parm("Record_every_dT", float),
         "record_dE": ECC_parm("Record_every_dE", float),
@@ -128,10 +128,10 @@ class OpenCircuitVoltage:
         "bandwidth": ECC_parm("Bandwidth", int),
         }
 
-        p_duration = make_ecc_parm(self.device, OCV_parm_names["duration"], parameters.duration)
-        p_record = make_ecc_parm(self.device, OCV_parm_names["record_dt"], parameters.record_dt)
-        p_erange = make_ecc_parm(self.device, OCV_parm_names["E_range"], parameters.e_range)
-        p_band = make_ecc_parm(self.device, OCV_parm_names["bandwidth"], parameters.bandwidth)
+        p_duration = make_ecc_parm(self.device, ocv_param_names["duration"], parameters.duration)
+        p_record = make_ecc_parm(self.device, ocv_param_names["record_dt"], parameters.record_dt)
+        p_erange = make_ecc_parm(self.device, ocv_param_names["E_range"], parameters.e_range)
+        p_band = make_ecc_parm(self.device, ocv_param_names["bandwidth"], parameters.bandwidth)
 
         return make_ecc_parms(self.device, p_duration, p_record, p_erange, p_band)
         return ecc_parms_ocv
