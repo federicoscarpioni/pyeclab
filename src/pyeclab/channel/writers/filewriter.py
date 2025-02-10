@@ -1,16 +1,13 @@
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from attrs import define
 import numpy as np
-
-from pyeclab.channel.writers.abstractwriter import AbstractWriter
+from attrs import define
 
 
 @define
-class FileWriter(AbstractWriter):
+class FileWriter:
     """
     Writer class which writes to a text file.
 
@@ -19,8 +16,6 @@ class FileWriter(AbstractWriter):
 
     file_dir: Path
     experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
     append: bool = False
     overwrite: bool = True
 
@@ -32,6 +27,19 @@ class FileWriter(AbstractWriter):
         if len(data) > 0:
             np.savetxt(self.file, data, fmt="%4.3e", delimiter="\t")
             self.file.flush()
+
+    def write_metadata(self, data: dict[str, str | int | float | datetime]):
+        file_path = self.file_dir / self.experiment_name / "metadata.txt"
+        lines = []
+        for k, v in data.items():
+            if isinstance(v, datetime):
+                v = v.strftime("%d.%m.%Y, %H:%M:%S")
+            lines.append(": ".join([k, str(v)]) + "\n")
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(file_path, "w") as f:
+            f.writelines(lines)
 
     def instantiate(self, structure: Sequence[str]):
         """Create dir"""
@@ -80,42 +88,3 @@ class FileWriter(AbstractWriter):
         # ! Add information on the device, channel number, cell name and user comments
         # ! Add the list of condition checked by the software
         self.metadata_file.close()
-
-
-@define
-class SqlWriter(AbstractWriter):
-    """"""
-
-    db: Path
-    experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
-
-    def write(self, data):
-        """Write to DB"""
-        cur = self.conn.cursor()
-        insert_data = (
-            self.experiment_name,
-            data.time,
-            data.voltage,
-            data.current,
-            data.technique_num,
-            data.loop_num,
-            data.user_cycle,
-        )
-        cur.execute(
-            "INSERT INTO ?(?,?,?,?,?,?)",
-            insert_data,
-        )
-
-    def instantiate(self) -> None:
-        """Create DB/Table and create connection."""
-        self.conn = sqlite3.connect(self.db)
-        cur = self.conn.cursor()
-        stmt = "CREATE TABLE IF NOT EXISTS ?(id INTEGER PRIMARY KEY AUTOINCREMENT, time REAL, current REAL, voltage REAL, technique_num INTEGER, loop_num INTEGER, user_cycle INTEGER, user_state TEXT)"
-        cur.execute(stmt, self.experiment_name)
-        self.conn.commit()
-
-    def close(self) -> None:
-        """Close the DB connection"""
-        self.conn.close()
