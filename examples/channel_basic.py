@@ -1,26 +1,31 @@
-import pyeclab.techniques.techniques as tech
+from pyeclab.techniques import OpenCircuitVoltage
 from pyeclab.channel import Channel, ChannelOptions
 from pyeclab.device import BiologicDevice
+import pyeclab.api.kbio_types as KBIO
 
 # IP address of the instrument
-ip_address = "172.28.26.11"
+ip_address = "172.28.20.81"
 # Path of the SDK from BioLogic installed in the machine
 binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 # Istantiate device class
 device = BiologicDevice(ip_address, binary_path=binary_path)
 # Create OCV technique
-ocv_params = tech.OCV_params(20, 1, 0, 4)
-ocv_technique = tech.OCV_tech(device, device.is_VMP3, ocv_params)
-sequence_test = [ocv_technique]
+ocv = OpenCircuitVoltage(device = device,
+                         duration=10, 
+                         record_dt=1, 
+                         e_range=KBIO.E_RANGE.E_RANGE_2_5V, 
+                         bandwidth=KBIO.BANDWIDTH.BW_4)
+ocv.make_technique()
+sequence_test = [ocv]
 # Istantiate channel
-test_options = ChannelOptions("2408240935_working_example_live_plot_channel")
+test_options = ChannelOptions("250210_test_ocv")
 channel1 = Channel(
     device,
     1,
-    "E:/Experimental_data/Federico/2024/python_software_test",
+    "C:/Experimental_data/Federico/2025/python_software_test",
     test_options,
-    do_live_plot=True,
-    do_print_values=False,
+    is_live_plotting=True,
+    is_printing_values= True
 )
-channel1.load_sequence(sequence_test, ask_ok=False)
+channel1.load_sequence(sequence_test, ask_ok=True)
 channel1.start()
