@@ -16,7 +16,13 @@ dependencies = [
 ]
 ```
 
+### Notes
+
+Don't use python version 3.13.0, as it has a bug with the location of the TCL-library. Python versions earlier/later are fine.
+
 ### np-rw-Buffer
+
+Attention: np-rw-buffer will be removed in the future and replaced with a custom solution, as the package isn't maintained anymore.
 
 The optional np-rw-ringbuffer dependency can be installed using the `[buffer]` dependency group, e.g. like this:
 
