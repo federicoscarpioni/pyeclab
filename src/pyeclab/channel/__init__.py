@@ -1,19 +1,16 @@
-from abc import ABC, abstractmethod
 import json
-import time
-from collections import deque, namedtuple
-from datetime import datetime
-from pathlib import Path
-from threading import Thread
 import logging
-import sqlite3
+import time
+from datetime import datetime
+from threading import Thread
 
-from attrs import define
 import numpy as np
+from attrs import asdict
 
 from pyeclab.api.tech_types import TECH_ID
-from pyeclab.device import BiologicDevice
 from pyeclab.channel.liveplot import LivePlot
+from pyeclab.channel.writers.abstractwriter import AbstractWriter
+from pyeclab.device import BiologicDevice
 from pyeclab.techniques.functions import reset_duration, set_duration_to_1s
 
 logger = logging.getLogger("pyeclab")
@@ -33,49 +30,6 @@ else:
 !!! Works only for dt of 1 second of the potentiostat. The problem is how to 
 !!! save correctly a matrix of values instead of an array
 """
-
-ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
-
-
-class SavingManager:
-    "Manages the storage of data and metadata into a txt file or sql database."
-
-    def __init__(self, path):
-        self.path = path
-
-    def save_metadata(self, channel):
-        with open(self.path + "/experiment_metadata.txt", "w") as txtfile:
-            # File title
-            txtfile.write("PYECLAB METADATA FILE\n")
-            # Information of the starting time
-            txtfile = datetime.now()
-            txtfile.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-            txtfile.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
-            # Information of the saving file name
-            txtfile.write(f"Experiment name : {self.experiment_name}\n")
-            txtfile.write(f"Saving file path : {self.path}\n")
-            # ! Add information on the method of saving (txt or sql database)
-            # !!! Print all the information of the techniques in the sequence
-            # ! Add information on the device, channel number, cell name and user comments
-            # ! Add the list of condition checked by the software
-
-    def create_exp_folder(self):
-        Path(self.path).mkdir(parents=True, exist_ok=True)
-
-    def create_saving_file(self, channel):
-        self.saving_file = open(self.path + "/measurement_data.txt", "w+")
-        # Write headers
-        if self.channel.is_recording_Ece and self.channel.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
-        elif self.channel.is_recording_Ece:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
-        elif self.channel.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
-        else:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
-
-    def close_saving_file(self):
-        self.saving_file.close()
 
 
 class HardwareConfig:
@@ -108,83 +62,6 @@ class SoftwareLimitsManager:
 class SequenceMonitor: ...
 
 
-@define
-class Data:
-    time: float
-    voltage: float
-    current: float
-    technique_num: int
-    loop_num: int
-    user_cycle: int
-
-
-class AbstractWriter(ABC):
-    @abstractmethod
-    def write(self, data: Data) -> None: ...
-
-    @abstractmethod
-    def instantiate(self) -> None: ...
-
-    @abstractmethod
-    def close(self) -> None: ...
-
-
-@define
-class FileWriter(AbstractWriter):
-    """"""
-
-    file_dir: Path
-    experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
-
-    def write(self, data):
-        """Write to file"""
-        raise NotImplementedError
-
-    def instantiate(self):
-        """Create dir"""
-
-
-@define
-class SqlWriter(AbstractWriter):
-    """"""
-
-    db: Path
-    experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
-
-    def write(self, data: Data):
-        """Write to DB"""
-        cur = self.conn.cursor()
-        insert_data = (
-            self.experiment_name,
-            data.time,
-            data.voltage,
-            data.current,
-            data.technique_num,
-            data.loop_num,
-            data.user_cycle,
-        )
-        cur.execute(
-            "INSERT INTO ?(?,?,?,?,?,?)",
-            insert_data,
-        )
-
-    def instantiate(self) -> None:
-        """Create DB/Table and create connection."""
-        self.conn = sqlite3.connect(self.db)
-        cur = self.conn.cursor()
-        stmt = "CREATE TABLE IF NOT EXISTS ?(id INTEGER PRIMARY KEY AUTOINCREMENT, time REAL, current REAL, voltage REAL, technique_num INTEGER, loop_num INTEGER, user_cycle INTEGER, user_state TEXT)"
-        cur.execute(stmt, self.experiment_name)
-        self.conn.commit()
-
-    def close(self) -> None:
-        """Close the DB connection"""
-        self.conn.close()
-
-
 class Channel:
     # New to implement:
     # def __init__(self, bio_device, channel_num, saving_dir, channel_options,
@@ -201,8 +78,7 @@ class Channel:
         self,
         bio_device: BiologicDevice,
         channel_num: int,
-        saving_dir: str,  # writer
-        channel_options: namedtuple,  # writer
+        writer: AbstractWriter,
         is_live_plotting: bool = True,  # plot  # ? Deside which naming convention to use for booleans
         is_recording_Ece: bool = False,  # exp
         is_external_controlled: bool = False,  # exp
@@ -214,9 +90,7 @@ class Channel:
     ):
         self.bio_device = bio_device
         self.num = channel_num
-        # Saving details
-        self.experiment_name = channel_options.experiment_name  # ? maybe I can save directly the whole options
-        self.saving_path = saving_dir + "/" + self.experiment_name
+        self.writer = writer
         # Class behaviour
         self.print_values = is_printing_values
         self.is_live_plotting = is_live_plotting
@@ -263,8 +137,7 @@ class Channel:
 
     def start(self):
         # Save experiment data
-        self._create_exp_folder()
-        self._create_saving_file()
+        self._instantiate_writer()
         self._save_exp_metadata()
         # self._save_sequence_json()
         # Start channel on the device
@@ -321,7 +194,7 @@ class Channel:
         """
         Operations to perfom when the sequence is completed.
         """
-        self._close_saving_file()
+        self.writer.close()
         self._execute_callbacks()
         print(f"CH{self.num} > Measure terminated")
 
@@ -350,9 +223,9 @@ class Channel:
             if self._check_software_limits():
                 print("Software limits met")  # debug print
                 self.end_technique()
-            if self._check_software_limits_avarage():
-                print("Software limits avarage met")  # debug print
-                self.end_technique()
+            # if self._check_software_limits_avarage():
+            #     print("Software limits avarage met")  # debug print
+            #     self.end_technique()
             # Sleep before retriving next measrued data
             time.sleep(sleep_time)
 
@@ -557,22 +430,19 @@ class Channel:
                 return True
         return False
 
-    ## Methods for saving data ##
+    ## Methods for saving data
+    def _instantiate_writer(self):
+        structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
 
-    # def _create_exp_folder(self):
-    #     Path(self.saving_path).mkdir(parents=True, exist_ok=True)
+        if self.is_recording_Ece and self.is_charge_recorded:
+            structure.insert(3, "Ece/V")
+            structure.insert(4, "Q/C")
+        elif self.is_recording_Ece:
+            structure.insert(3, "Ece/V")
+        elif self.is_charge_recorded:
+            structure.insert(3, "Q/C")
 
-    # def _create_saving_file(self):
-    #     self.saving_file = open(self.saving_path + "/measurement_data.txt", "w+")
-    #     # Write headers
-    #     if self.is_recording_Ece and self.is_charge_recorded:
-    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
-    #     elif self.is_recording_Ece:
-    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
-    #     elif self.is_charge_recorded:
-    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
-    #     else:
-    #         self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
+        self.writer.instantiate(structure)
 
     def _write_latest_data_to_file(self):
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
@@ -580,30 +450,28 @@ class Channel:
 
         data_to_save = np.column_stack((*self.latest_data, technique_num, loop_num))
 
-        np.savetxt(self.saving_file, data_to_save, fmt="%4.3e", delimiter="\t")
-        self.saving_file.flush()
+        self.writer.write(data_to_save)
 
-    # def _close_saving_file(self):
-    #     self.saving_file.close()
+    def _save_exp_metadata(self):
+        metadata = {}
 
-    # def _save_exp_metadata(self):
-    #     # Note: I am not using the 'with' constructor here because I assume I
-    #     # might want to update the metada if some event happen. In that case,
-    #     # the closing function should be move in the stop() method.
-    #     self.metadata_file = open(self.saving_path + "/experiment_metadata.txt", "w")
-    #     # File title
-    #     self.metadata_file.write("PYECLAB METADATA FILE\n")
-    #     # Information of the starting time
-    #     self.starting_time = datetime.now()
-    #     self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-    #     self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
-    #     # Information of the saving file name
-    #     self.metadata_file.write(f"Experiment name : {self.experiment_name}\n")
-    #     self.metadata_file.write(f"Saving file path : {self.saving_path}\n")
-    #     # !!! Print all the information of the techniques in the sequence
-    #     # ! Add information on the device, channel number, cell name and user comments
-    #     # ! Add the list of condition checked by the software
-    #     self.metadata_file.close()
+        self.starting_time = datetime.now()
+        metadata["Experiment Name"] = self.writer.experiment_name
+        metadata["Start of Experiment"] = self.starting_time
+
+        for idx, technique in enumerate(self.sequence):
+            metadata["Technique"] = idx
+            for k, v in asdict(technique).items():
+                if not isinstance(v, datetime):
+                    try:
+                        str(v)
+                        metadata[f"tech{idx}_{k}"] = v
+                    except Exception:
+                        continue
+                else:
+                    metadata[f"tech{idx}_{k}"] = v
+
+        self.writer.write_metadata(metadata)
 
     # def _save_sequence_json(self):
     #     json_file_path = self.saving_path + "/sequence.json"
