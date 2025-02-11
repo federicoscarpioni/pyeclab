@@ -131,4 +131,5 @@ class LivePlot:
             self._update_plot,
             init_func=self._initialize_figure(),
             interval=self.update_interval,
+            cache_frame_data=False,
         )
