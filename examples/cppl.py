@@ -1,18 +1,18 @@
+from pathlib import Path
+from pyeclab.channel.writers.filewriter import FileWriter
 from pyeclab.device import BiologicDevice
-from pyeclab.techniques.techniques import EXIT_COND, OCV_params, OCV_tech, CpLim
-from pyeclab.channel import Channel, ChannelOptions
-from pyeclab.api.kbio_types import I_RANGE, E_RANGE, BANDWIDTH
+from pyeclab import EXIT_COND, Channel, I_RANGE, E_RANGE, BANDWIDTH
+from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage
 
 IP = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/lib/"
 
 device = BiologicDevice(IP, binary_path)
 
-ocv_params = OCV_params(20, 1, 0, 4)
-ocv_technique = OCV_tech(device, device.is_VMP3, ocv_params)
+ocv = OpenCircuitVoltage(device=device, duration=5, record_dt=1, e_range=E_RANGE.E_RANGE_2_5V, bandwidth=BANDWIDTH.BW_4)
+ocv.make_technique()
 
-
-cppl = CpLim(
+cppl = ChronoPotentiometryWithLimits(
     device=device,
     current=0.01,
     duration=1 * 1 * 5,
@@ -28,18 +28,17 @@ cppl = CpLim(
     limit_values=10,
     bandwidth=BANDWIDTH.BW_5,
 )
+cppl.make_technique()
 
-cppl_technique = cppl.make_technique()
+sequence_test = [ocv, cppl, ocv]
 
-sequence_test = [cppl_technique]
 
-test_options = ChannelOptions("20250122_1112_cppl-test")
+writer = FileWriter(Path("C:/Users/jconen/Desktop/data"), experiment_name="2025_02_11-Test")
 
 channel1 = Channel(
     device,
     1,
-    "C:/Users/jconen/Desktop/biologic_data",
-    test_options,
+    writer,
 )
 channel1.load_sequence(sequence_test, ask_ok=True)
 channel1.start()
