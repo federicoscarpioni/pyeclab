@@ -20,17 +20,17 @@ class OpenCircuitVoltage:
     record_dt: float
     e_range: KBIO.E_RANGE
     bandwidth: KBIO.BANDWIDTH
-    ecc_file : str | None = field(init = False, default = None)
-    ecc_params : list | None = field(init = False, default = None) 
+    ecc_file: str | None = field(init=False, default=None)
+    ecc_params: list | None = field(init=False, default=None)
 
     def make_ocv_params(self):
         # List of OCV parameters
         ocv_param_names = {
-        "duration": ECC_parm("Rest_time_T", float),
-        "record_dt": ECC_parm("Record_every_dT", float),
-        "record_dE": ECC_parm("Record_every_dE", float),
-        "E_range": ECC_parm("E_Range", int),
-        "bandwidth": ECC_parm("Bandwidth", int),
+            "duration": ECC_parm("Rest_time_T", float),
+            "record_dt": ECC_parm("Record_every_dT", float),
+            "record_dE": ECC_parm("Record_every_dE", float),
+            "E_range": ECC_parm("E_Range", int),
+            "bandwidth": ECC_parm("Bandwidth", int),
         }
 
         p_duration = make_ecc_parm(self.device, ocv_param_names["duration"], self.duration)
@@ -48,8 +48,6 @@ class OpenCircuitVoltage:
         # pick the correct ecc file based on the instrument family
         return ocv3_tech_file if self.device.is_VMP3 else ocv4_tech_file
 
-    def  make_technique(self):
-
-        self.ecc_file = self.choose_ecc_file()   
+    def make_technique(self):
+        self.ecc_file = self.choose_ecc_file()
         self.ecc_params = self.make_ocv_params()
-
