@@ -64,17 +64,6 @@ class SequenceMonitor: ...
 
 
 class Channel:
-    # New to implement:
-    # def __init__(self, bio_device, channel_num, saving_dir, channel_options,
-    #              hardware_manager, experiment_manager, data_manager, condition_checker):
-    #     self.bio_device = bio_device
-    #     self.num = channel_num
-    #     self.hardware_manager = hardware_manager
-    #     self.experiment_manager = experiment_manager
-    #     self.data_manager = data_manager
-    #     self.condition_checker = condition_checker
-    #     ...
-
     def __init__(
         self,
         bio_device: BiologicDevice,
@@ -308,6 +297,7 @@ class Channel:
         self.current_tech_id = self.data_info.TechniqueID
         logger.debug(f"From _update_sequence_trackers:\n{self.current_tech_id=}\n{self.data_info.TechniqueID}")
         self.current_loop = self.data_info.loop
+        print(f"Loop {self.current_loop}, Technique {self.current_tech_index}, Technique ID {self.current_tech_id}")
 
     def _monitoring_sequence_progression(self):
         """
