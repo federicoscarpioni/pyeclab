@@ -1,4 +1,5 @@
 from pathlib import Path
+from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.writers.filewriter import FileWriter
 from pyeclab.device import BiologicDevice
 from pyeclab import EXIT_COND, Channel, I_RANGE, E_RANGE, BANDWIDTH
@@ -35,10 +36,13 @@ sequence_test = [ocv, cppl, ocv]
 
 writer = FileWriter(Path("C:/Users/jconen/Desktop/data"), experiment_name="2025_02_11-Test")
 
+config = ChannelConfig()
+
 channel1 = Channel(
     device,
     1,
     writer,
+    config,
 )
 channel1.load_sequence(sequence_test, ask_ok=True)
 channel1.start()
