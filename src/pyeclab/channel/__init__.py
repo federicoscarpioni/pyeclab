@@ -8,6 +8,7 @@ import numpy as np
 from attrs import asdict
 
 from pyeclab.api.tech_types import TECH_ID
+from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
 from pyeclab.device import BiologicDevice
@@ -79,21 +80,13 @@ class Channel:
         bio_device: BiologicDevice,
         channel_num: int,
         writer: AbstractWriter,
-        is_live_plotting: bool = True,  # plot  # ? Deside which naming convention to use for booleans
-        is_recording_Ece: bool = False,  # exp
-        is_external_controlled: bool = False,  # exp
-        is_recording_analog_In1: bool = False,  # exp
-        is_recording_analog_In2: bool = False,  # exp
-        is_charge_recorded: bool = False,  # exp
-        is_printing_values: bool = False,
+        config: ChannelConfig,
         callbacks: list | None = None,  # callbacks
     ):
         self.bio_device = bio_device
         self.num = channel_num
         self.writer = writer
-        # Class behaviour
-        self.print_values = is_printing_values
-        self.is_live_plotting = is_live_plotting
+        self.config = config
         self.callbacks = [] if callbacks is None else callbacks
         self.current_tech_index = 0
         self.current_loop = 0
@@ -101,11 +94,6 @@ class Channel:
         self.conditions = []
         self.conditions_average = []
         self.is_running = False
-        self.is_recording_Ece = is_recording_Ece
-        self.is_external_controlled = is_external_controlled
-        self.is_recording_analog_In1 = is_recording_analog_In1
-        self.is_recording_analog_In2 = is_recording_analog_In2
-        self.is_charge_recorded = is_charge_recorded
         self.xtr_param = self.generate_xctr_param()  # This parameter is valid only for premium potentiostat
 
     ## Methods for setting hardware for the experiment ##
@@ -114,13 +102,13 @@ class Channel:
 
     def generate_xctr_param(self):
         bitfield = 0
-        bitfield |= self.is_recording_Ece << 0  # Record Ece at bit position 1
-        bitfield |= self.is_recording_analog_In1 << 1  # Record Analog IN1 at bit position 2
-        bitfield |= self.is_recording_analog_In2 << 2  # Record Analog IN2 at bit position 3
-        bitfield |= self.is_external_controlled << 3  # Enable External ctrl at bit position 4
+        bitfield |= self.config.record_ece << 0  # Record Ece at bit position 1
+        bitfield |= self.config.record_analog_In1 << 1  # Record Analog IN1 at bit position 2
+        bitfield |= self.config.record_analog_In2 << 2  # Record Analog IN2 at bit position 3
+        bitfield |= self.config.external_control << 3  # Enable External ctrl at bit position 4
         # bit 5 is reserved
         # No information for bit position 6 (Record Control), assuming not needed
-        bitfield |= self.is_charge_recorded << 6  # Record Charge at bit position 7
+        bitfield |= self.config.record_charge << 6  # Record Charge at bit position 7
         # No information for bit position 8 (Record IRange), assuming not needed
         return bitfield
 
@@ -147,7 +135,7 @@ class Channel:
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
         # Initialize liveplot
-        if self.is_live_plotting:
+        if self.config.live_plot:
             self.start_live_plot()
         print(f"CH{self.num}: Experiment started")
 
@@ -209,7 +197,7 @@ class Channel:
             # Write latest data to open saving file
             self._write_latest_data_to_file()
             # Print latest values
-            if self.print_values:
+            if self.config.print_values:
                 self._print_current_values()
             # Update plot
             # self.liveplot.update_plot()
@@ -301,11 +289,11 @@ class Channel:
             [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
         )
         # Convert buffer numbers in real values
-        if self.is_charge_recorded and self.is_recording_Ece:
+        if self.config.record_charge and self.config.record_ece:
             return self._get_converted_buffer_with_charge_and_Ece(buffer)
-        elif self.is_charge_recorded:
+        elif self.config.record_charge:
             return self._get_converted_buffer_with_charge(buffer)
-        elif self.is_recording_Ece:
+        elif self.config.record_ece:
             return self._get_converted_buffer_with_Ece(buffer)
         else:
             return self._get_converted_buffer_base(buffer)
@@ -437,12 +425,12 @@ class Channel:
         """
         structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
 
-        if self.is_recording_Ece and self.is_charge_recorded:
+        if self.config.record_ece and self.config.record_charge:
             structure.insert(3, "Ece/V")
             structure.insert(4, "Q/C")
-        elif self.is_recording_Ece:
+        elif self.config.record_ece:
             structure.insert(3, "Ece/V")
-        elif self.is_charge_recorded:
+        elif self.config.record_charge:
             structure.insert(3, "Q/C")
 
         self.writer.instantiate(structure)
