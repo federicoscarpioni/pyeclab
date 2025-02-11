@@ -6,9 +6,11 @@ from collections.abc import Iterable, Sequence
 import numpy as np
 from attrs import define, field
 
+from pyeclab.channel.writers.abstractwriter import AbstractWriter
+
 
 @define
-class FileWriter:
+class FileWriter(AbstractWriter):
     """
     Writer class which writes to a text file.
 

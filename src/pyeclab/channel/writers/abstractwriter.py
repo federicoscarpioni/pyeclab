@@ -1,12 +1,15 @@
 from abc import ABC, abstractmethod
 
-from pyeclab.channel.writers.filewriter import FileWriter
-from pyeclab.channel.writers.sqlwriter import SqlWriter
+import numpy as np
 
 
 class AbstractWriter(ABC):
     @abstractmethod
-    def write(self, data) -> None: ...
+    def __init__(self, experiment_name: str):
+        self.experiment_name = experiment_name
+
+    @abstractmethod
+    def write(self, data: np.typing.NDArray) -> None: ...
 
     @abstractmethod
     def write_metadata(self, data: dict) -> None: ...
@@ -16,7 +19,3 @@ class AbstractWriter(ABC):
 
     @abstractmethod
     def close(self) -> None: ...
-
-
-AbstractWriter.register(FileWriter)
-AbstractWriter.register(SqlWriter)

@@ -5,9 +5,11 @@ from collections.abc import Sequence
 
 from attrs import define
 
+from pyeclab.channel.writers.abstractwriter import AbstractWriter
+
 
 @define
-class SqlWriter:
+class SqlWriter(AbstractWriter):
     """"""
 
     db: Path | str
