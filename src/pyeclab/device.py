@@ -17,15 +17,18 @@ class BiologicDevice(KBIO_api):
     IMPORTANT: The class doesn't retrive the measurement data from the instrument!
     """
 
-    def __init__(self, address, binary_path="C:/EC-Lab Development Package/EC-Lab Development Package/"):
+    def __init__(
+        self, address, binary_path="C:/EC-Lab Development Package/EC-Lab Development Package/", autoconnect: bool = True
+    ):
         DLL_path = self._choose_library(binary_path)
         super(BiologicDevice, self).__init__(DLL_path)
         self.address = address
-        self.connect()
-        self.test_connection()
-        self.test_channels_plugged()
-        self.is_VMP3 = self.device_info.model in types.VMP3_FAMILY
-        self._load_firmware_channels(force_load=False)
+        if autoconnect:
+            self.connect()
+            self.test_connection()
+            self.test_channels_plugged()
+            self.is_VMP3 = self.device_info.model in types.VMP3_FAMILY
+            self._load_firmware_channels(force_load=False)
 
     def _choose_library(self, binary_path):
         """
