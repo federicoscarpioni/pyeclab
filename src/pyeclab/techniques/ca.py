@@ -16,7 +16,7 @@ from pyeclab.techniques.exit_cond import EXIT_COND
 
 @define(kw_only=True)
 class ChronoAmperometry:
-    device:BiologicDevice
+    device: BiologicDevice
     voltage: float
     duration: float
     vs_init: bool
@@ -35,9 +35,8 @@ class ChronoAmperometry:
     exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
     bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
-    ecc_file : str | None = field(init = False, default = None)
-    ecc_params : list | None = field(init = False, default = None)
-
+    ecc_file: str | None = field(init=False, default=None)
+    ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
     def make_ca_params(self):
         # dictionary of CP parameters (non exhaustive)
@@ -93,8 +92,6 @@ class ChronoAmperometry:
         # pick the correct ecc file based on the instrument family
         return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-
-
     def make_technique(self):
-        self.ecc_file = self.choose_ecc_file()   
+        self.ecc_file = self.choose_ecc_file()
         self.ecc_params = self.make_ca_params()

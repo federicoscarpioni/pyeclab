@@ -21,7 +21,7 @@ class OpenCircuitVoltage:
     e_range: KBIO.E_RANGE
     bandwidth: KBIO.BANDWIDTH
     ecc_file: str | None = field(init=False, default=None)
-    ecc_params: list | None = field(init=False, default=None)
+    ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
     def make_ocv_params(self):
         # List of OCV parameters
