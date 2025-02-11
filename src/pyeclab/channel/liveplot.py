@@ -1,9 +1,9 @@
-import csv
-
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+from pyeclab.channel.writers.filewriter import FileWriter
 
 # NOTE last point is not plotted
 
@@ -50,7 +50,7 @@ class LivePlot:
         self.ax2.grid(True)
 
     def _read_latest_values(self):
-        if not self.channel.saving_file.closed:
+        if not self.channel.writer.file.closed and isinstance(self.channel.writer, FileWriter):
             # == Read and split approach ==
             # # Move the cursor on the file
             # self.channel.saving_file.seek(self.last_position)
@@ -66,7 +66,9 @@ class LivePlot:
 
             # == Pandas approach ==
             new_lines = pd.read_csv(
-                self.channel.saving_path + "/measurement_data.txt", delimiter="\t", skiprows=self.lines_red
+                self.channel.writer.file_dir / self.channel.writer.experiment_name / "measurement_data.txt",
+                delimiter="\t",
+                skiprows=self.lines_red,
             )
             self.lines_red = self.lines_red + len(new_lines.index)
 
