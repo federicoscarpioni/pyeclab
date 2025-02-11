@@ -14,14 +14,13 @@ class BiologicDevice(KBIO_api):
     Connect and setup BioLogic device and perform measurement techniques on
     channels. Inharitates from BioLogic api module and simplify the calls to
     the functions.
-    IMPORTANT: The class doesn't retrive the measrument data from the instrument!
+    IMPORTANT: The class doesn't retrive the measurement data from the instrument!
     """
 
-    def __init__(self, address, binary_path="C:/EC-Lab Development Package/EC-Lab Development Package/", verbosity=3):
+    def __init__(self, address, binary_path="C:/EC-Lab Development Package/EC-Lab Development Package/"):
         DLL_path = self._choose_library(binary_path)
         super(BiologicDevice, self).__init__(DLL_path)
         self.address = address
-        self.verbosity = verbosity
         self.connect()
         self.test_connection()
         self.test_channels_plugged()
