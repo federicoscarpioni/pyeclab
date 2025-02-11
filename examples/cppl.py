@@ -4,6 +4,7 @@ from pyeclab.channel.writers.filewriter import FileWriter
 from pyeclab.device import BiologicDevice
 from pyeclab import EXIT_COND, Channel, I_RANGE, E_RANGE, BANDWIDTH
 from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage
+from pyeclab.techniques.loop import Loop
 
 IP = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/lib/"
@@ -31,7 +32,10 @@ cppl = ChronoPotentiometryWithLimits(
 )
 cppl.make_technique()
 
-sequence_test = [ocv, cppl, ocv]
+loop = Loop(device=device, repeat_N=3, loop_start=0)
+loop.make_technique()
+
+sequence_test = [ocv, cppl, ocv, loop]
 
 
 writer = FileWriter(Path("C:/Users/jconen/Desktop/data"), experiment_name="2025_02_11-Test")
