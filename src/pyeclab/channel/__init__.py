@@ -432,6 +432,9 @@ class Channel:
 
     ## Methods for saving data
     def _instantiate_writer(self):
+        """Create the structure of the data as list and pass it to the writer,
+        which in return creates the appropriate structure in a file, database or similar.
+        """
         structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
 
         if self.is_recording_Ece and self.is_charge_recorded:
@@ -445,6 +448,7 @@ class Channel:
         self.writer.instantiate(structure)
 
     def _write_latest_data_to_file(self):
+        """Format the latest data into a numpy array and pass it to the writers .write() method."""
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
         loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
 
@@ -453,6 +457,8 @@ class Channel:
         self.writer.write(data_to_save)
 
     def _save_exp_metadata(self):
+        """Gather all the metadata, mainly from the techniques in the sequence, and pass it
+        to the writers .write_metadata() method."""
         metadata = {}
 
         self.starting_time = datetime.now()
