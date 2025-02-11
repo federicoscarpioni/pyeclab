@@ -13,6 +13,7 @@ from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 from pyeclab.techniques.exit_cond import EXIT_COND
 
+
 @define(kw_only=True)
 class ChronoPotentiometryWithLimits:
     device: BiologicDevice
@@ -32,12 +33,12 @@ class ChronoPotentiometryWithLimits:
 
     e_range: KBIO.E_RANGE
     exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
-    limit_variable: int 
+    limit_variable: int
     limit_values: float
     bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
-    ecc_file : str | None = field(init = False, default = None)
-    ecc_params : list | None = field(init = False, default = None)
+    ecc_file: str | None = field(init=False, default=None)
+    ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
     def make_cplim_params(self):
         # dictionary of CPLIM parameters (non exhaustive)
@@ -96,7 +97,6 @@ class ChronoPotentiometryWithLimits:
         # Pick the correct ecc file based on the instrument family
         return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-
     def make_technique(self):
-        self.ecc_file = self.choose_ecc_file()   
+        self.ecc_file = self.choose_ecc_file()
         self.ecc_params = self.make_cplim_params()
