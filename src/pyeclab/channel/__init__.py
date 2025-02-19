@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 import json
 import logging
 import time
@@ -101,8 +102,13 @@ class Channel:
         # No information for bit position 8 (Record IRange), assuming not needed
         return bitfield
 
-    def load_sequence(self, sequence, ask_ok=False):
+    def load_sequence(self, sequence: Sequence, ask_ok=False):
         self.sequence = sequence
+        for element in sequence:
+            if element.ecc_file is None or element.ecc_params is None:
+                raise AttributeError(
+                    f"Ecc File or Ecc Params of {element.__name__} are None. Did you call .make_technique() ?"
+                )
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
 
     def import_sequence(self, json_file_path):
