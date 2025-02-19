@@ -28,9 +28,7 @@ def set_duration_to_1s(api: BiologicDevice, technique, tech_id: int):
 
     p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], new_duration, idx))
 
-    parms = make_ecc_parms(api, *p_current_steps)
-    print(parms)
-    return parms
+    return make_ecc_parms(api, *p_current_steps)
 
 
 # ------------------------------------------------------------------------------#
