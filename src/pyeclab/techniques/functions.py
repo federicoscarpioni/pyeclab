@@ -27,13 +27,13 @@ def set_duration_to_1s(api, technique, tech_id):
     idx = 0  # Only one current step is used
     p_current_steps = list()
     if tech_id == TECH_ID.CPLIMIT.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["current_step"], technique.user_params.current, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["current_step"], technique.current, idx))
 
     elif tech_id == TECH_ID.CA.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["voltage_step"], technique.user_params.voltage, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["voltage_step"], technique.voltage, idx))
 
     if tech_id != TECH_ID.OCV.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.user_params.vs_init, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.vs_init, idx))
 
     p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], new_duration, idx))
 
@@ -53,14 +53,14 @@ def reset_duration(api, technique, tech_id):
     idx = 0  # Only one current step is used
     p_current_steps = list()
     if tech_id == TECH_ID.CPLIMIT.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["current_step"], technique.user_params.current, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["current_step"], technique.current, idx))
 
     elif tech_id == TECH_ID.CA.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["voltage_step"], technique.user_params.voltage, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["voltage_step"], technique.voltage, idx))
 
     if tech_id != TECH_ID.OCV.value:
-        p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.user_params.vs_init, idx))
+        p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.vs_init, idx))
 
-    p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], technique.user_params.duration, idx))
+    p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], technique.duration, idx))
 
     return make_ecc_parms(api, *p_current_steps)
