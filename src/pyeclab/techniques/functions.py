@@ -1,14 +1,5 @@
-from collections import namedtuple
-from dataclasses import dataclass
-from enum import Enum
-from wsgiref.validate import validator
-
-from attrs import define, field, validators
-
-import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
-from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 
@@ -17,7 +8,7 @@ def set_duration_to_1s(api: BiologicDevice, technique, tech_id: int):
     Update the duration of CP or CA to 1s. It is used to force the technique to
     terminate not being present any specific function in the SDK.
     """
-    new_duration = 1
+    new_duration = 1.0
     parameters = {
         "current_step": ECC_parm("Current_step", float),
         "voltage_step": ECC_parm("Voltage_step", float),
