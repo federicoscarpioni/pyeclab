@@ -12,7 +12,7 @@ from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 
-def set_duration_to_1s(api, technique, tech_id):
+def set_duration_to_1s(api: BiologicDevice, technique, tech_id: int):
     """
     Update the duration of CP or CA to 1s. It is used to force the technique to
     terminate not being present any specific function in the SDK.
