@@ -26,6 +26,9 @@ def set_duration_to_1s(api: BiologicDevice, technique, tech_id: int):
     if tech_id != TECH_ID.OCV.value:
         p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.vs_init, idx))
 
+    if tech_id == TECH_ID.OCV.value:
+        parameters["step_duration"] = ECC_parm("Rest_time_T", float)
+
     p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], new_duration, idx))
 
     return make_ecc_parms(api, *p_current_steps)
@@ -51,6 +54,9 @@ def reset_duration(api, technique, tech_id):
 
     if tech_id != TECH_ID.OCV.value:
         p_current_steps.append(make_ecc_parm(api, parameters["vs_init"], technique.vs_init, idx))
+
+    if tech_id == TECH_ID.OCV.value:
+        parameters["step_duration"] = ECC_parm("Rest_time_T", float)
 
     p_current_steps.append(make_ecc_parm(api, parameters["step_duration"], technique.duration, idx))
 
