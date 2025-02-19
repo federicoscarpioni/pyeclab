@@ -28,8 +28,11 @@ class FileWriter(AbstractWriter):
     def write(self, data: np.typing.NDArray):
         """Write to one or multiple rows of data to file."""
 
+        cols = data.shape[1]
+        formatter = ["%4.3e"] * (cols - 2) + ["%d"] * 2
+
         if self.file:
-            np.savetxt(self.file, data, fmt="%4.3e", delimiter="\t")
+            np.savetxt(self.file, data, fmt=formatter, delimiter="\t")
             self.file.flush()
 
     def write_metadata(self, data: dict[str, str | int | float | datetime]):
