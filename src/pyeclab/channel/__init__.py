@@ -107,7 +107,7 @@ class Channel:
         for element in sequence:
             if element.ecc_file is None or element.ecc_params is None:
                 raise AttributeError(
-                    f"Ecc File or Ecc Params of {element.__name__} are None. Did you call .make_technique() ?"
+                    f"Ecc File or Ecc Params of {type(element).__name__} are None. Did you call .make_technique() ?"
                 )
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
 
