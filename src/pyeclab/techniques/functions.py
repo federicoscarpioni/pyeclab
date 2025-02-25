@@ -1,6 +1,6 @@
+from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from pyeclab.api.tech_types import TECH_ID
 from pyeclab.device import BiologicDevice
-from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 
 def set_duration_to_1s(api: BiologicDevice, technique, tech_id: int):

@@ -2,8 +2,9 @@ from datetime import datetime
 
 import numpy as np
 import pytest
-from pyeclab.channel.writers.filewriter import FileWriter
 from pytest import fixture
+
+from pyeclab.channel.writers.filewriter import FileWriter
 
 
 @fixture

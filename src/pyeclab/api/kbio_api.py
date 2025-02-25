@@ -20,8 +20,8 @@ This behaviour can be overriden in the BL_xxx functions with an abort flag set t
 
 """
 
-from array import array
 import logging
+from array import array
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.c_utils import *

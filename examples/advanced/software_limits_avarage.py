@@ -1,7 +1,7 @@
 from pathlib import Path
-from pyeclab import BiologicDevice, Channel, ChannelConfig, FileWriter
+
+from pyeclab import BiologicDevice, Channel, ChannelConfig, FileWriter, E_RANGE, I_RANGE, BANDWIDTH
 from pyeclab.techniques import ChronoAmperometry
-import pyeclab.api.kbio_types as KBIO
 
 ip_address = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
@@ -16,9 +16,9 @@ ca = ChronoAmperometry(
     record_dt=1,
     record_dI=12,
     repeat=0,
-    e_range=KBIO.E_RANGE.E_RANGE_2_5V,
-    i_range=KBIO.I_RANGE.I_RANGE_100mA,
-    bandwidth=KBIO.BANDWIDTH.BW_4,
+    e_range=E_RANGE.E_RANGE_2_5V,
+    i_range=I_RANGE.I_RANGE_100mA,
+    bandwidth=BANDWIDTH.BW_4,
 )
 
 ca = ca.make_technique()

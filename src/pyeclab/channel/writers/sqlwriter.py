@@ -1,7 +1,7 @@
-from datetime import datetime
 import sqlite3
-from pathlib import Path
 from collections.abc import Sequence
+from datetime import datetime
+from pathlib import Path
 
 from attrs import define
 

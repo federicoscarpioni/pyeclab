@@ -1,5 +1,6 @@
 from pathlib import Path
-from pyeclab import BiologicDevice, ChannelConfig, Channel, E_RANGE, I_RANGE, EXIT_COND, BANDWIDTH, FileWriter
+
+from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
 from pyeclab.techniques import ChronoPotentiometryWithLimits, build_limit
 
 ip_address = "172.28.20.81"

@@ -1,7 +1,7 @@
 from pathlib import Path
-from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
-from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage, Loop
 
+from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
+from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
 
 IP = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/lib/"

@@ -1,5 +1,6 @@
 from pathlib import Path
-from pyeclab import BiologicDevice, Channel, ChannelConfig, E_RANGE, I_RANGE, BANDWIDTH, FileWriter
+
+from pyeclab import BANDWIDTH, E_RANGE, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
 from pyeclab.techniques import ChronoAmperometry
 
 ip_address = "172.28.20.81"

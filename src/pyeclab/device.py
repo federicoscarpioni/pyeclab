@@ -2,8 +2,8 @@
 This module
 """
 
-from collections.abc import Sequence
 import logging
+from collections.abc import Sequence
 
 import pyeclab.api.kbio_types as types
 from pyeclab.api.c_utils import c_is_64b

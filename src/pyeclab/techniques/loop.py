@@ -6,10 +6,10 @@ from wsgiref.validate import validator
 from attrs import define, field, validators
 
 import pyeclab.api.kbio_types as KBIO
-from pyeclab.api.tech_types import TECH_ID
-from pyeclab.device import BiologicDevice
 from pyeclab.api.kbio_api import KBIO_api
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
+from pyeclab.api.tech_types import TECH_ID
+from pyeclab.device import BiologicDevice
 
 # LoopTech = namedtuple("LoopTech", "ecc_file ecc_params user_params")
 
