@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
@@ -14,7 +14,8 @@ class FileWriter(AbstractWriter):
     """
     Writer class which writes to a text file.
 
-    Attention on append-mode: When appending, the headers aren't written, as its assumed, that you want to append to an existing file.
+    Attention on append-mode: When appending, the headers aren't written, as its assumed, that you want to append to an
+    existing file.
     """
 
     file_dir: Path

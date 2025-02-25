@@ -6,8 +6,6 @@ This module provides an enumeration of technique identifiers which DLL calls ret
 
 from enum import Enum
 
-# =============================================================================#
-
 
 class TECH_ID(Enum):
     NONE = 0  # None
@@ -66,6 +64,3 @@ class TECH_ID(Enum):
     MP = 167  # Modular Pulse
     CASG = 169  # Constant amplitude sinusoidal micro galvano polarization
     CASP = 170  # Constant amplitude sinusoidal micro potentio polarization
-
-
-# =============================================================================#

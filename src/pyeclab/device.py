@@ -2,7 +2,6 @@
 This module
 """
 
-import logging
 from collections.abc import Sequence
 
 import pyeclab.api.kbio_types as types
@@ -25,7 +24,7 @@ class BiologicDevice(KBIO_api):
         autoconnect: bool = True,
     ):
         DLL_path = self._choose_library(binary_path)
-        super(BiologicDevice, self).__init__(DLL_path)
+        super().__init__(DLL_path)
         self.address = address
         if autoconnect:
             self.connect()

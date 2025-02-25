@@ -1,7 +1,6 @@
 import pytest
 
-from pyeclab.channel import Channel
-from pyeclab.device import BiologicDevice
+from pyeclab import Channel
 
 _instantiate_writers_parameters = [
     (False, False, "Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num"),

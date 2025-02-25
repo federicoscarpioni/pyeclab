@@ -1,7 +1,7 @@
 import time
 
-import pyeclab.techniques.techniques as tech
-from pyeclab.device import BiologicDevice
+from pyeclab.techniques import OpenCircuitVoltage
+from pyeclab import BiologicDevice
 
 #!!! Has to be refactored for the new techniques objects!
 

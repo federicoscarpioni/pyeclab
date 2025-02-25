@@ -36,6 +36,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "S", "UP"]
+exclude = ["E741"]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/**/*.py" = [
