@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Literal
+
 from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.writers.filewriter import FileWriter
-from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage, Loop
-
+from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
 
 IP = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/lib/"
@@ -12,7 +12,7 @@ device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
     device=device,
-    duration= 20,
+    duration=20,
     record_dt=1,
     e_range=E_RANGE.E_RANGE_2_5V,
     bandwidth=BANDWIDTH.BW_4,
@@ -28,13 +28,13 @@ writer = FileWriter(
 
 # Activate the counter electrode record from the configuration object
 config = ChannelConfig(
-    record_ece = True,
-    record_charge = False,
-    live_plot = True,
-    print_values = False,
-    external_control = False,
-    record_analog_In1 = False,
-    record_analog_In2 = False
+    record_ece=True,
+    record_charge=False,
+    live_plot=True,
+    print_values=False,
+    external_control=False,
+    record_analog_In1=False,
+    record_analog_In2=False,
 )
 
 channel1 = Channel(
@@ -46,4 +46,4 @@ channel1 = Channel(
 
 channel1.load_sequence(sequence)
 
-channel1.start() 
+channel1.start()

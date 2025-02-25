@@ -1,7 +1,7 @@
-from collections.abc import Sequence
 import json
 import logging
 import time
+from collections.abc import Sequence
 from datetime import datetime
 from threading import Thread
 
@@ -17,51 +17,13 @@ from pyeclab.techniques.functions import reset_duration, set_duration_to_1s
 
 logger = logging.getLogger("pyeclab")
 
-try:
-    from np_rw_buffer import RingBuffer
-except ImportError:
-    _has_buffer = False
-    print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
-    logger.info("np_rw_buffer not imported.")
-else:
-    _has_buffer = True
 
-# ! Add a logger
-
-""" 
-!!! Works only for dt of 1 second of the potentiostat. The problem is how to 
-!!! save correctly a matrix of values instead of an array
-"""
-
-
+# TODO
 class HardwareConfig:
     "See page 153 of the manual"
 
     def set_CE2ground(self): ...
     def set_controlled_potential(self): ...
-
-
-class SequenceConfig:
-    "This will handle the GUI element for an esier creation of sequences of techinques"
-
-    def GUI(self): ...
-    def load_sequence_json(self): ...
-    def save_sequence_json(self, path):
-        json_file_path = self.saving_path + "/sequence.json"
-        with open(json_file_path, "w") as json_file:
-            json.dump(self.sequence, json_file)
-
-
-class SoftwareLimitsManager:
-    """
-    Create software limits for voltage working electrode, voltagecounter
-    electrode, capacity, or other external input (AUX1 or 2).
-    """
-
-    ...
-
-
-class SequenceMonitor: ...
 
 
 class Channel:
@@ -71,7 +33,7 @@ class Channel:
         channel_num: int,
         writer: AbstractWriter,
         config: ChannelConfig,
-        callbacks: list | None = None,  # callbacks
+        callbacks: list | None = None,
     ):
         self.bio_device = bio_device
         self.num = channel_num
@@ -112,26 +74,29 @@ class Channel:
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
 
     def import_sequence(self, json_file_path):
-        with open("json_file_path", "r") as sequence_json:
+        with open("json_file_path") as sequence_json:
             self.sequence = json.load(sequence_json)
         self.bio_device.load_sequence(self.num, self.sequence)
 
     ## Methods for managing the execution of the experiment ##
 
     def start(self):
-        # Save experiment data
         self._instantiate_writer()
         self._save_exp_metadata()
         # self._save_sequence_json()
+
         # Start channel on the device
         self.first_loop = True
         self.bio_device.start_channel(self.num)
+
         # Start collecting data from the device
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
+
         # Initialize liveplot
         if self.config.live_plot:
             self.start_live_plot()
+
         print(f"CH{self.num}: Experiment started")
 
     def stop(self):
@@ -194,11 +159,9 @@ class Channel:
             # Print latest values
             if self.config.print_values:
                 self._print_current_values()
-            # Update plot
-            # self.liveplot.update_plot()
             # Check if the technique has changed on the instrument
             self._monitoring_sequence_progression()
-            # Brake the loop if sequence is terminates
+            # Break the loop if sequence is terminates
             if self.current_values.State == 0:
                 self._final_actions()
                 break
@@ -209,13 +172,12 @@ class Channel:
             # if self._check_software_limits_avarage():
             #     print("Software limits avarage met")  # debug print
             #     self.end_technique()
-            # Sleep before retriving next measrued data
+            # Sleep before retriving next measured data
             time.sleep(sleep_time)
 
     def _get_measurement_values(self):
-        # Get data from instrument ADC
+        """Get measurement data from the instruments ADC and convert it into physical values."""
         self._get_data()
-        # Convert ADC numbers to physical values
         latest_data = self._get_converted_buffer()
         return latest_data
 
@@ -275,15 +237,9 @@ class Channel:
         Convert digitalized signal from ADC to physical values.
 
         Note: Counter electrode  and AUX to be added!
-
         """
-        # Buffer from the device
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
-        # Convert voltage buffer numbers in real values
-        Ewe = np.array(
-            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
-        )
-        # Convert buffer numbers in real values
+
         if self.config.record_charge and self.config.record_ece:
             return self._get_converted_buffer_with_charge_and_Ece(buffer)
         elif self.config.record_charge:
@@ -299,6 +255,7 @@ class Channel:
                 callback()
 
     def _update_sequence_trackers(self):
+        """Update tech index, tech id and loop id."""
         self.current_tech_index = self.data_info.TechniqueIndex
         self.current_tech_id = self.data_info.TechniqueID
         logger.debug(f"From _update_sequence_trackers:\n{self.current_tech_id=}\n{self.data_info.TechniqueID}")
@@ -309,25 +266,22 @@ class Channel:
         """
         This method checks when a new technique is started in the instrument. This
         can be used to add new behaviours to the application.
-
-        Currently doesn't execute on first loop!
         """
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id = self.data_info.TechniqueID
         new_loop = self.data_info.loop
+
         if not self.is_running:
             self.is_running = True
             self.current_tech_id = new_tech_id
-        # Check if a new technique is running
-        if (
-            self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True
-        ):  # the second condition should be sufficient...
+
+        if self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True:
             self.first_loop = False
             self._update_sequence_trackers()
             self._execute_callbacks()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
-    ## Methods for software controll ##
+    ## Methods for software control ##
 
     def set_condition(self, technique_index: int, quantity: str, operator: str, threshold: float):
         self.conditions.append((technique_index, quantity, operator, threshold))
@@ -457,7 +411,9 @@ class Channel:
                         str(v)
                         metadata[f"tech{idx}_{k}"] = v
                     except Exception:
+                        logger.info("Metadata could not be processed. Type: %s", type(v))
                         continue
+
                 else:
                     metadata[f"tech{idx}_{k}"] = v
 

@@ -1,14 +1,12 @@
-from pyeclab.device import BiologicDevice
+from pathlib import Path
+from pyeclab import BiologicDevice, ChannelConfig, Channel, E_RANGE, I_RANGE, EXIT_COND, BANDWIDTH, FileWriter
 from pyeclab.techniques import ChronoPotentiometryWithLimits, build_limit
-from pyeclab.channel import Channel
-from pyeclab.channel.config import ChannelConfig
-import pyeclab.api.kbio_types as KBIO
 
 ip_address = "172.28.20.81"
 binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 device = BiologicDevice(ip_address, binary_path=binary_path)
 
-cplim = ChronoPotentiometryWithLimits(    
+cplim = ChronoPotentiometryWithLimits(
     device=device,
     current=0.001,
     duration=10,
@@ -21,7 +19,7 @@ cplim = ChronoPotentiometryWithLimits(
     e_range=E_RANGE.E_RANGE_2_5V,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     limit_variable=build_limit("voltage", "greater", "or", True),
-    limit_values=3, 
+    limit_values=3,
     bandwidth=BANDWIDTH.BW_5,
 )
 

@@ -92,7 +92,6 @@ class ChronoAmperometry:
         # pick the correct ecc file based on the instrument family
         return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
 
-
     def make_technique(self):
         self.ecc_file = self.choose_ecc_file()
         self.ecc_params = self.make_ca_params()

@@ -1,20 +1,23 @@
-'''
+"""
 Channel class can execute functions when a new technique from the sequence starts.
 In this script, a simple printing funcion and class methods are used as examples.
-In practice, the function to excecute can be appended to the list attribute 
-'callbacks' of Channel class. 
-'''
+In practice, the function to excecute can be appended to the list attribute
+'callbacks' of Channel class.
+"""
 
 from pathlib import Path
 from typing import Literal
+
 from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.writers.filewriter import FileWriter
-from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage, Loop
+from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
+
 
 # Example of a function
 def printer_function():
-    prtin('Hey! I am the printer function')
+    print("Hey! I am the printer function")
+
 
 # Example of a class with simple method
 class FakeInstrument:
@@ -29,7 +32,7 @@ device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
     device=device,
-    duration= 20,
+    duration=20,
     record_dt=1,
     e_range=E_RANGE.E_RANGE_2_5V,
     bandwidth=BANDWIDTH.BW_4,
@@ -53,6 +56,6 @@ channel1.load_sequence(sequence)
 # Add the function and method to the list of callbacks to excecute.
 channel1.callbacks.append(printer_function)
 fake_instrument = FakeInstrument()
-channel1.callbacks.append(fake_instrument.print('Hey I am a method from a class'))
+channel1.callbacks.append(fake_instrument.print("Hey I am a method from a class"))
 
-channel1.start() 
+channel1.start()

@@ -1,9 +1,6 @@
 from pathlib import Path
-from typing import Literal
-from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel
-from pyeclab.channel.config import ChannelConfig
-from pyeclab.channel.writers.filewriter import FileWriter
-from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage, Loop, build_limit
+from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
+from pyeclab.techniques import ChronoPotentiometryWithLimits, OpenCircuitVoltage, Loop, build_limit, ChronoAmperometry
 
 
 IP = "172.28.20.81"
@@ -32,22 +29,24 @@ cplim = ChronoPotentiometryWithLimits(
     e_range=E_RANGE.E_RANGE_2_5V,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     limit_variable=build_limit("voltage", "greater", "or", True),
-    limit_values=3,  
+    limit_values=3,
     bandwidth=BANDWIDTH.BW_5,
 )
 cplim.make_technique()
 
-ca = ChronoAmperometry(device=device,
-                        voltage=0,
-                        duration=10,
-                        vs_init=True,
-                        nb_steps=0,
-                        record_dt=1,
-                        record_dI=12,
-                        repeat=0,
-                        e_range=KBIO.E_RANGE.E_RANGE_2_5V,
-                        i_range=KBIO.I_RANGE.I_RANGE_100mA,
-                        bandwidth=KBIO.BANDWIDTH.BW_5)
+ca = ChronoAmperometry(
+    device=device,
+    voltage=0,
+    duration=10,
+    vs_init=True,
+    nb_steps=0,
+    record_dt=1,
+    record_dI=12,
+    repeat=0,
+    e_range=E_RANGE.E_RANGE_2_5V,
+    i_range=I_RANGE.I_RANGE_100mA,
+    bandwidth=BANDWIDTH.BW_5,
+)
 ca = ca.make_technique()
 
 loop = Loop(device=device, repeat_N=2, loop_start=0)  # loop forever

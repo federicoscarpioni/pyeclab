@@ -1,6 +1,6 @@
-from pyeclab.device import BiologicDevice
+from pathlib import Path
+from pyeclab import BiologicDevice, Channel, ChannelConfig, FileWriter
 from pyeclab.techniques import ChronoAmperometry
-from pyeclab.channel import Channel, ChannelOptions
 import pyeclab.api.kbio_types as KBIO
 
 ip_address = "172.28.20.81"
@@ -18,7 +18,7 @@ ca = ChronoAmperometry(
     repeat=0,
     e_range=KBIO.E_RANGE.E_RANGE_2_5V,
     i_range=KBIO.I_RANGE.I_RANGE_100mA,
-    bandwidth=KBIO.BANDWIDTH.BW_4
+    bandwidth=KBIO.BANDWIDTH.BW_4,
 )
 
 ca = ca.make_technique()
@@ -40,6 +40,6 @@ channel1 = Channel(
 channel1.load_sequence(sequence)
 
 # Set condition on the avarage of the voltage
-channel1.set_condition_avarage(1,"Ewe", ">", 0.005, 4)
+channel1.set_condition_avarage(1, "Ewe", ">", 0.005, 4)
 
 channel1.start()
