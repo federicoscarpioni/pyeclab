@@ -71,3 +71,12 @@ def build_limit(
         value = _set_bit(value, 6)
 
     return value
+
+
+__all__ = [
+    "ChronoAmperometry",
+    "ChronoPotentiometryWithLimits",
+    "Loop",
+    "OpenCircuitVoltage",
+    "build_limit",
+]

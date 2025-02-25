@@ -4,3 +4,14 @@ from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.writers.filewriter import FileWriter
 from pyeclab.device import BiologicDevice
 from pyeclab.techniques.exit_cond import EXIT_COND
+
+__all__ = [
+    "BANDWIDTH",
+    "E_RANGE",
+    "I_RANGE",
+    "Channel",
+    "ChannelConfig",
+    "FileWriter",
+    "BiologicDevice",
+    "EXIT_COND",
+]
