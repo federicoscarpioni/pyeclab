@@ -40,3 +40,31 @@ from pyeclab.techniques.ocv import OpenCircuitVoltage
 from pyeclab.techniques.cplim import ChronoPotentiometryWithLimits
 from pyeclab.techniques.ca import ChronoAmperometry
 from pyeclab.techniques.loop import Loop
+
+
+def set_bit(value, bit_index):
+    return value | (1 << bit_index)
+
+
+def build_limit(
+    type: Literal["voltage", "current"], sign: Literal["greater", "less"], logic: Literal["and", "or"], active=True
+):
+    '''
+    Generate the appropriate bitfield to set-up limit in limited techniques according
+    to the structure in the manual.
+    '''
+    value = 0b0
+    if active:
+        value = set_bit(value, 0)
+
+    if logic == "and":
+        value = set_bit(value, 1)
+
+    if sign == "greater":
+        value = set_bit(value, 2)
+
+    if type == "current":
+        value = set_bit(value, 5)
+        value = set_bit(value, 6)
+
+    return value
