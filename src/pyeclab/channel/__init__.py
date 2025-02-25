@@ -143,7 +143,7 @@ class Channel:
         Operations to perfom when the sequence is completed.
         """
         self.writer.close()
-        self._execute_callbacks()
+        # self._execute_callbacks() # removed to avoid double execution of callbacks.
         print(f"CH{self.num} > Measure terminated")
 
     def _retrive_data_loop(self, sleep_time=0.1):
