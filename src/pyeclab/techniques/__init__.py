@@ -41,6 +41,7 @@ from pyeclab.techniques.ca import ChronoAmperometry
 from pyeclab.techniques.cplim import ChronoPotentiometryWithLimits
 from pyeclab.techniques.loop import Loop
 from pyeclab.techniques.ocv import OpenCircuitVoltage
+from pyeclab.techniques.auxiliary_io import generate_xctr_param
 
 # from pyeclab.techniques.functions import set_duration_to_1s, reset_duration
 
@@ -79,4 +80,5 @@ __all__ = [
     "Loop",
     "OpenCircuitVoltage",
     "build_limit",
+    "generate_xctr_param",
 ]
