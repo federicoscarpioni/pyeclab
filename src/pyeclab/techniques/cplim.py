@@ -49,7 +49,6 @@ class ChronoPotentiometryWithLimits:
             "test1_config": ECC_parm("Test1_Config", int),
             "test1_value": ECC_parm("Test1_Value", float),
             "bandwidth": ECC_parm("Bandwidth", int),
-            # 'analog_filter': ECC_parm('Filter', int)
         }
 
         if self.i_range == KBIO.I_RANGE.I_RANGE_AUTO:
