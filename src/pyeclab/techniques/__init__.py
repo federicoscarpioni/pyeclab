@@ -38,6 +38,8 @@ For each technique are provided:
 from typing import Literal
 
 from pyeclab.techniques.ca import ChronoAmperometry
+from pyeclab.techniques.calim import ChronoAmperometryWithLimits
+from pyeclab.techniques.cp import ChronoPotentiometry
 from pyeclab.techniques.cplim import ChronoPotentiometryWithLimits
 from pyeclab.techniques.loop import Loop
 from pyeclab.techniques.ocv import OpenCircuitVoltage
