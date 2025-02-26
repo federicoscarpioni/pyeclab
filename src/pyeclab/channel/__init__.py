@@ -52,20 +52,22 @@ class Channel:
 
     def set_hardware_config(self): ...
 
+    # This is not implemented yet, we need first to define a way of saving and 
+    # loading the sequences.
 
-    def load_sequence(self, sequence: Sequence, ask_ok=False):
-        self.sequence = sequence
-        for element in sequence:
-            if element.ecc_file is None or element.ecc_params is None:
-                raise AttributeError(
-                    f"Ecc File or Ecc Params of {type(element).__name__} are None. Did you call .make_technique() ?"
-                )
-        self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
-
-    def import_sequence(self, json_file_path):
-        with open("json_file_path") as sequence_json:
-            self.sequence = json.load(sequence_json)
-        self.bio_device.load_sequence(self.num, self.sequence)
+    # def load_sequence(self, sequence: Sequence, ask_ok=False):
+    #     self.sequence = sequence
+    #     for element in sequence:
+    #         if element.ecc_file is None or element.ecc_params is None:
+    #             raise AttributeError(
+    #                 f"Ecc File or Ecc Params of {type(element).__name__} are None. Did you call .make_technique() ?"
+    #             )
+    #     self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
+    # 
+    # def import_sequence(self, json_file_path):
+    #     with open("json_file_path") as sequence_json:
+    #         self.sequence = json.load(sequence_json)
+    #     self.bio_device.load_sequence(self.num, self.sequence)
 
     ## Methods for managing the execution of the experiment ##
 
