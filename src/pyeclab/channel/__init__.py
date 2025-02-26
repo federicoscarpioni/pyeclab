@@ -44,7 +44,6 @@ class Channel:
         self.current_loop = 0
         # Hardware setting
         self.conditions = []
-        self.conditions_average = []
         self.is_running = False
         self.xtr_param = self.generate_xctr_param()  # This parameter is valid only for premium potentiostat
 
@@ -160,9 +159,6 @@ class Channel:
             if self._check_software_limits():
                 print("Software limits met")  # debug print
                 self.end_technique()
-            # if self._check_software_limits_avarage():
-            #     print("Software limits avarage met")  # debug print
-            #     self.end_technique()
             # Sleep before retriving next measured data
             time.sleep(sleep_time)
 
@@ -302,62 +298,6 @@ class Channel:
                     return True
         return False  # Do I need to keep this return?
 
-    def set_condition_avarage(
-        self, technique_index: int, quantity: str, operator: str, threshold: float, points_avarage: int
-    ):
-        '''
-            latest_points is a circular buffer. It is saved in the condition tuple.
-            """
-            if not _has_buffer:
-                raise ImportError(
-                    """The optional dependency 'np-rw-buffer' is required to do this,
-                    install it with 'pip install pyeclab[buffer]'"""
-                )
-            latest_points = RingBuffer(points_avarage)
-            self.conditions_average.append((technique_index, quantity, operator, threshold,points_avarage, latest_points))
-
-        def _update_value_buffer(self, buffer, data):
-            buffer.write(data, error = False)
-            return buffer
-
-        def _reset_buffer_avarage(self):
-            for technique_index, quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:
-                latest_points.read()
-
-        def _get_avarage(self, buffer):
-            return np.sum(buffer.get_data())/len(buffer.get_data())
-
-        def _check_software_limits_avarage(self):
-            """
-            Check if a certain condition (< or > of a trashold value) is met for the
-            avarage value of a sampled data over a certain number of points.
-        '''
-        for (
-            technique_index,
-            quantity,
-            operator,
-            threshold,
-            points_avarage,
-            latest_points,
-        ) in (
-            self.conditions_average
-        ):  # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            quantity_value = getattr(
-                self.current_values, quantity, None
-            )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-            if self.current_tech_index != technique_index:
-                continue
-            if quantity_value is None:
-                continue
-            latest_points = self._update_value_buffer(latest_points, quantity_value)
-            if len(latest_points) < points_avarage:
-                continue
-            avarage_value = self._get_avarage(latest_points)
-            if operator == ">" and avarage_value >= threshold:
-                return True
-            elif operator == "<" and avarage_value <= threshold:
-                return True
-        return False
 
     ## Methods for saving data
     def _instantiate_writer(self):
