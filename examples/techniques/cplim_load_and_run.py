@@ -9,15 +9,15 @@ device = BiologicDevice(ip_address, binary_path=binary_path)
 
 cplim = ChronoPotentiometryWithLimits(
     device=device,
-    current=0.001,
+    current=0.0001,
     duration=10,
     vs_init=False,
     nb_steps=0,
     record_dt=1,
     record_dE=0.1,
     repeat=0,
-    i_range=I_RANGE.I_RANGE_100mA,
-    e_range=E_RANGE.E_RANGE_2_5V,
+    i_range=I_RANGE.I_RANGE_10mA,
+    e_range=E_RANGE.E_RANGE_5V,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     limit_variable=build_limit("voltage", "greater", "or", True),
     limit_values=3,
@@ -29,14 +29,14 @@ cplim.make_technique()
 sequence = [cplim]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
 )
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=False),
+    config=ChannelConfig(live_plot=True),
 )
-channel1.load_sequence(sequence)
+channel1.load_sequence(sequence, ask_ok=True)
 channel1.start()
