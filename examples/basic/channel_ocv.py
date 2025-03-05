@@ -3,15 +3,15 @@ from pathlib import Path
 from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
 from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
 
-IP = "172.28.20.81"
-binary_path = "C:/EC-Lab Development Package/lib/"
+IP = "172.28.26.10"
+binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
     device=device,
     duration=20,
     record_dt=1,
-    e_range=E_RANGE.E_RANGE_2_5V,
+    e_range=E_RANGE.E_RANGE_5V,
     bandwidth=BANDWIDTH.BW_4,
 )
 ocv.make_technique()
@@ -19,8 +19,8 @@ ocv.make_technique()
 sequence = [ocv]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
 )
 
 config = ChannelConfig(
