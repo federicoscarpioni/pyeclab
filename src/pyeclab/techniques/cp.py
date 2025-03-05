@@ -32,7 +32,7 @@ class ChronoPotentiometry:
 
     def make_cplim_params(self):
         # dictionary of CPLIM parameters (non exhaustive)
-        cplim_param_names = {
+        cp_param_names = {
             "current_step": ECC_parm("Current_step", float),
             "step_duration": ECC_parm("Duration_step", float),
             "vs_init": ECC_parm("vs_initial", bool),
@@ -77,8 +77,8 @@ class ChronoPotentiometry:
 
     def choose_ecc_file(self):
         # Name of the dll for the OCV technique (for both types of instruments VMP3/VSP300)
-        cplim3_tech_file = "cp.ecc"
-        cplim4_tech_file = "cp4.ecc"
+        cp3_tech_file = "cp.ecc"
+        cp4_tech_file = "cp4.ecc"
         # Pick the correct ecc file based on the instrument family
         return cp3_tech_file if self.device.is_VMP3 else cp4_tech_file
 
