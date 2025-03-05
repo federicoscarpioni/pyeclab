@@ -17,7 +17,7 @@ cp = ChronoPotentiometry(
     record_dE=0.1,
     repeat=0,
     i_range=I_RANGE.I_RANGE_100mA,
-    e_range=E_RANGE.E_RANGE_2_5V,
+    e_range=E_RANGE.E_RANGE_5V,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     bandwidth=BANDWIDTH.BW_5,
 )
@@ -26,14 +26,14 @@ cp.make_technique()
 sequence = [cp]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
 )
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=False),
+    config=ChannelConfig(live_plot=True),
 )
 channel1.load_sequence(sequence)
 channel1.start()
