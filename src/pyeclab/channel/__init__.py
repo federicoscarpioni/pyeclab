@@ -45,7 +45,6 @@ class Channel:
         # Hardware setting
         self.conditions = []
         self.is_running = False
-        self.xtr_param = self.generate_xctr_param()  # This parameter is valid only for premium potentiostat
 
     ## Methods for setting hardware for the experiment ##
 
