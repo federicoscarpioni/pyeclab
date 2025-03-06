@@ -30,7 +30,7 @@ class ChronoPotentiometry:
     ecc_file: str | None = field(init=False, default=None)
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
-    def make_cplim_params(self):
+    def make_cp_params(self):
         # dictionary of CPLIM parameters (non exhaustive)
         cp_param_names = {
             "current_step": ECC_parm("Current_step", float),
