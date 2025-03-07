@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
-from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
+from pyeclab.techniques import OpenCircuitVoltage
 
 IP = "172.28.26.10"
 binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
@@ -20,7 +20,7 @@ sequence = [ocv]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
+    experiment_name="2503071435_example_basic_channel_ocv_after_refactoring",
 )
 
 config = ChannelConfig(
