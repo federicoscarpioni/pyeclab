@@ -17,7 +17,7 @@ ca = ChronoAmperometry(
     record_dI=1,
     repeat=0,
     e_range=E_RANGE.E_RANGE_5V,
-    i_range=I_RANGE.I_RANGE_100mA,
+    i_range=I_RANGE.I_RANGE_100uA,
     bandwidth=BANDWIDTH.BW_4,
 )
 ca.make_technique()
@@ -26,14 +26,15 @@ sequence = [ca]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071534_example_ca_after_refactoring",
+    experiment_name="2503071703_example_ca_after_refactoring",
 )
 
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=True),
+    config=ChannelConfig(live_plot=True,
+                         print_values=True),
 )
 
 channel1.load_sequence(sequence)
