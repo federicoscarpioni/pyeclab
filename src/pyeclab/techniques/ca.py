@@ -31,7 +31,7 @@ class ChronoAmperometry:
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
     def make_ca_params(self):
-        # dictionary of CP parameters (non exhaustive)
+        # dictionary of CA parameters (non exhaustive)
         ca_param_names = {
             "voltage_step": ECC_parm("Voltage_step", float),
             "step_duration": ECC_parm("Duration_step", float),
