@@ -62,13 +62,13 @@ class ChronoPotentiometryWithLimits:
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["exit_cond"], self.exit_cond.value, idx))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_config"], self.limit_variable, idx))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_value"], self.limit_values, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["nb_steps"], self.nb_steps))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["record_dt"], self.record_dt))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["record_dE"], self.record_dE))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["repeat"], self.repeat))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value))
+        p_nb_steps =make_ecc_parm(self.device, cplim_param_names["nb_steps"], self.nb_steps)
+        p_record_dt = make_ecc_parm(self.device, cplim_param_names["record_dt"], self.record_dt)
+        p_record_dE = make_ecc_parm(self.device, cplim_param_names["record_dE"], self.record_dE)
+        p_repeat = make_ecc_parm(self.device, cplim_param_names["repeat"], self.repeat)
+        p_IRange =  make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value)
+        p_ERange =  make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value)
+        p_band =  make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value)
 
         # Make the technique parameter array
         if self.xctr:
@@ -78,6 +78,13 @@ class ChronoPotentiometryWithLimits:
         ecc_parms_cplim = make_ecc_parms(
             self.device,
             *p_current_steps,
+            p_nb_steps,
+            p_record_dt,
+            p_record_dE,
+            p_IRange,
+            p_ERange,
+            p_repeat,
+            p_band,
         )
         return ecc_parms_cplim
 

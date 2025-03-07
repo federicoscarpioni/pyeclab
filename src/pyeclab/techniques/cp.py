@@ -31,7 +31,7 @@ class ChronoPotentiometry:
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
     def make_cp_params(self):
-        # dictionary of CPLIM parameters (non exhaustive)
+        # dictionary of CP parameters (non exhaustive)
         cp_param_names = {
             "current_step": ECC_parm("Current_step", float),
             "step_duration": ECC_parm("Duration_step", float),
@@ -56,13 +56,13 @@ class ChronoPotentiometry:
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["step_duration"], self.duration, idx))
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["vs_init"], self.vs_init, idx))
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["exit_cond"], self.exit_cond.value, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["nb_steps"], self.nb_steps))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["record_dt"], self.record_dt))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["record_dE"], self.record_dE))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["repeat"], self.repeat))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["i_range"], self.i_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["e_range"], self.e_range.value))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["bandwidth"], self.bandwidth.value))
+        p_nb_steps =make_ecc_parm(self.device, cp_param_names["nb_steps"], self.nb_steps)
+        p_record_dt = make_ecc_parm(self.device, cp_param_names["record_dt"], self.record_dt)
+        p_record_dE = make_ecc_parm(self.device, cp_param_names["record_dE"], self.record_dE)
+        p_repeat = make_ecc_parm(self.device, cp_param_names["repeat"], self.repeat)
+        p_IRange =  make_ecc_parm(self.device, cp_param_names["i_range"], self.i_range.value)
+        p_ERange =  make_ecc_parm(self.device, cp_param_names["e_range"], self.e_range.value)
+        p_band =  make_ecc_parm(self.device, cp_param_names["bandwidth"], self.bandwidth.value)
 
         # Make the technique parameter array
         if self.xctr:
@@ -72,6 +72,13 @@ class ChronoPotentiometry:
         ecc_parms_cp = make_ecc_parms(
             self.device,
             *p_current_steps,
+            p_nb_steps,
+            p_record_dt,
+            p_record_dE,
+            p_IRange,
+            p_ERange,
+            p_repeat,
+            p_band,
         )
         return ecc_parms_cp
 
