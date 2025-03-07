@@ -9,7 +9,7 @@ device = BiologicDevice(ip_address, binary_path=binary_path)
 
 cplim = ChronoPotentiometryWithLimits(
     device=device,
-    current=0.0001,
+    current=0,
     duration=10,
     vs_init=False,
     nb_steps=0,
@@ -30,7 +30,7 @@ sequence = [cplim]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
+    experiment_name="2503071524_example_cplim_after_refactoring",
 )
 channel1 = Channel(
     device,

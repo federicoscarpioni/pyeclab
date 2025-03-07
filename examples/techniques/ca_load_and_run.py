@@ -20,13 +20,13 @@ ca = ChronoAmperometry(
     i_range=I_RANGE.I_RANGE_100mA,
     bandwidth=BANDWIDTH.BW_4,
 )
-ca = ca.make_technique()
+ca.make_technique()
 
 sequence = [ca]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503051605_example_basic_channel_ocv_after_refactoring",
+    experiment_name="2503071534_example_ca_after_refactoring",
 )
 
 channel1 = Channel(

@@ -10,7 +10,7 @@ device = BiologicDevice(ip_address, binary_path=binary_path)
 calim = ChronoAmperometryWithLimits(
     device=device,
     voltage=0,
-    duration=10,
+    duration=30,
     vs_init=True,
     nb_steps=0,
     record_dt=1,
@@ -19,7 +19,7 @@ calim = ChronoAmperometryWithLimits(
     e_range=E_RANGE.E_RANGE_5V,
     i_range=I_RANGE.I_RANGE_10mA,
     limit_variable=build_limit("current", "greater", "or", True),
-    limit_values=3,
+    limit_values=1,
     bandwidth=BANDWIDTH.BW_4,
 )
 calim.make_technique()
@@ -27,15 +27,15 @@ calim.make_technique()
 sequence = [calim]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503071529_example_calim_after_refactoring",
 )
 
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=False),
+    config=ChannelConfig(live_plot=True),
 )
 
 channel1.load_sequence(sequence)
