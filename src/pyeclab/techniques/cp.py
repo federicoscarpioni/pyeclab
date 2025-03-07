@@ -42,7 +42,6 @@ class ChronoPotentiometry:
             "repeat": ECC_parm("N_Cycles", int),
             "i_range": ECC_parm("I_Range", int),
             "e_range": ECC_parm("E_Range", int),
-            "exit_cond": ECC_parm("Exit_Cond", int),
             "xctr": ECC_parm("xctr", int),
             "bandwidth": ECC_parm("Bandwidth", int),
         }
@@ -55,7 +54,6 @@ class ChronoPotentiometry:
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["current_step"], self.current, idx))
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["step_duration"], self.duration, idx))
         p_current_steps.append(make_ecc_parm(self.device, cp_param_names["vs_init"], self.vs_init, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cp_param_names["exit_cond"], self.exit_cond.value, idx))
         p_nb_steps =make_ecc_parm(self.device, cp_param_names["nb_steps"], self.nb_steps)
         p_record_dt = make_ecc_parm(self.device, cp_param_names["record_dt"], self.record_dt)
         p_record_dE = make_ecc_parm(self.device, cp_param_names["record_dE"], self.record_dE)

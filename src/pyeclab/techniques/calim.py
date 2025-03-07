@@ -55,6 +55,7 @@ class ChronoAmperometryWithLimits:
         p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["voltage_step"], self.voltage, idx))
         p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["step_duration"], self.duration, idx))
         p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["vs_init"], self.vs_init, idx))
+        p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["exit_cond"], self.exit_cond.value, idx))
         p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["test1_config"], self.limit_variable, idx))
         p_voltage_steps.append(make_ecc_parm(self.device, calim_param_names["test1_value"], self.limit_values, idx))
         p_nb_steps = make_ecc_parm(self.device, calim_param_names["nb_steps"], self.nb_steps)
