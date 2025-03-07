@@ -42,7 +42,6 @@ class ChronoAmperometry:
             "repeat": ECC_parm("N_Cycles", int),
             "i_range": ECC_parm("I_Range", int),
             "e_range": ECC_parm("E_Range", int),
-            "exit_cond": ECC_parm("Exit_Cond", int),
             "xctr": ECC_parm("xctr", int),
             "bandwidth": ECC_parm("Bandwidth", int),
         }

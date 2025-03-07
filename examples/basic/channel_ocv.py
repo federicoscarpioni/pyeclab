@@ -9,7 +9,7 @@ device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
     device=device,
-    duration=20,
+    duration=10,
     record_dt=1,
     e_range=E_RANGE.E_RANGE_5V,
     bandwidth=BANDWIDTH.BW_4,
@@ -20,7 +20,7 @@ sequence = [ocv]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071435_example_basic_channel_ocv_after_refactoring",
+    experiment_name="2503071702_example_basic_channel_ocv_after_refactoring",
 )
 
 config = ChannelConfig(

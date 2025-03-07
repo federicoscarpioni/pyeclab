@@ -30,13 +30,14 @@ sequence = [cplim]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071524_example_cplim_after_refactoring",
+    experiment_name="2503071646_example_cplim_after_refactoring",
 )
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=True),
+    config=ChannelConfig(live_plot=True,
+                         print_values=True),
 )
 channel1.load_sequence(sequence, ask_ok=True)
 channel1.start()
