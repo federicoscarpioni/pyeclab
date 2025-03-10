@@ -8,7 +8,7 @@ In practice, the function to excecute can be appended to the list attribute
 from pathlib import Path
 from typing import Literal
 
-from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel
+from pyeclab import BANDWIDTH, E_RANGE, I_RANGE, BiologicDevice, Channel
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.writers.filewriter import FileWriter
 from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitVoltage
@@ -16,13 +16,13 @@ from pyeclab.techniques import ChronoPotentiometryWithLimits, Loop, OpenCircuitV
 
 # Example of a function
 def printer_function():
-    print("Hey! I am the printer function")
+    print("Hey! I am the printer function!")
 
 
 # Example of a class with simple method
 class FakeInstrument:
-    def print(self, string):
-        print(string)
+    def print_massage(self):
+        print('I am a method of an object!')
 
 
 IP = "172.28.20.81"
@@ -32,18 +32,18 @@ device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
     device=device,
-    duration=20,
+    duration=5,
     record_dt=1,
-    e_range=E_RANGE.E_RANGE_2_5V,
+    e_range=E_RANGE.E_RANGE_5V,
     bandwidth=BANDWIDTH.BW_4,
 )
 ocv.make_technique()
 
-sequence = [ocv]
+sequence = [ocv, ocv, ocv]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503101144_example_callbacks_between_OCVs",
 )
 channel1 = Channel(
     device,
@@ -56,6 +56,6 @@ channel1.load_sequence(sequence)
 # Add the function and method to the list of callbacks to excecute.
 channel1.callbacks.append(printer_function)
 fake_instrument = FakeInstrument()
-channel1.callbacks.append(fake_instrument.print("Hey I am a method from a class"))
+channel1.callbacks.append(fake_instrument.print_massage)
 
 channel1.start()

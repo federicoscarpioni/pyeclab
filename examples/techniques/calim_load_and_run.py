@@ -29,7 +29,7 @@ sequence = [calim]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071658_example_calim_after_refactoring",
+    experiment_name="2503101127_example_calim_after_refactoring",
 )
 
 channel1 = Channel(

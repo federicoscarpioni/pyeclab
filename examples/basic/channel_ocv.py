@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pyeclab import BANDWIDTH, E_RANGE, EXIT_COND, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
+from pyeclab import BANDWIDTH, E_RANGE, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
 from pyeclab.techniques import OpenCircuitVoltage
 
 IP = "172.28.26.10"
@@ -20,7 +20,7 @@ sequence = [ocv]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071702_example_basic_channel_ocv_after_refactoring",
+    experiment_name="2503101135_test_dt_greater_than_1",
 )
 
 config = ChannelConfig(

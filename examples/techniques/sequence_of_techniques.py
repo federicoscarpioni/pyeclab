@@ -10,7 +10,7 @@ device = BiologicDevice(IP, binary_path)
 ocv = OpenCircuitVoltage(
     device=device,
     duration=10,
-    record_dt=1,
+    record_dt=0.1,
     e_range=E_RANGE.E_RANGE_2_5V,
     bandwidth=BANDWIDTH.BW_4,
 )
@@ -22,7 +22,7 @@ cplim = ChronoPotentiometryWithLimits(
     duration=10,
     vs_init=False,
     nb_steps=0,
-    record_dt=1,
+    record_dt=0.1,
     record_dE=0.1,
     repeat=0,
     i_range=I_RANGE.I_RANGE_100mA,
@@ -40,16 +40,16 @@ ca = ChronoAmperometry(
     duration=10,
     vs_init=True,
     nb_steps=0,
-    record_dt=1,
+    record_dt=0.1,
     record_dI=12,
     repeat=0,
     e_range=E_RANGE.E_RANGE_2_5V,
     i_range=I_RANGE.I_RANGE_100mA,
     bandwidth=BANDWIDTH.BW_5,
 )
-ca = ca.make_technique()
+ca.make_technique()
 
-loop = Loop(device=device, repeat_N=2, loop_start=0)  # loop forever
+loop = Loop(device=device, repeat_N=1, loop_start=0)  # loop forever
 loop.make_technique()
 
 sequence = [
@@ -61,14 +61,14 @@ sequence = [
 ]
 
 writer = FileWriter(
-    file_dir=Path("C:/Users/385-lab/Desktop/data/"),
-    experiment_name="2025-02-19_Test_02",
+    file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
+    experiment_name="2503101141_example_sequence_after_refactoring_dt_100ms",
 )
 channel1 = Channel(
     device,
     1,
     writer=writer,
-    config=ChannelConfig(live_plot=False),
+    config=ChannelConfig(live_plot=True),
 )
 channel1.load_sequence(sequence)
 channel1.start()

@@ -26,7 +26,7 @@ sequence = [cp]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503071700_example_cp_after_refactoring",
+    experiment_name="2503101128_example_cp_after_refactoring",
 )
 channel1 = Channel(
     device,
