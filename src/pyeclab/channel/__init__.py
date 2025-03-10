@@ -137,7 +137,7 @@ class Channel:
         # self._execute_callbacks() # removed to avoid double execution of callbacks.
         print(f"CH{self.num} > Measure terminated")
 
-    def _retrive_data_loop(self, sleep_time=0.1):
+    def _retrive_data_loop(self, sleep_time=1):
         """
         Retrives latest measurement data from the BioLogic device, converts and
         saves. The sequence progression is also monitored.
@@ -224,7 +224,7 @@ class Channel:
         """
         Convert digitalized signal from ADC to physical values.
 
-        Note: Counter electrode  and AUX to be added!
+        Note: AUX to be added!
         """
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
 
