@@ -224,7 +224,7 @@ class Channel:
         """
         Convert digitalized signal from ADC to physical values.
 
-        Note: Counter electrode  and AUX to be added!
+        Note: AUX to be added!
         """
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
 
