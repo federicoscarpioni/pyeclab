@@ -22,6 +22,7 @@ class OpenCircuitVoltage:
             "record_dt": ECC_parm("Record_every_dT", float),
             "record_dE": ECC_parm("Record_every_dE", float),
             "E_range": ECC_parm("E_Range", int),
+            "xctr": ECC_parm("xctr", int),
             "bandwidth": ECC_parm("Bandwidth", int),
         }
 
@@ -30,7 +31,20 @@ class OpenCircuitVoltage:
         p_erange = make_ecc_parm(self.device, ocv_param_names["E_range"], self.e_range.value)
         p_band = make_ecc_parm(self.device, ocv_param_names["bandwidth"], self.bandwidth.value)
         # Make the technique parameter array
-        return make_ecc_parms(self.device, p_duration, p_record, p_erange, p_band)
+        params_list = [
+            p_duration, 
+            p_record, 
+            p_erange, 
+            p_band,
+        ]
+        if self.xctr:
+            p_xctr = make_ecc_parm(self.device, ocv_param_names["xctr"], self.xctr)
+            params_list.append(p_xctr)
+        ecc_params_ocv = make_ecc_parms(
+            self.device, 
+            *params_list,
+        )
+        return ecc_params_ocv
 
     def choose_ecc_file(self):
         # Name of the dll for the OCV technique (for both types of instruments VMP3/VSP300)

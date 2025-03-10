@@ -69,14 +69,8 @@ class ChronoPotentiometryWithLimits:
         p_IRange =  make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value)
         p_ERange =  make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value)
         p_band =  make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value)
-
         # Make the technique parameter array
-        if self.xctr:
-            p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
-            p_current_steps.append(p_xctr)
-
-        ecc_parms_cplim = make_ecc_parms(
-            self.device,
+        params_list= [
             *p_current_steps,
             p_nb_steps,
             p_record_dt,
@@ -85,6 +79,13 @@ class ChronoPotentiometryWithLimits:
             p_ERange,
             p_repeat,
             p_band,
+        ]
+        if self.xctr:
+            p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
+            params_list.append(p_xctr)
+        ecc_parms_cplim = make_ecc_parms(
+            self.device,
+            *params_list,
         )
         return ecc_parms_cplim
 

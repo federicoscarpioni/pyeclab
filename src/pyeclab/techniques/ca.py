@@ -58,8 +58,7 @@ class ChronoAmperometry:
         p_ERange = make_ecc_parm(self.device, ca_param_names["e_range"], self.e_range.value)
         p_band = make_ecc_parm(self.device, ca_param_names["bandwidth"], self.bandwidth.value)
         # make the technique parameter array
-        ecc_parms_ca = make_ecc_parms(
-            self.device,
+        params_list = [
             *p_voltage_steps,  # all array type paramaters goes together
             p_nb_steps,
             p_record_dt,
@@ -68,11 +67,14 @@ class ChronoAmperometry:
             p_ERange,
             p_repeat,
             p_band,
-        )
+        ]
         if self.xctr:
             p_xctr = make_ecc_parm(self.device, ca_param_names["xctr"], self.xctr)
-            ecc_parms_ca.append(p_xctr)
-
+            params_list.append(p_xctr)
+        ecc_parms_ca = make_ecc_parms(
+            self.device,
+            *params_list,
+        )
         return ecc_parms_ca
 
     def choose_ecc_file(self):
