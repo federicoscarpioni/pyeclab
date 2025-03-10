@@ -297,7 +297,7 @@ class Channel:
                     return True
                 elif operator == "<" and quantity_value <= threshold:
                     return True
-        return False  # Do I need to keep this return?
+        return False  
 
 
     ## Methods for saving data
