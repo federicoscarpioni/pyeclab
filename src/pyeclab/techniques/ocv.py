@@ -14,6 +14,7 @@ class OpenCircuitVoltage:
     bandwidth: KBIO.BANDWIDTH
     ecc_file: str | None = field(init=False, default=None)
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)
+    xctr: int | None = None
 
     def make_ocv_params(self):
         # List of OCV parameters
@@ -32,16 +33,16 @@ class OpenCircuitVoltage:
         p_band = make_ecc_parm(self.device, ocv_param_names["bandwidth"], self.bandwidth.value)
         # Make the technique parameter array
         params_list = [
-            p_duration, 
-            p_record, 
-            p_erange, 
+            p_duration,
+            p_record,
+            p_erange,
             p_band,
         ]
         if self.xctr:
             p_xctr = make_ecc_parm(self.device, ocv_param_names["xctr"], self.xctr)
             params_list.append(p_xctr)
         ecc_params_ocv = make_ecc_parms(
-            self.device, 
+            self.device,
             *params_list,
         )
         return ecc_params_ocv
