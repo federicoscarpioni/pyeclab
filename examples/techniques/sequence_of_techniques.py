@@ -49,7 +49,7 @@ ca = ChronoAmperometry(
 )
 ca.make_technique()
 
-loop = Loop(device=device, repeat_N=1, loop_start=0)  # loop forever
+loop = Loop(device=device, repeat_N=1, loop_start=0)
 loop.make_technique()
 
 sequence = [
