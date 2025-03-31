@@ -6,16 +6,11 @@ and prone to be used in several modules.
 
 import os
 
-# ------------------------------------------------------------------------------#
-
 
 def class_name(obj):
     """Return the class name of an object."""
     name = type(obj).__name__
     return name
-
-
-# ------------------------------------------------------------------------------#
 
 
 def exception_brief(e, extended=False):
@@ -24,9 +19,6 @@ def exception_brief(e, extended=False):
     if extended:
         brief += f" : {e}"
     return brief
-
-
-# ------------------------------------------------------------------------------#
 
 
 def warn_diff(msg, cmp):
@@ -42,9 +34,6 @@ def warn_diff(msg, cmp):
     return not_ok
 
 
-# ------------------------------------------------------------------------------#
-
-
 def error_diff(msg, cmp):
     """Check a predicate (assert) or a mismatch, and on error raise an exception."""
     if type(cmp) is bool:
@@ -53,9 +42,6 @@ def error_diff(msg, cmp):
     else:
         if cmp[0] != cmp[1]:
             raise RuntimeError(f"{msg} {cmp}")
-
-
-# ------------------------------------------------------------------------------#
 
 
 def prepend_path(path, filename):
@@ -67,9 +53,6 @@ def prepend_path(path, filename):
     return filename
 
 
-# ------------------------------------------------------------------------------#
-
-
 def file_complete(filename, an_ext):
     """Append an extension to a filename unless the file already exists or if it already has one."""
     if not os.path.isfile(filename):
@@ -77,9 +60,6 @@ def file_complete(filename, an_ext):
     if not ext:
         filename = root + an_ext
     return filename
-
-
-# ------------------------------------------------------------------------------#
 
 
 def pp_plural(nb, label, num=True, nothing=""):
@@ -98,6 +78,3 @@ def pp_plural(nb, label, num=True, nothing=""):
     else:
         en_clair = f"{nb} {label}s"
     return en_clair
-
-
-# ==============================================================================#

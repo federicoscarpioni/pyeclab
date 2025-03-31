@@ -13,12 +13,10 @@ the _pack_ attribute in the Structures.
 """
 
 from dataclasses import dataclass
-from enum import Enum, EnumMeta
-from math import nan
+from enum import Enum
 
 from pyeclab.api.c_utils import *
 
-# ==============================================================================#
 
 # Max number of slots
 MAX_SLOT_NB = 16
@@ -30,8 +28,6 @@ ChannelsArray = c_bool * MAX_SLOT_NB
 ResultsArray = c_int32 * MAX_SLOT_NB
 
 DataBuffer = c_uint32 * 1000
-
-# ==============================================================================#
 
 
 @dataclass
@@ -50,9 +46,6 @@ class USB_device:
         return address
 
 
-# ==============================================================================#
-
-
 @dataclass
 class Ethernet_device:
     config: tuple
@@ -68,9 +61,6 @@ class Ethernet_device:
         if self.name:
             en_clair += f", name='{self.name}'"
         return en_clair
-
-
-# ==============================================================================#
 
 
 class DEVICE(Enum):
@@ -114,8 +104,6 @@ class DEVICE(Enum):
     UNKNOWN = 255
 
 
-# ------------------------------------------------------------------------------#
-
 VMP3_FAMILY = (
     "VMP2",
     "VMP3",
@@ -142,7 +130,6 @@ VMP3_FAMILY = (
     "SP150E",
 )
 
-# ------------------------------------------------------------------------------#
 
 VMP300_FAMILY = (
     "SP100",
@@ -153,8 +140,6 @@ VMP300_FAMILY = (
     "SP240",
     "BP300",
 )
-
-# ------------------------------------------------------------------------------#
 
 
 class DeviceInfo(POD):
@@ -174,8 +159,6 @@ class DeviceInfo(POD):
 
 
 DEVICE_INFO = POINTER(DeviceInfo)
-
-# ------------------------------------------------------------------------------#
 
 
 class CHANNEL_BOARD(Enum):
@@ -228,8 +211,6 @@ class ChannelInfo(POD):
 
 CH_INFO = POINTER(ChannelInfo)
 
-# ------------------------------------------------------------------------------#
-
 
 class HardwareConf(POD):
     _fields_ = [
@@ -253,9 +234,6 @@ class HW_MODE(Enum):
     FLOATING = 1  # Floating mode
 
 
-# ------------------------------------------------------------------------------#
-
-
 class OPTION_ERROR(Enum):
     NO_ERROR = 0  # No error found
     OPT_CHANGE = 1  # Number of options changed
@@ -275,9 +253,6 @@ class OPTION_ERROR(Enum):
     OPT_10A5V_POWFAIL = 303  # 10A 5V amplifier power fail
 
 
-# -----------------------------------------------------------------------------#
-
-
 class FIRMWARE(Enum):
     NONE = 0
     INTERPR = 1
@@ -286,9 +261,6 @@ class FIRMWARE(Enum):
     INVALID = 8
     ECAL = 10
     ECAL4 = 11
-
-
-# ------------------------------------------------------------------------------#
 
 
 class CurrentValues(POD):
@@ -317,8 +289,6 @@ class CurrentValues(POD):
 
 CURRENT_VALUES = POINTER(CurrentValues)
 
-# ------------------------------------------------------------------------------#
-
 
 class DataInfo(POD):
     _pack_ = 4
@@ -337,16 +307,11 @@ class DataInfo(POD):
 
 DATA_INFO = POINTER(DataInfo)
 
-# ------------------------------------------------------------------------------#
-
 
 class PARAM_TYPE(Enum):
     PARAM_INT = 0
     PARAM_BOOLEAN = 1
     PARAM_SINGLE = 2
-
-
-# ------------------------------------------------------------------------------#
 
 
 class EccParam(POD):
@@ -359,8 +324,6 @@ class EccParam(POD):
 
 
 ECC_PARM = POINTER(EccParam)
-
-# ------------------------------------------------------------------------------#
 
 
 class EccParams(POD):
@@ -379,9 +342,6 @@ def ECC_PARM_ARRAY(nb):
     return array_type()
 
 
-# ------------------------------------------------------------------------------#
-
-
 class TechniqueInfos(POD):
     _fields_ = [
         ("Id", c_int32),
@@ -395,17 +355,12 @@ class TechniqueInfos(POD):
 
 TECHNIQUE_INFOS = POINTER(TechniqueInfos)
 
-# ------------------------------------------------------------------------------#
-
 
 class PROG_STATE(Enum):
     STOP = 0  # Channel is stopped
     RUN = 1  # Channel is running
     PAUSE = 2  # Channel is paused
     SYNC = 3  # grouped channels synchronization (stack)
-
-
-# ------------------------------------------------------------------------------#
 
 
 class I_RANGE(Enum):
@@ -425,17 +380,11 @@ class I_RANGE(Enum):
     I_RANGE_AUTO = 12  # Auto range VMP3
 
 
-# ------------------------------------------------------------------------------#
-
-
 class E_RANGE(Enum):
     E_RANGE_2_5V = 0  # ±2.5V
     E_RANGE_5V = 1  # ±5V
     E_RANGE_10V = 2  # ±10V
     E_RANGE_AUTO = 3  # auto
-
-
-# ------------------------------------------------------------------------------#
 
 
 class BANDWIDTH(Enum):
@@ -450,9 +399,6 @@ class BANDWIDTH(Enum):
     BW_9 = 9
 
 
-# ------------------------------------------------------------------------------#
-
-
 class GAIN(Enum):
     GAIN_1 = 0
     GAIN_10 = 1
@@ -460,17 +406,11 @@ class GAIN(Enum):
     GAIN_1000 = 3
 
 
-# ------------------------------------------------------------------------------#
-
-
 class FILTER(Enum):
     FILTER_NONE = 0
     FILTER_50KHZ = 1
     FILTER_1KHZ = 2
     FILTER_5HZ = 3
-
-
-# ------------------------------------------------------------------------------#
 
 
 class AMPLIFIER(Enum):
@@ -509,9 +449,6 @@ class AMPLIFIER(Enum):
     AMPL3_50A60VII = 101  # 50A/60V amplifier (FlexP 0060)
     AMPL4_1A48VPII = 105  # 1A/48VP v2
     AMPL4_1A48VPIII = 129  # 1A/48VP v3
-
-
-# ------------------------------------------------------------------------------#
 
 
 class ERROR(Enum):
@@ -580,9 +517,6 @@ class ERROR(Enum):
     OPT_1A48VP_POWERFAIL = 603  # 1A48VP amplifier power fail
 
 
-# ==============================================================================#
-
-
 class FIND_ERROR(Enum):
     NO_ERROR = 0  # "No error"
     UNKNOWN_ERROR = -1  # unknown error
@@ -601,6 +535,3 @@ class FIND_ERROR(Enum):
     GW_FORMAT = -35  # invalid format of gateway address
     IP_NOT_FOUND = -38  # instrument to modify not found
     IP_ALREADYEXIST = -39  # new IP address in TCP/IP parameters
-
-
-# ==============================================================================#

@@ -1,7 +1,9 @@
 import time
 
-import pyeclab.techniques.techniques as tech
-from pyeclab.device import BiologicDevice
+from pyeclab.techniques import OpenCircuitVoltage
+from pyeclab import BiologicDevice
+
+#!!! Has to be refactored for the new techniques objects!
 
 # IP address of the instrument
 ip_address = "172.28.26.11"

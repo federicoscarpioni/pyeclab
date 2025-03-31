@@ -2,7 +2,7 @@
 This module
 """
 
-import logging
+from collections.abc import Sequence
 
 import pyeclab.api.kbio_types as types
 from pyeclab.api.c_utils import c_is_64b
@@ -12,23 +12,28 @@ from pyeclab.api.kbio_api import KBIO_api
 class BiologicDevice(KBIO_api):
     """
     Connect and setup BioLogic device and perform measurement techniques on
-    channels. Inharitates from BioLogic api module and simplify the calls to
+    channels. Inherits from BioLogic api module and simplifies the calls to
     the functions.
-    IMPORTANT: The class doesn't retrive the measrument data from the instrument!
+    IMPORTANT: The class doesn't retrieve the measurement data from the instrument!
     """
 
-    def __init__(self, address, binary_path="C:/EC-Lab Development Package/EC-Lab Development Package/", verbosity=3):
+    def __init__(
+        self,
+        address: str,
+        binary_path: str = "C:/EC-Lab Development Package/EC-Lab Development Package/",
+        autoconnect: bool = True,
+    ):
         DLL_path = self._choose_library(binary_path)
-        super(BiologicDevice, self).__init__(DLL_path)
+        super().__init__(DLL_path)
         self.address = address
-        self.verbosity = verbosity
-        self.connect()
-        self.test_connection()
-        self.test_channels_plugged()
-        self.is_VMP3 = self.device_info.model in types.VMP3_FAMILY
-        self._load_firmware_channels(force_load=False)
+        if autoconnect:
+            self.connect()
+            self.test_connection()
+            self.test_channels_plugged()
+            self.is_VMP3 = self.device_info.model in types.VMP3_FAMILY
+            self._load_firmware_channels(force_load=False)
 
-    def _choose_library(self, binary_path):
+    def _choose_library(self, binary_path: str):
         """
         Choose the proper BioLogic dll according to Python version (32/64bit)'
         """
@@ -63,7 +68,7 @@ class BiologicDevice(KBIO_api):
             channel,
         )
 
-    def _load_firmware_channels(self, force_load):
+    def _load_firmware_channels(self, force_load: bool):
         """
         Load the firmware in a channel if needed
         """
@@ -82,13 +87,13 @@ class BiologicDevice(KBIO_api):
         self.LoadFirmware(self.device_id, channel_map, firmware=firmware_path, fpga=fpga_path, force=force_load)
         print("> ... firmware loaded")
 
-    def start_channel(self, channel):
+    def start_channel(self, channel: int):
         self.StartChannel(self.device_id, channel)
         print(f"> Started channel {channel}")
 
     # !!! Implement start_channels for channel synchronization
 
-    def stop_channel(self, channel):
+    def stop_channel(self, channel: int):
         self.StopChannel(self.device_id, channel)
         print(f"> Channel {channel} stopped")
 
@@ -97,7 +102,7 @@ class BiologicDevice(KBIO_api):
         status = types.PROG_STATE(status).name
         return status
 
-    def load_sequence(self, channel, sequence, display=False):
+    def load_sequence(self, channel: int, sequence: Sequence, display: bool = False):
         for i in range(0, len(sequence)):
             # Determine the "first"and "last" parameter needed in LoadTechnique
             # from the length of sequence list.

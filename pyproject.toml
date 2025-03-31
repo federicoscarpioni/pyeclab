@@ -1,6 +1,6 @@
 [project]
 name = "pyeclab"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Python wrapper around the EC-Lab SDK for the control of BioLogic potentiostats."
 authors = [
     {name = "Federico Scarpioni", email = "federicoscarpioni@gmail.com"},
@@ -21,7 +21,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 
 [project.optional-dependencies]
-buffer = ["np-rw-ringbuffer"]
+dev = ["pytest"]
 
 [project.urls]
 Repository = "https://github.com/federicoscarpioni/pyeclab.git"
@@ -35,4 +35,15 @@ build-backend = "hatchling.build"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "S", "UP"]
+select = ["B", "E", "F", "S", "UP"]
+exclude = ["E741"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*.py" = [
+    "S101", # asserts allowed in tests...
+    "ARG", # Unused function args -> fixtures nevertheless are functionally relevant...
+    "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
+    # The below are debateable
+    "PLR2004", # Magic value used in comparison, ...
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+]

@@ -24,7 +24,6 @@ from ctypes import (
     string_at,
 )
 
-# ------------------------------------------------------------------------------#
 
 # pointer version of types
 
@@ -35,8 +34,6 @@ c_uint32_p = POINTER(c_uint32)
 # check on the size of pointers
 c_is_64b = sizeof(c_void_p) == 8
 
-# ==============================================================================#
-
 
 def c_dump(cobj):
     """Print both byte version of object and hex dump."""
@@ -46,8 +43,6 @@ def c_dump(cobj):
     h = binascii.hexlify(b)
     print(b, "\n", h)
 
-
-# ------------------------------------------------------------------------------#
 
 # helper class to be used when buffer+sizeof are needed
 
@@ -82,9 +77,6 @@ class c_buffer:
         if value[-1:] == b"\0":
             value = value[:-1]
         return value
-
-
-# ------------------------------------------------------------------------------#
 
 
 class POD(Structure):
@@ -132,6 +124,3 @@ class POD(Structure):
             value = getattr(self, name)
             subset += {name: value}
         return subset
-
-
-# ==============================================================================#

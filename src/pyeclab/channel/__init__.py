@@ -1,242 +1,93 @@
-from abc import ABC, abstractmethod
 import json
-import time
-from collections import deque, namedtuple
-from datetime import datetime
-from pathlib import Path
-from threading import Thread
 import logging
-import sqlite3
+import time
+from collections.abc import Sequence
+from datetime import datetime
+from threading import Thread
 
-from attrs import define
 import numpy as np
+from attrs import asdict
 
 from pyeclab.api.tech_types import TECH_ID
-from pyeclab.device import BiologicDevice
+from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
-from pyeclab.techniques.techniques import reset_duration, set_duration_to_1s
+from pyeclab.channel.writers.abstractwriter import AbstractWriter
+from pyeclab.device import BiologicDevice
+from pyeclab.techniques.functions import reset_duration, set_duration_to_1s
 
 logger = logging.getLogger("pyeclab")
 
-try:
-    from np_rw_buffer import RingBuffer
-except ImportError:
-    _has_buffer = False
-    print("optional dependecy np-rw-buffer not installed, install with 'pip install pyeclab[buffer]'")
-    logger.info("np_rw_buffer not imported.")
-else:
-    _has_buffer = True
 
-# ! Add a logger
+# TODO
+class HardwareConfig:
+    "See page 153 of the manual"
 
-""" 
-!!! Works only for dt of 1 second of the potentiostat. The problem is how to 
-!!! save correctly a matrix of values instead of an array
-"""
-
-ChannelOptions = namedtuple("ChannelOptions", ["experiment_name"])
-
-# class HardwareConfigManger:
-#     def set_hardware_config(self, ...):
-#         ...
-
-#     def generate_xctr_param(self, ...):
-#         ...
-
-# class ExperimentManager:
-#     def start(self, ...):
-#         ...
-
-#     def stop(self, ...):
-#         ...
-
-# class DataManager:
-#     def __init__(self, saving_dir):
-#         self.saving_dir = saving_dir
-
-#     def create_exp_folder(self, ...):
-#         ...
-
-#     def write_data_to_file(self, ...):
-#         ...
-
-# class ConditionChecker:
-#     def set_condition(self, ...):
-#         ...
-
-
-#     def check_limits(self, ...):
-#         ...
-
-
-@define
-class Data:
-    time: float
-    voltage: float
-    current: float
-    technique_num: int
-    loop_num: int
-    user_cycle: int
-
-
-class AbstractWriter(ABC):
-    @abstractmethod
-    def write(self, data: Data) -> None: ...
-
-    @abstractmethod
-    def instantiate(self) -> None: ...
-
-    @abstractmethod
-    def close(self) -> None: ...
-
-
-@define
-class FileWriter(AbstractWriter):
-    """"""
-
-    file_dir: Path
-    experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
-
-    def write(self, data):
-        """Write to file"""
-        raise NotImplementedError
-
-    def instantiate(self):
-        """Create dir"""
-
-
-@define
-class SqlWriter(AbstractWriter):
-    """"""
-
-    db: Path
-    experiment_name: str
-    current_cycle: int = 0
-    current_state: int = 0
-
-    def write(self, data: Data):
-        """Write to DB"""
-        cur = self.conn.cursor()
-        insert_data = (
-            self.experiment_name,
-            data.time,
-            data.voltage,
-            data.current,
-            data.technique_num,
-            data.loop_num,
-            data.user_cycle,
-        )
-        cur.execute(
-            "INSERT INTO ?(?,?,?,?,?,?)",
-            insert_data,
-        )
-
-    def instantiate(self) -> None:
-        """Create DB/Table and create connection."""
-        self.conn = sqlite3.connect(self.db)
-        cur = self.conn.cursor()
-        stmt = "CREATE TABLE IF NOT EXISTS ?(id INTEGER PRIMARY KEY AUTOINCREMENT, time REAL, current REAL, voltage REAL, technique_num INTEGER, loop_num INTEGER, user_cycle INTEGER, user_state TEXT)"
-        cur.execute(stmt, self.experiment_name)
-        self.conn.commit()
-
-    def close(self) -> None:
-        """Close the DB connection"""
-        self.conn.close()
+    def set_CE2ground(self): ...
+    def set_controlled_potential(self): ...
 
 
 class Channel:
-    # New to implement:
-    # def __init__(self, bio_device, channel_num, saving_dir, channel_options,
-    #              hardware_manager, experiment_manager, data_manager, condition_checker):
-    #     self.bio_device = bio_device
-    #     self.num = channel_num
-    #     self.hardware_manager = hardware_manager
-    #     self.experiment_manager = experiment_manager
-    #     self.data_manager = data_manager
-    #     self.condition_checker = condition_checker
-    #     ...
-
     def __init__(
         self,
         bio_device: BiologicDevice,
         channel_num: int,
-        saving_dir: str,
-        channel_options: namedtuple,
-        is_live_plotting: bool = True,  # ? Deside which naming convention to use for booleans
-        is_recording_Ece: bool = False,
-        is_external_controlled: bool = False,
-        is_recording_analog_In1: bool = False,
-        is_recording_analog_In2: bool = False,
-        is_charge_recorded: bool = False,
-        is_printing_values: bool = False,
+        writer: AbstractWriter,
+        config: ChannelConfig,
         callbacks: list | None = None,
     ):
         self.bio_device = bio_device
         self.num = channel_num
-        # Saving details
-        self.experiment_name = channel_options.experiment_name  # ? maybe I can save directly the whole options
-        self.saving_path = saving_dir + "/" + self.experiment_name
-        # Class behaviour
-        self.print_values = is_printing_values
-        self.is_live_plotting = is_live_plotting
+        self.writer = writer
+        self.config = config
         self.callbacks = [] if callbacks is None else callbacks
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
         self.conditions = []
-        self.conditions_average = []
         self.is_running = False
-        self.is_recording_Ece = is_recording_Ece
-        self.is_external_controlled = is_external_controlled
-        self.is_recording_analog_In1 = is_recording_analog_In1
-        self.is_recording_analog_In2 = is_recording_analog_In2
-        self.is_charge_recorded = is_charge_recorded
-        self.xtr_param = self.generate_xctr_param()  # This parameter is valid only for premium potentiostat
 
     ## Methods for setting hardware for the experiment ##
 
     def set_hardware_config(self): ...
 
-    def generate_xctr_param(self):
-        bitfield = 0
-        bitfield |= self.is_recording_Ece << 0  # Record Ece at bit position 1
-        bitfield |= self.is_recording_analog_In1 << 1  # Record Analog IN1 at bit position 2
-        bitfield |= self.is_recording_analog_In2 << 2  # Record Analog IN2 at bit position 3
-        bitfield |= self.is_external_controlled << 3  # Enable External ctrl at bit position 4
-        # bit 5 is reserved
-        # No information for bit position 6 (Record Control), assuming not needed
-        bitfield |= self.is_charge_recorded << 6  # Record Charge at bit position 7
-        # No information for bit position 8 (Record IRange), assuming not needed
-        return bitfield
 
-    def load_sequence(self, sequence, ask_ok=False):
+
+    def load_sequence(self, sequence: Sequence, ask_ok=False):
         self.sequence = sequence
+        for element in sequence:
+            if element.ecc_file is None or element.ecc_params is None:
+                raise AttributeError(
+                    f"Ecc File or Ecc Params of {type(element).__name__} are None. Did you call .make_technique() ?"
+                )
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
 
-    def import_sequence(self, json_file_path):
-        with open("json_file_path", "r") as sequence_json:
-            self.sequence = json.load(sequence_json)
-        self.bio_device.load_sequence(self.num, self.sequence)
+        
+    # This is not implemented yet, we need first to define a way of saving and 
+    # loading the sequences. 
+    # def import_sequence(self, json_file_path):
+    #     with open("json_file_path") as sequence_json:
+    #         self.sequence = json.load(sequence_json)
+    #     self.bio_device.load_sequence(self.num, self.sequence)
 
     ## Methods for managing the execution of the experiment ##
 
     def start(self):
-        # Save experiment data
-        self._create_exp_folder()
-        self._create_saving_file()
+        self._instantiate_writer()
         self._save_exp_metadata()
         # self._save_sequence_json()
+
         # Start channel on the device
         self.first_loop = True
         self.bio_device.start_channel(self.num)
+
         # Start collecting data from the device
         loop_thread = Thread(target=self._retrive_data_loop)
         loop_thread.start()
+
         # Initialize liveplot
-        if self.is_live_plotting:
+        if self.config.live_plot:
             self.start_live_plot()
+
         print(f"CH{self.num}: Experiment started")
 
     def stop(self):
@@ -282,11 +133,11 @@ class Channel:
         """
         Operations to perfom when the sequence is completed.
         """
-        self._close_saving_file()
-        self._execute_callbacks()
+        self.writer.close()
+        # self._execute_callbacks() # removed to avoid double execution of callbacks.
         print(f"CH{self.num} > Measure terminated")
 
-    def _retrive_data_loop(self, sleep_time=0.1):
+    def _retrive_data_loop(self, sleep_time=1):
         """
         Retrives latest measurement data from the BioLogic device, converts and
         saves. The sequence progression is also monitored.
@@ -297,13 +148,11 @@ class Channel:
             # Write latest data to open saving file
             self._write_latest_data_to_file()
             # Print latest values
-            if self.print_values:
+            if self.config.print_values:
                 self._print_current_values()
-            # Update plot
-            # self.liveplot.update_plot()
             # Check if the technique has changed on the instrument
             self._monitoring_sequence_progression()
-            # Brake the loop if sequence is terminates
+            # Break the loop if sequence is terminates
             if self.current_values.State == 0:
                 self._final_actions()
                 break
@@ -311,16 +160,12 @@ class Channel:
             if self._check_software_limits():
                 print("Software limits met")  # debug print
                 self.end_technique()
-            if self._check_software_limits_avarage():
-                print("Software limits avarage met")  # debug print
-                self.end_technique()
-            # Sleep before retriving next measrued data
+            # Sleep before retriving next measured data
             time.sleep(sleep_time)
 
     def _get_measurement_values(self):
-        # Get data from instrument ADC
+        """Get measurement data from the instruments ADC and convert it into physical values."""
         self._get_data()
-        # Convert ADC numbers to physical values
         latest_data = self._get_converted_buffer()
         return latest_data
 
@@ -379,21 +224,15 @@ class Channel:
         """
         Convert digitalized signal from ADC to physical values.
 
-        Note: Counter electrode  and AUX to be added!
-
+        Note: AUX to be added!
         """
-        # Buffer from the device
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
-        # Convert voltage buffer numbers in real values
-        Ewe = np.array(
-            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
-        )
-        # Convert buffer numbers in real values
-        if self.is_charge_recorded and self.is_recording_Ece:
+
+        if self.config.record_charge and self.config.record_ece:
             return self._get_converted_buffer_with_charge_and_Ece(buffer)
-        elif self.is_charge_recorded:
+        elif self.config.record_charge:
             return self._get_converted_buffer_with_charge(buffer)
-        elif self.is_recording_Ece:
+        elif self.config.record_ece:
             return self._get_converted_buffer_with_Ece(buffer)
         else:
             return self._get_converted_buffer_base(buffer)
@@ -404,34 +243,33 @@ class Channel:
                 callback()
 
     def _update_sequence_trackers(self):
+        """Update tech index, tech id and loop id."""
         self.current_tech_index = self.data_info.TechniqueIndex
         self.current_tech_id = self.data_info.TechniqueID
         logger.debug(f"From _update_sequence_trackers:\n{self.current_tech_id=}\n{self.data_info.TechniqueID}")
         self.current_loop = self.data_info.loop
+        print(f"Loop {self.current_loop}, Technique {self.current_tech_index}, Technique ID {self.current_tech_id}")
 
     def _monitoring_sequence_progression(self):
         """
         This method checks when a new technique is started in the instrument. This
         can be used to add new behaviours to the application.
-
-        Currently doesn't execute on first loop!
         """
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id = self.data_info.TechniqueID
         new_loop = self.data_info.loop
+
         if not self.is_running:
             self.is_running = True
             self.current_tech_id = new_tech_id
-        # Check if a new technique is running
-        if (
-            self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True
-        ):  # the second condition should be sufficient...
+
+        if self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True:
             self.first_loop = False
             self._update_sequence_trackers()
             self._execute_callbacks()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
-    ## Methods for software controll ##
+    ## Methods for software control ##
 
     def set_condition(self, technique_index: int, quantity: str, operator: str, threshold: float):
         self.conditions.append((technique_index, quantity, operator, threshold))
@@ -459,174 +297,56 @@ class Channel:
                     return True
                 elif operator == "<" and quantity_value <= threshold:
                     return True
-        return False  # Do I need to keep this return?
+        return False  
 
-    def set_condition_avarage(
-        self, technique_index: int, quantity: str, operator: str, threshold: float, points_avarage: int
-    ):
-        '''
-            latest_points is a circular buffer. It is saved in the condition tuple.
-            """
-            if not _has_buffer:
-                raise ImportError(
-                    """The optional dependency 'np-rw-buffer' is required to do this,
-                    install it with 'pip install pyeclab[buffer]'"""
-                )
-            latest_points = RingBuffer(points_avarage)
-            self.conditions_average.append((technique_index, quantity, operator, threshold,points_avarage, latest_points))
 
-        def _update_value_buffer(self, buffer, data):
-            buffer.write(data, error = False)
-            return buffer
+    ## Methods for saving data
+    def _instantiate_writer(self):
+        """Create the structure of the data as list and pass it to the writer,
+        which in return creates the appropriate structure in a file, database or similar.
+        """
+        structure = ["Time/s", "Ewe/V", "I/A", "Technique_num", "Loop_num"]
 
-        def _reset_buffer_avarage(self):
-            for technique_index, quantity, operator, threshold, points_avarage, latest_points in self.conditions_average:
-                latest_points.read()
+        if self.config.record_ece and self.config.record_charge:
+            structure.insert(3, "Ece/V")
+            structure.insert(4, "Q/C")
+        elif self.config.record_ece:
+            structure.insert(3, "Ece/V")
+        elif self.config.record_charge:
+            structure.insert(3, "Q/C")
 
-        def _get_avarage(self, buffer):
-            return np.sum(buffer.get_data())/len(buffer.get_data())
-
-        def _check_software_limits_avarage(self):
-            """
-            Check if a certain condition (< or > of a trashold value) is met for the
-            avarage value of a sampled data over a certain number of points.
-        '''
-        for (
-            technique_index,
-            quantity,
-            operator,
-            threshold,
-            points_avarage,
-            latest_points,
-        ) in (
-            self.conditions_average
-        ):  # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            quantity_value = getattr(
-                self.current_values, quantity, None
-            )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-            if self.current_tech_index != technique_index:
-                continue
-            if quantity_value is None:
-                continue
-            latest_points = self._update_value_buffer(latest_points, quantity_value)
-            if len(latest_points) < points_avarage:
-                continue
-            avarage_value = self._get_avarage(latest_points)
-            if operator == ">" and avarage_value >= threshold:
-                return True
-            elif operator == "<" and avarage_value <= threshold:
-                return True
-        return False
-
-    ## Methods for saving data ##
-
-    def _create_exp_folder(self):
-        Path(self.saving_path).mkdir(parents=True, exist_ok=True)
-
-    def _create_saving_file(self):
-        self.saving_file = open(self.saving_path + "/measurement_data.txt", "w+")
-        # Write headers
-        if self.is_recording_Ece and self.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tQ/C\tTechnique_num\tLoop_num\n")
-        elif self.is_recording_Ece:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tEce/V\tTechnique_num\tLoop_num\n")
-        elif self.is_charge_recorded:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tQ/C\tTechnique_num\tLoop_num\n")
-        else:
-            self.saving_file.write("Time/s\tEwe/V\tI/A\tTechnique_num\tLoop_num\n")
+        self.writer.instantiate(structure)
 
     def _write_latest_data_to_file(self):
+        """Format the latest data into a numpy array and pass it to the writers .write() method."""
         technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
         loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
 
         data_to_save = np.column_stack((*self.latest_data, technique_num, loop_num))
 
-        np.savetxt(self.saving_file, data_to_save, fmt="%4.3e", delimiter="\t")
-        self.saving_file.flush()
-
-    def _close_saving_file(self):
-        self.saving_file.close()
+        self.writer.write(data_to_save)
 
     def _save_exp_metadata(self):
-        # Note: I am not using the 'with' constructor here because I assume I
-        # might want to update the metada if some event happen. In that case,
-        # the closing function should be move in the stop() method.
-        self.metadata_file = open(self.saving_path + "/experiment_metadata.txt", "w")
-        # File title
-        self.metadata_file.write("PYECLAB METADATA FILE\n")
-        # Information of the starting time
+        """Gather all the metadata, mainly from the techniques in the sequence, and pass it
+        to the writers .write_metadata() method."""
+        metadata = {}
+
         self.starting_time = datetime.now()
-        self.metadata_file.write(f"Date : {self.starting_time.strftime('%Y-%m-%d')}\n")
-        self.metadata_file.write(f"Starting time : {self.starting_time.strftime('%H:%M:%S')}\n")
-        # Information of the saving file name
-        self.metadata_file.write(f"Experiment name : {self.experiment_name}\n")
-        self.metadata_file.write(f"Saving file path : {self.saving_path}\n")
-        # !!! Print all the information of the techniques in the sequence
-        # ! Add information on the device, channel number, cell name and user comments
-        # ! Add the list of condition checked by the software
-        self.metadata_file.close()
+        metadata["Experiment Name"] = self.writer.experiment_name
+        metadata["Start of Experiment"] = self.starting_time
 
-    def _save_sequence_json(self):
-        json_file_path = self.saving_path + "/sequence.json"
-        with open(json_file_path, "w") as json_file:
-            json.dump(self.sequence, json_file)
+        for idx, technique in enumerate(self.sequence):
+            metadata["Technique"] = idx
+            for k, v in asdict(technique).items():
+                if not isinstance(v, datetime):
+                    try:
+                        str(v)
+                        metadata[f"tech{idx}_{k}"] = v
+                    except Exception:
+                        logger.info("Metadata could not be processed. Type: %s", type(v))
+                        continue
 
-    # ---- Methods to be reviewed ---- #
+                else:
+                    metadata[f"tech{idx}_{k}"] = v
 
-    # def save_exp_params(self):
-    #     savepath = f'{self.experiment_info.deis_directory}/{self.experiment_info.project_name}/{self.experiment_info.cell_name}/{self.experiment_info.experiment_name}CH{self.num}/'
-    #     # Create the path
-    #     Path(savepath).mkdir(parents=True, exist_ok=True)
-    #     with open(savepath+'exp_details.txt', 'w') as f:
-    #         f.write('Experimental parameters\n\n')
-    #         f.write('Starting time:' + datetime.now().strftime("%m/%d/%Y-%H:%M:%S"))
-    #         f.write('\n')
-    #         if self.pico is not None:
-    #             f.write('Acquisition with Picoscope\nSampling starting time:'+self.pico.time_start.strftime("%m/%d/%Y-%H:%M:%S")+'\n')
-    #         for key, value in self.experiment_info.__dict__.items():
-    #             f.write('%s: %s\n' % (key, value))
-    #         f.write('\nSoftware paramteres\n')
-    #         for key, value in self.software_params.__dict__.items():
-    #             f.write('%s: %s\n' % (key, value))
-    #         f.write('\nSequence paramters\n')
-    #         for i in range(0,len(self.sequence)):
-    #             f.write(f'\nTechnique #{i}: ' + self.sequence[i].ecc_file[:-5])
-    #             f.write('\n')
-    #             for key, value in self.sequence[i].user_params.__dict__.items():
-    #                 f.write('%s: %s\n' % (key, value))
-
-    # def copy_buffer(self):
-    #     '''
-    #     Copy converted data buffers to an allocated array. next_sample variable
-    #     contains the first 'free' (or empty, i.e. zero element) index to start
-    #     the copy from.
-    #     '''
-    #     dest_end = self.next_sample + self.Ewe_buff.size
-    #     if dest_end > self.max_array_allocation:
-    #         self.save_data(True)
-    #         self.inizialize_arrays()
-    #         dest_end = self.Ewe_buff.size
-    #     if self.pico is not None and self.pico.nextSample > self.max_array_allocation:
-    #         self.save_data(True)
-    #         dest_end = self.Ewe_buff.size
-    #     self.Ewe[self.next_sample:dest_end]             = self.Ewe_buff
-    #     self.I[self.next_sample:dest_end]               = self.I_buff
-    #     self.time_experiment[self.next_sample:dest_end] = self.t_buff
-    #     self.next_sample = dest_end
-    #     self.send_data_to_queue(self.downsampling_factor) # !!! soft code the downsampling constant
-
-    # def get_technique_name(self):
-    #     if self.current_tech_id == 100:
-    #         technique_name = 'OCV'
-    #     elif self.current_tech_id == 101:
-    #         technique_name = 'chonoamperometry'
-    #     elif self.current_tech_id == 155:
-    #         technique_name = 'chronopotentiometry'
-    #     return technique_name
-
-    # def update_potentiostatic_value(self, Ewe, new_tech_index):
-    #     self.bio_device.UpdateParameters(self.bio_device.device_id,
-    #                                      self.num,
-    #                                      self.current_tech_index,
-    #                                      bt.update_CA_voltage(self.bio_device, Ewe, self.sequence[new_tech_index]),
-    #                                      self.sequence[new_tech_index].ecc_file)
+        self.writer.write_metadata(metadata)

@@ -2,3 +2,4 @@ pyeclab.egg-info/
 .idea/
 .venv
 __pycache__
+.vscode
