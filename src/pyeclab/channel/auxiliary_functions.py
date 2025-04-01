@@ -1,12 +1,6 @@
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 
 
-def load_sequence_from_json(path: str) -> list:  # Specify which object type will be the list elements
-    return sequence
-
-
-def create_empty_json_sequence(path: str, techniques: list[str]): ...
-
 
 def update_CA_voltage(api, Ewe, technique):
     CA_parm_names = {

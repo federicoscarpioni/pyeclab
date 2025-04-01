@@ -61,15 +61,6 @@ class Channel:
                 )
         self.bio_device.load_sequence(self.num, self.sequence, display=ask_ok)
 
-        
-    # This is not implemented yet, we need first to define a way of saving and 
-    # loading the sequences. 
-    # def import_sequence(self, json_file_path):
-    #     with open("json_file_path") as sequence_json:
-    #         self.sequence = json.load(sequence_json)
-    #     self.bio_device.load_sequence(self.num, self.sequence)
-
-    ## Methods for managing the execution of the experiment ##
 
     def start(self):
         self._instantiate_writer()
