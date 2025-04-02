@@ -207,36 +207,14 @@ class Channel:
 
     ## Methods for software control ##
 
-    def set_condition(self, technique_index: int, quantity: str, operator: str, threshold: float):
-        self.conditions.append((technique_index, quantity, operator, threshold))
+    ## Methods for managing the software limits on voltage and curent
 
     def _check_software_limits(self):
-        """
-        Check if a certain condition (< or > of a trashold value) is met for a
-        value of the sampled data over a certain number of points.
-        """
-        for (
-            technique_index,
-            quantity,
-            operator,
-            threshold,
-        ) in (
-            self.conditions
-        ):  # ? Can I manually add other attributes to current_values for the quantities that are missing?
-            if self.data_info.TechniqueIndex == technique_index:
-                quantity_value = getattr(
-                    self.current_values, quantity, None
-                )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-                if quantity_value is None:
-                    continue
-                if operator == ">" and quantity_value >= threshold:
-                    return True
-                elif operator == "<" and quantity_value <= threshold:
-                    return True
-        return False  
+        return check_software_limits
 
 
-    ## Methods for saving data
+    ## Methods for saving data and metadata (including initialization of the files)
+
     def _instantiate_writer(self):
         """Create the structure of the data as list and pass it to the writer,
         which in return creates the appropriate structure in a file, database or similar.

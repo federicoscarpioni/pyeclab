@@ -1,6 +1,7 @@
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from pyeclab.channel import Channel
 from pyeclab.techniques.functions import reset_duration, set_duration_to_1s
+from dataclasses import dataclass
 
 # =============================
 # Communication with the device
@@ -44,3 +45,42 @@ def end_technique(channel):
         channel.sequence[channel.current_tech_index].ecc_file,
     )
 
+# ===============
+# Software limits
+# ===============
+
+@dataclass
+class Condition:
+     technique_index : int
+     quantity : str
+     operator : str
+     threshold : float
+
+#-------------------------------------------------------------------------------
+
+def check_software_limits(channel:Channel, conditions:list[Condition]):
+    """
+    Check if a certain condition (< or > of a trashold value) is met for a
+    value of the sampled data over a certain number of points.
+    """
+    for (
+            technique_index,
+            quantity,
+            operator,
+            threshold,
+        ) in (
+            conditions
+        ):  # ? Can I manually add other attributes to current_values for the quantities that are missing?
+            if channel.data_info.TechniqueIndex == technique_index:
+                quantity_value = getattr(
+                    channel.current_values, quantity, None
+                )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
+                if quantity_value is None:
+                    continue
+                if operator == ">" and quantity_value >= threshold:
+                    return True
+                elif operator == "<" and quantity_value <= threshold:
+                    return True
+    return False 
+
+#-------------------------------------------------------------------------------
