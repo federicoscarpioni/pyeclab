@@ -39,7 +39,7 @@ class Channel:
         self.num = channel_num
         self.writer = writer
         self.config = config
-        self.callbacks = [] if callbacks is None else callbacks
+        self.function = None
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
@@ -121,7 +121,7 @@ class Channel:
             self._monitoring_sequence_progression()
             # Break the loop if sequence is terminates
             if self.current_values.State == 0:
-                self._final_actions()
+                self.running = False
                 break
             # Stop current technique if any software limit is reached
             if self._check_software_limits():
@@ -173,10 +173,7 @@ class Channel:
         )
 
 
-    def _execute_callbacks(self):
-        for callback in self.callbacks:
-            if callable(callback):
-                callback()
+    ## Methods to monitor the execution of the sequence from Python
 
     def _update_sequence_trackers(self):
         """Update tech index, tech id and loop id."""
@@ -202,7 +199,7 @@ class Channel:
         if self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True:
             self.first_loop = False
             self._update_sequence_trackers()
-            self._execute_callbacks()
+            self.function()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
     ## Methods for software control ##
