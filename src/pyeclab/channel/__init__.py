@@ -89,30 +89,6 @@ class Channel:
     def start_live_plot(self):
         self.liveplot = LivePlot(self)
 
-    def end_technique(self):
-        """
-        End the current technique in the sequence by replacing its original
-        duration to the value of 1 second (This is a workaround for the lack
-        of a specific function in the EC-Lab SDK).
-        """
-        logger.debug(f"From end_technique: {self.data_info.TechniqueID=}")
-        logger.debug(f"From end_technique: {self.current_tech_id=}")
-        self.bio_device.UpdateParameters(
-            self.bio_device.device_id,
-            self.num,
-            self.current_tech_index,
-            set_duration_to_1s(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-            self.sequence[self.current_tech_index].ecc_file,
-        )
-
-        self.bio_device.UpdateParameters(
-            self.bio_device.device_id,
-            self.num,
-            self.current_tech_index,
-            reset_duration(self.bio_device, self.sequence[self.current_tech_index], self.current_tech_id),
-            self.sequence[self.current_tech_index].ecc_file,
-        )
-
     def _print_current_values(self):
         print(
             f"CH{self.num} > Ewe: {self.current_values.Ewe:4.3e} V | I: {self.current_values.I:4.3e} mA | Tech_ID: {TECH_ID(self.data_info.TechniqueID).name} | Tech_indx: {self.data_info.TechniqueIndex} | loop: {self.data_info.loop}"
