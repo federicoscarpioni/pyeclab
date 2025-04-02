@@ -174,43 +174,6 @@ class Channel:
         )
         logger.debug(f"Got Data:\n{self.data_info}")
 
-    def _get_converted_buffer_base(self, buffer):
-        Ewe = np.array(
-            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, self.data_info.NbRows)]
-        )
-        I = (
-            np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, self.data_info.NbRows)])
-            if self.data_info.TechniqueID != 100
-            else np.array([0] * len(Ewe))
-        )
-        t = np.array(
-            [
-                (((buffer[i, 0] << 32) + buffer[i, 1]) * self.current_values.TimeBase) + self.data_info.StartTime
-                for i in range(0, self.data_info.NbRows)
-            ]
-        )
-        return t, Ewe, I
-
-    def _get_converted_buffer_with_charge(self, buffer):
-        t, Ewe, I = self._get_converted_buffer_base(buffer)
-        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)])
-        return t, Ewe, I, q
-
-    def _get_converted_buffer_with_Ece(self, buffer):
-        t, Ewe, I = self._get_converted_buffer_base(buffer)
-        Ece = np.array(
-            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
-        )
-        return t, Ewe, I, Ece
-
-    def _get_converted_buffer_with_charge_and_Ece(self, buffer):
-        t, Ewe, I = self._get_converted_buffer_base(buffer)
-        Ece = np.array(
-            [self.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, self.data_info.NbRows)]
-        )
-        q = np.array([self.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, self.data_info.NbRows)])
-        return t, Ewe, I, Ece, q
-
     def _get_converted_buffer(self):
         """
         Convert digitalized signal from ADC to physical values.
@@ -220,13 +183,19 @@ class Channel:
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
 
         if self.config.record_charge and self.config.record_ece:
-            return self._get_converted_buffer_with_charge_and_Ece(buffer)
+            return get_buffer_converted.with_charge_and_Ece(self,buffer)
         elif self.config.record_charge:
-            return self._get_converted_buffer_with_charge(buffer)
+            return get_buffer_converted.with_charge(self,buffer)
         elif self.config.record_ece:
-            return self._get_converted_buffer_with_Ece(buffer)
+            return get_buffer_converted.with_Ece(self,buffer)
         else:
-            return self._get_converted_buffer_base(buffer)
+            return get_buffer_converted.base(self,buffer)
+
+    def _print_current_values(self):
+        print(
+            f"CH{self.num} > Ewe: {self.current_values.Ewe:4.3e} V | I: {self.current_values.I:4.3e} mA | Tech_ID: {TECH_ID(self.data_info.TechniqueID).name} | Tech_indx: {self.data_info.TechniqueIndex} | loop: {self.data_info.loop}"
+        )
+
 
     def _execute_callbacks(self):
         for callback in self.callbacks:
