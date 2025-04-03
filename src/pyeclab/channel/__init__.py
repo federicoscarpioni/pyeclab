@@ -79,7 +79,7 @@ class Channel:
         saves. The sequence progression is also monitored.
         """
         logger.debug("Starting Data Loop (_retrieve_data_loop)")
-        while self.running:
+        while True:
             self.latest_data = self._get_measurement_values()
             # Write latest data to open saving file
             self._write_latest_data_to_file()
