@@ -14,7 +14,7 @@ from pyeclab.device import BiologicDevice
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
-from pyeclab.channel.auxiliary_functions import end_technique, Condition, check_software_limits
+from pyeclab.channel.auxiliary_functions import end_technique, check_software_limits
 import pyeclab.channel.buffer_converters as get_buffer_converted
 
 logger = logging.getLogger("pyeclab")
@@ -23,7 +23,6 @@ logger = logging.getLogger("pyeclab")
 # TODO
 class HardwareConfig:
     "See page 153 of the manual"
-
     def set_CE2ground(self): ...
     def set_controlled_potential(self): ...
 
