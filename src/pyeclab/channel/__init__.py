@@ -185,21 +185,21 @@ class Channel:
         new_tech_id = self.data_info.TechniqueID
         new_loop = self.data_info.loop
 
-        if not self.is_running:
-            self.is_running = True
+        if not self.running:
+            self.running = True
             self.current_tech_id = new_tech_id
 
         if self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True:
             self.first_loop = False
             self._update_sequence_trackers()
-            self.function()
+            if self.function is not None: self.function()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
 
     ## Methods for managing the software limits on voltage and curent
 
     def _check_software_limits(self):
-        return check_software_limits
+        return check_software_limits(self)
 
 
     ## Methods for saving data and metadata (including initialization of the files)

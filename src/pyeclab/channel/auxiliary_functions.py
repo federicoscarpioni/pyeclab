@@ -1,5 +1,4 @@
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
-from pyeclab.channel import Channel
 from pyeclab.techniques.functions import reset_duration, set_duration_to_1s
 from dataclasses import dataclass
 
@@ -58,7 +57,7 @@ class Condition:
 
 #-------------------------------------------------------------------------------
 
-def check_software_limits(channel:Channel, conditions:list[Condition]):
+def check_software_limits(channel):
     """
     Check if a certain condition (< or > of a trashold value) is met for a
     value of the sampled data over a certain number of points.
@@ -69,7 +68,7 @@ def check_software_limits(channel:Channel, conditions:list[Condition]):
             operator,
             threshold,
         ) in (
-            conditions
+            channel.conditions
         ):  # ? Can I manually add other attributes to current_values for the quantities that are missing?
             if channel.data_info.TechniqueIndex == technique_index:
                 quantity_value = getattr(

@@ -1,7 +1,7 @@
 import numpy as np
-from pyeclab.channel import Channel
 
-def base(channel:Channel, buffer):
+
+def base(channel, buffer):
     Ewe = np.array(
         [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, channel.data_info.NbRows)]
     )
