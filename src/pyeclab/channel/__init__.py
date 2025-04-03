@@ -85,12 +85,12 @@ class Channel:
             # Print latest values
             if self.config.print_values:
                 self._print_current_values()
-            # Check if the technique has changed on the instrument
-            self._monitoring_sequence_progression()
             # Break the loop if sequence is terminates
             if self.current_values.State == 0:
                 self.running = False
                 break
+            # Check if the technique has changed on the instrument
+            self._monitoring_sequence_progression()
             # Stop current technique if any software limit is reached
             if self._check_software_limits():
                 print("Software limits met")  # debug print
