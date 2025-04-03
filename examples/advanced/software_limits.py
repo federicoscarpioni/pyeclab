@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pyeclab import BANDWIDTH, E_RANGE, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter
+from pyeclab import BANDWIDTH, E_RANGE, I_RANGE, BiologicDevice, Channel, ChannelConfig, FileWriter, Condition
 from pyeclab.techniques import ChronoPotentiometry
 
 ip_address = "172.28.20.81"
@@ -39,6 +39,6 @@ channel1 = Channel(
 channel1.load_sequence(sequence)
 
 # Set condition on the voltage
-channel1.set_condition(0, "Ewe", ">", 2.80)
+channel1.append(Condition(0, "Ewe", ">", 2.80))
 
 channel1.start()
