@@ -59,6 +59,7 @@ class Channel:
         self.first_loop = True
         self.bio_device.start_channel(self.num)
         # Start collecting data from the device
+        self.running = True
         self.run_thread.start()
         # Initialize liveplot
         if self.config.live_plot:
