@@ -186,15 +186,11 @@ class Channel:
         new_tech_index = self.data_info.TechniqueIndex
         new_tech_id = self.data_info.TechniqueID
         new_loop = self.data_info.loop
-
-        if not self.running:
-            self.running = True
-            self.current_tech_id = new_tech_id
-
-        if self.current_loop != new_loop or self.current_tech_index != new_tech_index or self.first_loop is True:
-            self.first_loop = False
-            self._update_sequence_trackers()
+        self.current_tech_id = new_tech_id
+        if self.current_loop != new_loop or self.current_tech_index != new_tech_index:# or self.first_loop is True:
+            # self.first_loop = False
             if self.function is not None: self.function()
+            self._update_sequence_trackers()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
 
