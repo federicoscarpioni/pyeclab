@@ -98,6 +98,7 @@ class Channel:
                 self.end_technique()
             # Sleep before retriving next measured data
             time.sleep(sleep_time)
+        if self.function is not None: self.function()
 
     ## Methods for setting hardware for the experiment ##
 
