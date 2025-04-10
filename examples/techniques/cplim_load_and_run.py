@@ -20,7 +20,7 @@ cplim = ChronoPotentiometryWithLimits(
     e_range=E_RANGE.E_RANGE_5V,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     limit_variable=build_limit("voltage", "greater", "or", True),
-    limit_values=3,
+    limit_value=3,
     bandwidth=BANDWIDTH.BW_5,
 )
 

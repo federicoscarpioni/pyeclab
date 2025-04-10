@@ -20,7 +20,7 @@ calim = ChronoAmperometryWithLimits(
     i_range=I_RANGE.I_RANGE_100uA,
     exit_cond=EXIT_COND.NEXT_TECHNIQUE,
     limit_variable=build_limit("current", "greater", "or", True),
-    limit_values=1,
+    limit_value=1,
     bandwidth=BANDWIDTH.BW_4,
 )
 calim.make_technique()

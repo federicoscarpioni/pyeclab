@@ -26,7 +26,7 @@ class ChronoPotentiometryWithLimits:
     e_range: KBIO.E_RANGE
     exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
     limit_variable: int
-    limit_values: float
+    limit_value: float
     bandwidth: KBIO.BANDWIDTH
     xctr: int | None = None
     ecc_file: str | None = field(init=False, default=None)
@@ -61,7 +61,7 @@ class ChronoPotentiometryWithLimits:
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["vs_init"], self.vs_init, idx))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["exit_cond"], self.exit_cond.value, idx))
         p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_config"], self.limit_variable, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_value"], self.limit_values, idx))
+        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_value"], self.limit_value, idx))
         p_nb_steps =make_ecc_parm(self.device, cplim_param_names["nb_steps"], self.nb_steps)
         p_record_dt = make_ecc_parm(self.device, cplim_param_names["record_dt"], self.record_dt)
         p_record_dE = make_ecc_parm(self.device, cplim_param_names["record_dE"], self.record_dE)
