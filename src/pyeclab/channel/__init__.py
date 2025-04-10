@@ -40,7 +40,7 @@ class Channel:
         self.num = channel_num
         self.writer = writer
         self.config = config
-        self.function = None
+        self.function = None # Executed at the end of each technique exept for the very last
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
@@ -98,7 +98,7 @@ class Channel:
                 self.end_technique()
             # Sleep before retriving next measured data
             time.sleep(sleep_time)
-        if self.function is not None: self.function()
+        
 
     ## Methods for setting hardware for the experiment ##
 
