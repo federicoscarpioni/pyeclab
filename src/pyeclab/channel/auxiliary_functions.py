@@ -48,8 +48,13 @@ def end_technique(channel):
 # Software limits
 # ===============
 
-@dataclass
+@dataclass(frozen = False)
 class Condition:
+     '''
+     Quantity should have the format of Channel.current_values for example: "Ewe",
+     "Ece", "I" or "ElapsedTime". Operator instead can only be ">" or "<".
+     Note that using the hardware limits of EC-Lab SDK Ece is not implemented.
+     '''
      technique_index : int
      quantity : str
      operator : str
@@ -90,13 +95,12 @@ def check_software_limits(channel):
     Check if a certain condition (< or > of a trashold value) is met for a
     value of the sampled data over a certain number of points.
     """
-    for condition in channel.conditions:  # ? Can I manually add other attributes to current_values for the quantities that are missing?
+    for condition in channel.conditions:  
         if channel.data_info.TechniqueIndex == condition.technique_index:
             quantity_value = getattr(
-                channel.current_values, condition.quantity, None
-            )  # ! It works only for attributes of current_data. I need onther trick to make it work also for capacity or power
-            if quantity_value is None:
-                continue
+                channel.current_values, 
+                condition.quantity,
+            )  
             if condition.operator == ">" and quantity_value >= condition.threshold:
                 return True
             elif condition.operator == "<" and quantity_value <= condition.threshold:
