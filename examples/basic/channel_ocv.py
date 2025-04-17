@@ -21,7 +21,7 @@ sequence = [ocv]
 
 writer = FileWriter(
     file_dir=Path("E:/Experimental_data/Federico/2025/python_software_test/"),
-    experiment_name="2503040928_test_OCV_after_rearranging_methods_with_automatic_disconnection",
+    experiment_name="2503041152_test_threding",
 )
 config = ChannelConfig(
     record_ece=False,
@@ -44,5 +44,5 @@ channel1.load_sequence(sequence)
 
 channel1.start()
 
-channel1.run_thread.join()
-device.disconnect()
+# channel1.run_thread.join()
+# device.disconnect()
