@@ -183,11 +183,11 @@ class Channel:
         This method checks when a new technique is started in the instrument. This
         can be used to add new behaviours to the application.
         """
-        new_tech_index = self.data_info.TechniqueIndex
-        new_tech_id = self.data_info.TechniqueID
-        new_loop = self.data_info.loop
-        self.current_tech_id = new_tech_id
-        if self.current_loop != new_loop or self.current_tech_index != new_tech_index:# or self.first_loop is True:
+        self.new_tech_index = self.data_info.TechniqueIndex
+        self.new_tech_id = self.data_info.TechniqueID
+        self.new_loop = self.data_info.loop
+        self.current_tech_id = self.new_tech_id
+        if self.current_loop != self.new_loop or self.current_tech_index != self.new_tech_index:# or self.first_loop is True:
             # self.first_loop = False
             if self.function is not None: self.function()
             self._update_sequence_trackers()
