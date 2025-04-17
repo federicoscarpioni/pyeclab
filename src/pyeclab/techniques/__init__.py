@@ -53,7 +53,7 @@ def _set_bit(value, bit_index):
 
 
 def build_limit(
-    type: Literal["voltage", "current"], sign: Literal["greater", "less"], logic: Literal["and", "or"], active=True
+    type: Literal["Ewe", "I"], sign: Literal[">", "<"], logic: Literal["and", "or"], active=True
 ):
     """
     Generate the appropriate bitfield to set-up limit in limited techniques according
@@ -66,10 +66,10 @@ def build_limit(
     if logic == "and":
         value = _set_bit(value, 1)
 
-    if sign == "greater":
+    if sign == ">":
         value = _set_bit(value, 2)
 
-    if type == "current":
+    if type == "I":
         value = _set_bit(value, 5)
         value = _set_bit(value, 6)
 
@@ -78,6 +78,8 @@ def build_limit(
 
 __all__ = [
     "ChronoAmperometry",
+    "ChronoPotentiometry",
+    "ChronoAmperometryWithLimits"
     "ChronoPotentiometryWithLimits",
     "Loop",
     "OpenCircuitVoltage",
