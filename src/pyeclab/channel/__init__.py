@@ -34,7 +34,6 @@ class Channel:
         channel_num: int,
         writer: AbstractWriter,
         config: ChannelConfig,
-        callbacks: list | None = None,
     ):
         self.bio_device = bio_device
         self.num = channel_num
@@ -189,7 +188,7 @@ class Channel:
         self.current_tech_id = self.new_tech_id
         if self.current_loop != self.new_loop or self.current_tech_index != self.new_tech_index:# or self.first_loop is True:
             # self.first_loop = False
-            if self.function is not None: self.function()
+            if self.function is not None: self.function() # This is strategically put before updating the trackers
             self._update_sequence_trackers()
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
