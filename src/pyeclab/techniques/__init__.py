@@ -22,6 +22,8 @@ Calling such function multiple times creates a sequence of techniques.
 This library supports the following techniques (not all!):
 - Open Circuit Voltage
 - Chono-Amperometry with Potential Limitation
+- Chrono-Potentiometry with Potential Limitation
+- Chono-Amperometry 
 - Chrono-Potentiometry
 - Loop
 Note: some techniques like CP and CA allows multiple steps but in the following
