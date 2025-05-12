@@ -18,7 +18,7 @@ dependencies = [
     "attrs",
 ]
 license = "MIT"
-license-files = ["LICENSE"]
+licence-files = ["LICENCE"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
