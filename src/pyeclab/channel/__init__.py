@@ -1,11 +1,12 @@
 import logging
 import time
+import json
 from collections.abc import Sequence
 from datetime import datetime
 from threading import Thread
 import numpy as np
 
-from attrs import asdict
+from dataclasses import asdict
 
 from pyeclab.api.tech_types import TECH_ID
 
@@ -53,7 +54,7 @@ class Channel:
 
     def start(self):
         self._instantiate_writer()
-        self._save_exp_metadata()
+        self._save_metadata()
         # Start channel on the device
         self.first_loop = True
         self.bio_device.start_channel(self.num)
@@ -226,27 +227,26 @@ class Channel:
 
         self.writer.write(data_to_save)
 
-    def _save_exp_metadata(self):
-        """Gather all the metadata, mainly from the techniques in the sequence, and pass it
-        to the writers .write_metadata() method."""
-        metadata = {}
-
-        self.starting_time = datetime.now()
-        metadata["Experiment Name"] = self.writer.experiment_name
-        metadata["Start of Experiment"] = self.starting_time
-
-        for idx, technique in enumerate(self.sequence):
-            metadata["Technique"] = idx
-            for k, v in asdict(technique).items():
-                if not isinstance(v, datetime):
-                    try:
-                        str(v)
-                        metadata[f"tech{idx}_{k}"] = v
-                    except Exception:
-                        logger.info("Metadata could not be processed. Type: %s", type(v))
-                        continue
-
-                else:
-                    metadata[f"tech{idx}_{k}"] = v
-
-        self.writer.write_metadata(metadata)
+    def _save_metadata(self):
+        metadata_dict = {
+            'Device address' : self.bio_device.address,
+            'API path' : self.bio_device.binary_path,
+            'Channel num' : self.num,
+            'Starting time' : datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+            'Sequence' : [asdict(technique) for technique in self.sequence]
+        }
+        metadata_dict.update(asdict(self.config))
+        if self.conditions:
+            metadata_dict.update(
+                {
+                    'Software conditions' : [asdict(instance) for instance in self.conditions]
+                }
+            )
+        if self.function:
+            metadata_dict.update(
+                {
+                    'Executed function':self.function
+                }
+            )
+        with open(self.writer.file_dir +'/metadata.json', 'w') as fp:
+            json.dump(metadata_dict, fp)
