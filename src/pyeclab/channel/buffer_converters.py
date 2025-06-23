@@ -19,19 +19,19 @@ def base(channel, buffer):
     return t, Ewe, I
 
 def with_charge(channel, buffer):
-    t, Ewe, I = base(buffer)
+    t, Ewe, I = base(channel,buffer)
     q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)])
     return t, Ewe, I, q
 
 def with_Ece(channel, buffer):
-    t, Ewe, I = base(buffer)
+    t, Ewe, I = base(channel,buffer)
     Ece = np.array(
         [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
     )
     return t, Ewe, I, Ece
 
 def with_charge_and_Ece(channel, buffer):
-    t, Ewe, I = base(buffer)
+    t, Ewe, I = base(channel,buffer)
     Ece = np.array(
         [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
     )
