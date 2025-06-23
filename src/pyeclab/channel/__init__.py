@@ -17,6 +17,7 @@ from pyeclab.channel.liveplot import LivePlot
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
 from pyeclab.channel.auxiliary_functions import end_technique, check_software_limits
 import pyeclab.channel.buffer_converters as get_buffer_converted
+from pyeclab.techniques import custom_serialization_factory
 
 logger = logging.getLogger("pyeclab")
 
@@ -89,6 +90,7 @@ class Channel:
             # Break the loop if sequence is terminates
             if self.current_values.State == 0:
                 self.running = False
+                print(f"CH{self.num}: Measure completed.")
                 break
             # Check if the technique has changed on the instrument
             self._monitoring_sequence_progression()
@@ -152,7 +154,6 @@ class Channel:
         Note: AUX to be added!
         """
         buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
-
         if self.config.record_charge and self.config.record_ece:
             return get_buffer_converted.with_charge_and_Ece(self,buffer)
         elif self.config.record_charge:
@@ -230,10 +231,9 @@ class Channel:
     def _save_metadata(self):
         metadata_dict = {
             'Device address' : self.bio_device.address,
-            'API path' : self.bio_device.binary_path,
             'Channel num' : self.num,
             'Starting time' : datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
-            'Sequence' : [asdict(technique) for technique in self.sequence]
+            # not working 'Sequence' : [asdict(technique, dict_factory=custom_serialization_factory) for technique in self.sequence]
         }
         metadata_dict.update(asdict(self.config))
         if self.conditions:
@@ -245,8 +245,8 @@ class Channel:
         if self.function:
             metadata_dict.update(
                 {
-                    'Executed function':self.function
+                    'Executed function':self.function.__name__
                 }
             )
-        with open(self.writer.file_dir +'/metadata.json', 'w') as fp:
+        with open(str(self.writer.file_dir / self.writer.experiment_name) +'/metadata.json', 'w') as fp:
             json.dump(metadata_dict, fp)

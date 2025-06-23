@@ -88,3 +88,15 @@ __all__ = [
     "build_limit",
     "generate_xctr_param",
 ]
+
+def custom_serialization_factory(data):
+    result_dict = {}
+    for field_name, filed_value in data:
+        if field_name == 'device' :
+            continue
+        if field_name == 'ecc_file':
+            continue
+        if field_name == 'ecc_params':
+            continue
+        result_dict[field_name] = filed_value
+    return result_dict
