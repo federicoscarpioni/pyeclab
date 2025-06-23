@@ -1,11 +1,11 @@
-from attrs import define, field
+from dataclasses import dataclass, field
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from pyeclab.device import BiologicDevice
 
 
-@define(kw_only=True)
+@dataclass
 class Loop:
     device: BiologicDevice
     repeat_N: int

@@ -1,4 +1,4 @@
-from attrs import define, field
+from dataclasses import dataclass, field
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
@@ -6,7 +6,7 @@ from pyeclab.device import BiologicDevice
 from pyeclab.techniques.exit_cond import EXIT_COND
 
 
-@define(kw_only=True)
+@dataclass
 class ChronoAmperometryWithLimits:
     device: BiologicDevice
     voltage: float
@@ -17,17 +17,11 @@ class ChronoAmperometryWithLimits:
     record_dI: float
     repeat: int
     i_range: KBIO.I_RANGE
-
-    # @i_range.validator
-    # def check(self, attribute, value):
-    #     if value == KBIO.I_RANGE.I_RANGE_AUTO:
-    #         raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
-
     e_range: KBIO.E_RANGE
-    exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
     limit_variable: int
     limit_value: float
     bandwidth: KBIO.BANDWIDTH
+    exit_cond: EXIT_COND = field(default= EXIT_COND.NEXT_TECHNIQUE)
     xctr: int | None = None
     ecc_file: str | None = field(init=False, default=None)
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)

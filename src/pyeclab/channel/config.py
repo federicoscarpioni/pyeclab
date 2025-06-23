@@ -1,7 +1,6 @@
-from attrs import define
+from dataclasses import dataclass
 
-
-@define
+@dataclass
 class ChannelConfig:
     record_ece: bool = False
     record_charge: bool = False

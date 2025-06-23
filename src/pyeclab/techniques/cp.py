@@ -1,4 +1,4 @@
-from attrs import define, field, validators
+from dataclasses import dataclass, field
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
@@ -6,26 +6,20 @@ from pyeclab.device import BiologicDevice
 from pyeclab.techniques.exit_cond import EXIT_COND
 
 
-@define(kw_only=True)
+@dataclass
 class ChronoPotentiometry:
     device: BiologicDevice
     current: float
-    duration: float = field(validator=validators.ge(0))
+    duration: float 
     vs_init: bool
-    nb_steps: int = field(validator=validators.and_(validators.ge(0), validators.le(19)))
-    record_dt: float = field(validator=validators.ge(0))
-    record_dE: float = field(validator=validators.ge(0))
-    repeat: int = field(validator=validators.ge(0))
+    nb_steps: int 
+    record_dt: float 
+    record_dE: float 
+    repeat: int 
     i_range: KBIO.I_RANGE = field()
-
-    # @i_range.validator
-    # def check(self, attribute, value):
-    #     if value == KBIO.I_RANGE.I_RANGE_AUTO:
-    #         raise ValueError("For this technique, I_RANGE_AUTO is not allowed.")
-
     e_range: KBIO.E_RANGE
-    exit_cond: EXIT_COND = EXIT_COND.NEXT_TECHNIQUE
     bandwidth: KBIO.BANDWIDTH
+    exit_cond: EXIT_COND = field(default= EXIT_COND.NEXT_TECHNIQUE)
     xctr: int | None = None
     ecc_file: str | None = field(init=False, default=None)
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)

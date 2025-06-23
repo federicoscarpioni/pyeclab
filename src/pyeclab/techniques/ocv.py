@@ -1,11 +1,11 @@
-from attrs import define, field
+from dataclasses import dataclass, field
 
 import pyeclab.api.kbio_types as KBIO
 from pyeclab.api.kbio_tech import ECC_parm, make_ecc_parm, make_ecc_parms
 from pyeclab.device import BiologicDevice
 
 
-@define(kw_only=True)
+@dataclass
 class OpenCircuitVoltage:
     device: BiologicDevice
     duration: float
@@ -38,7 +38,7 @@ class OpenCircuitVoltage:
             p_erange,
             p_band,
         ]
-        if self.xctr:
+        if self.xctr != None:
             p_xctr = make_ecc_parm(self.device, ocv_param_names["xctr"], self.xctr)
             params_list.append(p_xctr)
         ecc_params_ocv = make_ecc_parms(
