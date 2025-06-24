@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def base(channel, buffer):
     Ewe = np.array(
         [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, channel.data_info.NbRows)]
@@ -20,20 +19,34 @@ def base(channel, buffer):
 
 def with_charge(channel, buffer):
     t, Ewe, I = base(channel,buffer)
-    q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)])
+    if channel.data_info.TechniqueID == 100:
+        q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, channel.data_info.NbRows)])
+    else:
+        q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)])
     return t, Ewe, I, q
 
 def with_Ece(channel, buffer):
     t, Ewe, I = base(channel,buffer)
-    Ece = np.array(
-        [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
-    )
+    if channel.data_info.TechniqueID == 100:
+        Ece = np.array(
+            [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, channel.data_info.NbRows)]
+        )
+    else:
+        Ece = np.array(
+            [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
+        )
     return t, Ewe, I, Ece
 
 def with_charge_and_Ece(channel, buffer):
     t, Ewe, I = base(channel,buffer)
-    Ece = np.array(
-        [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
-    )
-    q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, channel.data_info.NbRows)])
+    if channel.data_info.TechniqueID == 100:
+        Ece = np.array(
+            [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, channel.data_info.NbRows)]
+        )
+        q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 4]) for i in range(0, channel.data_info.NbRows)])
+    else:
+        Ece = np.array(
+            [channel.bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, channel.data_info.NbRows)]
+        )
+        q = np.array([channel.bio_device.ConvertNumericIntoSingle(buffer[i, 6]) for i in range(0, channel.data_info.NbRows)])
     return t, Ewe, I, Ece, q
