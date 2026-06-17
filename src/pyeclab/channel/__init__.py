@@ -12,12 +12,12 @@ from pyeclab.api.tech_types import TECH_ID
 
 from pyeclab.device import BiologicDevice
 
+from pyeclab.channel.acquisition import DataAcquisition
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
 from pyeclab.channel.limits import SoftwareLimitChecker
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
 from pyeclab.channel.auxiliary_functions import end_technique
-import pyeclab.channel.buffer_converters as get_buffer_converted
 from pyeclab.techniques import custom_serialization_factory
 
 logger = logging.getLogger("pyeclab")
@@ -46,6 +46,7 @@ class Channel:
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
+        self.acquisition = DataAcquisition(bio_device, channel_num, config)
         self.limit_checker = SoftwareLimitChecker()
         self.running = False
         # Setup thread
@@ -70,7 +71,7 @@ class Channel:
 
     def stop(self):
         self.bio_device.stop_channel(self.num)
-        # self._get_measurement_values()  # ? There shoudl be still the latest values to retrive
+        # self.acquisition.poll()  # ? There shoudl be still the latest values to retrive
         self.running = False
         self.run_thread.join()    
         print(f"CH{self.num}: interrupted by the user")
@@ -82,7 +83,7 @@ class Channel:
         """
         logger.debug("Starting Data Loop (_retrieve_data_loop)")
         while True:
-            self.latest_data = self._get_measurement_values()
+            self.current_values, self.data_info, self.latest_data = self.acquisition.poll()
             # Write latest data to open saving file
             self._write_latest_data_to_file()
             # Print latest values
@@ -127,42 +128,6 @@ class Channel:
     
 
     ## Methods for managing data collection during run ##
- 
-    def _get_measurement_values(self):
-        """Get measurement data from the instruments ADC and convert it into physical values."""
-        self._get_data()
-        latest_data = self._get_converted_buffer()
-        return latest_data
-
-    def _get_data(self):
-        """
-        When retriving latest agglomerated data from the instrument, the api will
-        return three objects:
-        current_values = current values of the measurement
-        data_info = info on  the technique that is running and on the buffer content, e.g. TechniqueID
-        data_buffer = data in a one dimension
-        See the EC-Lab Development Kit manual for details on the data structures.
-        """
-        self.current_values, self.data_info, self.data_buffer = self.bio_device.GetData(
-            self.bio_device.device_id, self.num
-        )
-        logger.debug(f"Got Data:\n{self.data_info}")
-
-    def _get_converted_buffer(self):
-        """
-        Convert digitalized signal from ADC to physical values.
-
-        Note: AUX to be added!
-        """
-        buffer = np.array(self.data_buffer).reshape(self.data_info.NbRows, self.data_info.NbCols)
-        if self.config.record_charge and self.config.record_ece:
-            return get_buffer_converted.with_charge_and_Ece(self,buffer)
-        elif self.config.record_charge:
-            return get_buffer_converted.with_charge(self,buffer)
-        elif self.config.record_ece:
-            return get_buffer_converted.with_Ece(self,buffer)
-        else:
-            return get_buffer_converted.base(self,buffer)
 
     def _print_current_values(self):
         print(
