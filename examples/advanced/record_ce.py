@@ -22,7 +22,6 @@ config = ChannelConfig(
 )
 
 ca = ChronoAmperometry(
-    device=device,
     voltage=0,
     duration=10,
     vs_init=True,
@@ -35,7 +34,7 @@ ca = ChronoAmperometry(
     bandwidth=BANDWIDTH.BW_4,
     xctr = generate_xctr_param(config)
 )
-ca.make_technique()
+ca.make_technique(device)
 
 sequence = [ca]
 

@@ -8,7 +8,6 @@ from pyeclab.techniques.exit_cond import EXIT_COND
 
 @dataclass
 class ChronoPotentiometryWithLimits:
-    device: BiologicDevice
     current: float
     duration: float
     vs_init: bool
@@ -26,7 +25,7 @@ class ChronoPotentiometryWithLimits:
     ecc_file: str | None = field(init=False, default=None)
     ecc_params: KBIO.EccParams | None = field(init=False, default=None)
 
-    def make_cplim_params(self):
+    def make_cplim_params(self, device: BiologicDevice):
         # dictionary of CPLIM parameters (non exhaustive)
         cplim_param_names = {
             "current_step": ECC_parm("Current_step", float),
@@ -50,19 +49,19 @@ class ChronoPotentiometryWithLimits:
 
         idx = 0  # Only one current step is used
         p_current_steps = list()
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["current_step"], self.current, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["step_duration"], self.duration, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["vs_init"], self.vs_init, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["exit_cond"], self.exit_cond.value, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_config"], self.limit_variable, idx))
-        p_current_steps.append(make_ecc_parm(self.device, cplim_param_names["test1_value"], self.limit_value, idx))
-        p_nb_steps =make_ecc_parm(self.device, cplim_param_names["nb_steps"], self.nb_steps)
-        p_record_dt = make_ecc_parm(self.device, cplim_param_names["record_dt"], self.record_dt)
-        p_record_dE = make_ecc_parm(self.device, cplim_param_names["record_dE"], self.record_dE)
-        p_repeat = make_ecc_parm(self.device, cplim_param_names["repeat"], self.repeat)
-        p_IRange =  make_ecc_parm(self.device, cplim_param_names["i_range"], self.i_range.value)
-        p_ERange =  make_ecc_parm(self.device, cplim_param_names["e_range"], self.e_range.value)
-        p_band =  make_ecc_parm(self.device, cplim_param_names["bandwidth"], self.bandwidth.value)
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["current_step"], self.current, idx))
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["step_duration"], self.duration, idx))
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["vs_init"], self.vs_init, idx))
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["exit_cond"], self.exit_cond.value, idx))
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["test1_config"], self.limit_variable, idx))
+        p_current_steps.append(make_ecc_parm(device, cplim_param_names["test1_value"], self.limit_value, idx))
+        p_nb_steps =make_ecc_parm(device, cplim_param_names["nb_steps"], self.nb_steps)
+        p_record_dt = make_ecc_parm(device, cplim_param_names["record_dt"], self.record_dt)
+        p_record_dE = make_ecc_parm(device, cplim_param_names["record_dE"], self.record_dE)
+        p_repeat = make_ecc_parm(device, cplim_param_names["repeat"], self.repeat)
+        p_IRange =  make_ecc_parm(device, cplim_param_names["i_range"], self.i_range.value)
+        p_ERange =  make_ecc_parm(device, cplim_param_names["e_range"], self.e_range.value)
+        p_band =  make_ecc_parm(device, cplim_param_names["bandwidth"], self.bandwidth.value)
         # Make the technique parameter array
         params_list= [
             *p_current_steps,
@@ -75,21 +74,21 @@ class ChronoPotentiometryWithLimits:
             p_band,
         ]
         if self.xctr:
-            p_xctr = make_ecc_parm(self.device, cplim_param_names["xctr"], self.xctr)
+            p_xctr = make_ecc_parm(device, cplim_param_names["xctr"], self.xctr)
             params_list.append(p_xctr)
         ecc_parms_cplim = make_ecc_parms(
-            self.device,
+            device,
             *params_list,
         )
         return ecc_parms_cplim
 
-    def choose_ecc_file(self):
+    def choose_ecc_file(self, is_vmp3: bool):
         # Name of the dll for the OCV technique (for both types of instruments VMP3/VSP300)
         cplim3_tech_file = "cplimit.ecc"
         cplim4_tech_file = "cplimit4.ecc"
         # Pick the correct ecc file based on the instrument family
-        return cplim3_tech_file if self.device.is_VMP3 else cplim4_tech_file
+        return cplim3_tech_file if is_vmp3 else cplim4_tech_file
 
-    def make_technique(self):
-        self.ecc_file = self.choose_ecc_file()
-        self.ecc_params = self.make_cplim_params()
+    def make_technique(self, device: BiologicDevice):
+        self.ecc_file = self.choose_ecc_file(device.is_VMP3)
+        self.ecc_params = self.make_cplim_params(device)

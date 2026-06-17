@@ -8,16 +8,14 @@ binary_path = "C:/EC-Lab Development Package/lib/"
 device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
-    device=device,
     duration=10,
     record_dt=0.1,
     e_range=E_RANGE.E_RANGE_2_5V,
     bandwidth=BANDWIDTH.BW_4,
 )
-ocv.make_technique()
+ocv.make_technique(device)
 
 cplim = ChronoPotentiometryWithLimits(
-    device=device,
     current=0.001,
     duration=10,
     vs_init=False,
@@ -32,10 +30,9 @@ cplim = ChronoPotentiometryWithLimits(
     limit_values=3,
     bandwidth=BANDWIDTH.BW_5,
 )
-cplim.make_technique()
+cplim.make_technique(device)
 
 ca = ChronoAmperometry(
-    device=device,
     voltage=0,
     duration=10,
     vs_init=True,
@@ -47,10 +44,10 @@ ca = ChronoAmperometry(
     i_range=I_RANGE.I_RANGE_100mA,
     bandwidth=BANDWIDTH.BW_5,
 )
-ca.make_technique()
+ca.make_technique(device)
 
-loop = Loop(device=device, repeat_N=1, loop_start=0)
-loop.make_technique()
+loop = Loop(repeat_N=1, loop_start=0)
+loop.make_technique(device)
 
 sequence = [
     ocv,

@@ -23,7 +23,6 @@ config = ChannelConfig(
 )
 
 cp = ChronoPotentiometry(
-    device=device,
     current=-0.0001,
     duration=10,
     vs_init=False,
@@ -36,7 +35,7 @@ cp = ChronoPotentiometry(
     bandwidth=BANDWIDTH.BW_4,
     xctr= generate_xctr_param(config)
 )
-cp.make_technique()
+cp.make_technique(device)
 
 sequence = [cp]
 

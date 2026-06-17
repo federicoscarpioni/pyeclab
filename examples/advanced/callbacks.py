@@ -30,13 +30,12 @@ binary_path = "C:/EC-Lab Development Package/lib/"
 device = BiologicDevice(IP, binary_path)
 
 ocv = OpenCircuitVoltage(
-    device=device,
     duration=5,
     record_dt=1,
     e_range=E_RANGE.E_RANGE_5V,
     bandwidth=BANDWIDTH.BW_4,
 )
-ocv.make_technique()
+ocv.make_technique(device)
 
 sequence = [ocv, ocv, ocv]
 

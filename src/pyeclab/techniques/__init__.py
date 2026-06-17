@@ -81,7 +81,7 @@ def build_limit(
 __all__ = [
     "ChronoAmperometry",
     "ChronoPotentiometry",
-    "ChronoAmperometryWithLimits"
+    "ChronoAmperometryWithLimits",
     "ChronoPotentiometryWithLimits",
     "Loop",
     "OpenCircuitVoltage",
@@ -92,8 +92,6 @@ __all__ = [
 def custom_serialization_factory(data):
     result_dict = {}
     for field_name, filed_value in data:
-        if field_name == 'device' :
-            continue
         if field_name == 'ecc_file':
             continue
         if field_name == 'ecc_params':

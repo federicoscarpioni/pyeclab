@@ -8,7 +8,6 @@ binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 device = BiologicDevice(ip_address, binary_path=binary_path)
 
 calim = ChronoAmperometryWithLimits(
-    device=device,
     voltage=0,
     duration=10,
     vs_init=True,
@@ -23,7 +22,7 @@ calim = ChronoAmperometryWithLimits(
     limit_value=1,
     bandwidth=BANDWIDTH.BW_4,
 )
-calim.make_technique()
+calim.make_technique(device)
 
 sequence = [calim]
 

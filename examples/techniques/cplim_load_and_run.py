@@ -8,7 +8,6 @@ binary_path = "C:/EC-Lab Development Package/EC-Lab Development Package/"
 device = BiologicDevice(ip_address, binary_path=binary_path)
 
 cplim = ChronoPotentiometryWithLimits(
-    device=device,
     current=0,
     duration=10,
     vs_init=False,
@@ -24,7 +23,7 @@ cplim = ChronoPotentiometryWithLimits(
     bandwidth=BANDWIDTH.BW_5,
 )
 
-cplim.make_technique()
+cplim.make_technique(device)
 
 sequence = [cplim]
 
