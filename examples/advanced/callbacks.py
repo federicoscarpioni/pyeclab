@@ -1,8 +1,7 @@
 """
-Channel class can execute functions when a new technique from the sequence starts.
-In this script, a simple printing funcion and class methods are used as examples.
-In practice, the function to excecute can be appended to the list attribute
-'callbacks' of Channel class.
+Channel class can execute a function when a new technique from the sequence starts.
+In this script, a simple printing funcion and a class method are used as examples.
+In practice, the callback can be assigned to channel.sequence_monitor.on_technique_change.
 """
 
 from pathlib import Path
@@ -53,9 +52,15 @@ channel1 = Channel(
 )
 channel1.load_sequence(sequence)
 
-# Add the function and method to the list of callbacks to excecute.
-channel1.callbacks.append(printer_function)
+# Only a single callback is supported; wrap multiple actions in one function.
 fake_instrument = FakeInstrument()
-channel1.callbacks.append(fake_instrument.print_massage)
+
+
+def on_technique_change():
+    printer_function()
+    fake_instrument.print_massage()
+
+
+channel1.sequence_monitor.on_technique_change = on_technique_change
 
 channel1.start()

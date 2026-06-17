@@ -26,19 +26,21 @@ def end_technique(channel):
     duration to the value of 1 second (This is a workaround for the lack
     of a specific function in the EC-Lab SDK).
     """
+    tech_index = channel.sequence_monitor.current_tech_index
+    tech_id = channel.sequence_monitor.current_tech_id
     # Overwrite technique duration to 1 second to force automatic interruption
     channel.bio_device.UpdateParameters(
         channel.bio_device.device_id,
         channel.num,
-        channel.current_tech_index,
-        set_duration_to_1s(channel.bio_device, channel.sequence[channel.current_tech_index], channel.current_tech_id),
-        channel.sequence[channel.current_tech_index].ecc_file,
+        tech_index,
+        set_duration_to_1s(channel.bio_device, channel.sequence[tech_index], tech_id),
+        channel.sequence[tech_index].ecc_file,
     )
     # Reset duration to original value in case it is looped
     channel.bio_device.UpdateParameters(
         channel.bio_device.device_id,
         channel.num,
-        channel.current_tech_index,
-        reset_duration(channel.bio_device, channel.sequence[channel.current_tech_index], channel.current_tech_id),
-        channel.sequence[channel.current_tech_index].ecc_file,
+        tech_index,
+        reset_duration(channel.bio_device, channel.sequence[tech_index], tech_id),
+        channel.sequence[tech_index].ecc_file,
     )

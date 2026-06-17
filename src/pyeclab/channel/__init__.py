@@ -16,6 +16,7 @@ from pyeclab.channel.acquisition import DataAcquisition
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
 from pyeclab.channel.limits import SoftwareLimitChecker
+from pyeclab.channel.monitoring import SequenceMonitor
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
 from pyeclab.channel.auxiliary_functions import end_technique
 from pyeclab.techniques import custom_serialization_factory
@@ -42,12 +43,10 @@ class Channel:
         self.num = channel_num
         self.writer = writer
         self.config = config
-        self.function = None # Executed at the end of each technique exept for the very last
-        self.current_tech_index = 0
-        self.current_loop = 0
         # Hardware setting
         self.acquisition = DataAcquisition(bio_device, channel_num, config)
         self.limit_checker = SoftwareLimitChecker()
+        self.sequence_monitor = SequenceMonitor()
         self.running = False
         # Setup thread
         self.run_thread = Thread(target=self._run)
@@ -95,7 +94,8 @@ class Channel:
                 print(f"CH{self.num}: Measure completed.")
                 break
             # Check if the technique has changed on the instrument
-            self._monitoring_sequence_progression()
+            if self.sequence_monitor.update(self.data_info):
+                print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
             # Stop current technique if any software limit is reached
             if self.limit_checker.check(self.current_values, self.data_info):
                 print("Software limits met")  # debug print
@@ -135,32 +135,6 @@ class Channel:
         )
 
 
-    ## Methods to monitor the execution of the sequence from Python
-
-    def _update_sequence_trackers(self):
-        """Update tech index, tech id and loop id."""
-        self.current_tech_index = self.data_info.TechniqueIndex
-        self.current_tech_id = self.data_info.TechniqueID
-        logger.debug(f"From _update_sequence_trackers:\n{self.current_tech_id=}\n{self.data_info.TechniqueID}")
-        self.current_loop = self.data_info.loop
-        print(f"Loop {self.current_loop}, Technique {self.current_tech_index}, Technique ID {self.current_tech_id}")
-
-    def _monitoring_sequence_progression(self):
-        """
-        This method checks when a new technique is started in the instrument. This
-        can be used to add new behaviours to the application.
-        """
-        self.new_tech_index = self.data_info.TechniqueIndex
-        self.new_tech_id = self.data_info.TechniqueID
-        self.new_loop = self.data_info.loop
-        self.current_tech_id = self.new_tech_id
-        if self.current_loop != self.new_loop or self.current_tech_index != self.new_tech_index:# or self.first_loop is True:
-            # self.first_loop = False
-            if self.function is not None: self.function() # This is strategically put before updating the trackers
-            self._update_sequence_trackers()
-            print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
-
-
     ## Methods for saving data and metadata (including initialization of the files)
 
     def _instantiate_writer(self):
@@ -181,7 +155,7 @@ class Channel:
 
     def _write_latest_data_to_file(self):
         """Format the latest data into a numpy array and pass it to the writers .write() method."""
-        technique_num = self.current_tech_index * np.ones(len(self.latest_data[0]))
+        technique_num = self.sequence_monitor.current_tech_index * np.ones(len(self.latest_data[0]))
         loop_num = self.data_info.loop * np.ones(len(self.latest_data[0]))
 
         data_to_save = np.column_stack((*self.latest_data, technique_num, loop_num))
@@ -202,10 +176,10 @@ class Channel:
                     'Software conditions' : [asdict(instance) for instance in self.limit_checker.conditions]
                 }
             )
-        if self.function:
+        if self.sequence_monitor.on_technique_change:
             metadata_dict.update(
                 {
-                    'Executed function':self.function.__name__
+                    'Executed function': self.sequence_monitor.on_technique_change.__name__
                 }
             )
         with open(str(self.writer.file_dir / self.writer.experiment_name) +'/metadata.json', 'w') as fp:
