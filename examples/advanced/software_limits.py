@@ -39,6 +39,6 @@ channel1 = Channel(
 channel1.load_sequence(sequence)
 
 # Set condition on the voltage
-channel1.append(Condition(0, "Ewe", ">", 2.80))
+channel1.limit_checker.add(Condition(0, "Ewe", ">", 2.80))
 
 channel1.start()

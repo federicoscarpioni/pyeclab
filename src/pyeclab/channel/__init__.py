@@ -14,8 +14,9 @@ from pyeclab.device import BiologicDevice
 
 from pyeclab.channel.config import ChannelConfig
 from pyeclab.channel.liveplot import LivePlot
+from pyeclab.channel.limits import SoftwareLimitChecker
 from pyeclab.channel.writers.abstractwriter import AbstractWriter
-from pyeclab.channel.auxiliary_functions import end_technique, check_software_limits
+from pyeclab.channel.auxiliary_functions import end_technique
 import pyeclab.channel.buffer_converters as get_buffer_converted
 from pyeclab.techniques import custom_serialization_factory
 
@@ -45,7 +46,7 @@ class Channel:
         self.current_tech_index = 0
         self.current_loop = 0
         # Hardware setting
-        self.conditions = []
+        self.limit_checker = SoftwareLimitChecker()
         self.running = False
         # Setup thread
         self.run_thread = Thread(target=self._run)
@@ -95,7 +96,7 @@ class Channel:
             # Check if the technique has changed on the instrument
             self._monitoring_sequence_progression()
             # Stop current technique if any software limit is reached
-            if self._check_software_limits():
+            if self.limit_checker.check(self.current_values, self.data_info):
                 print("Software limits met")  # debug print
                 self.end_technique()
             # Sleep before retriving next measured data
@@ -195,12 +196,6 @@ class Channel:
             print(f"> CH{self.num} msg: new technique started ({self.data_info.TechniqueID})")
 
 
-    ## Methods for managing the software limits on voltage and curent
-
-    def _check_software_limits(self):
-        return check_software_limits(self)
-
-
     ## Methods for saving data and metadata (including initialization of the files)
 
     def _instantiate_writer(self):
@@ -236,10 +231,10 @@ class Channel:
             # not working 'Sequence' : [asdict(technique, dict_factory=custom_serialization_factory) for technique in self.sequence]
         }
         metadata_dict.update(asdict(self.config))
-        if self.conditions:
+        if self.limit_checker.conditions:
             metadata_dict.update(
                 {
-                    'Software conditions' : [asdict(instance) for instance in self.conditions]
+                    'Software conditions' : [asdict(instance) for instance in self.limit_checker.conditions]
                 }
             )
         if self.function:
