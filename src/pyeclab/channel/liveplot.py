@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from pyeclab.api.kbio_types import PROG_STATE
 from pyeclab.channel.writers.filewriter import FileWriter
 
 # NOTE last point is not plotted
@@ -120,7 +121,7 @@ class LivePlot:
             self.ax2.relim()
             self.ax.autoscale_view()
             self.ax2.autoscale_view()
-        if self.channel.current_values.State == 0:
+        if self.channel.current_values.State == PROG_STATE.STOP.value:
             # Stop the animation if the channel is not active
             self.ani.event_source.stop()
 
