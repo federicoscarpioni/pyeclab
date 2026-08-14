@@ -8,6 +8,7 @@ import numpy as np
 
 from dataclasses import asdict
 
+from pyeclab.api.kbio_types import PROG_STATE
 from pyeclab.api.tech_types import TECH_ID
 
 from pyeclab.device import BiologicDevice
@@ -89,7 +90,7 @@ class Channel:
             if self.config.print_values:
                 self._print_current_values()
             # Break the loop if sequence is terminates
-            if self.current_values.State == 0:
+            if self.current_values.State == PROG_STATE.STOP.value:
                 self.running = False
                 print(f"CH{self.num}: Measure completed.")
                 break
