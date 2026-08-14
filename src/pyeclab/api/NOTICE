@@ -1,0 +1,12 @@
+The contents of this directory (src/pyeclab/api/) are adapted from the
+"kbio" Python bindings distributed by Bio-Logic Science Instruments as part
+of the EC-Lab Development Package (Examples/Python/kbio), used to call into
+the EClib DLL that ships with that package.
+
+This code is not covered by pyeclab's MIT license (see LICENSE at the
+repository root). It remains the property of Bio-Logic Science Instruments,
+per the EC-Lab Development Package license agreement. Its inclusion here is
+pending written confirmation from Bio-Logic that this use is acceptable.
+
+If you are redistributing or building on pyeclab, be aware that this
+directory may need to be treated separately from the rest of the project.

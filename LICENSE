@@ -1,6 +1,10 @@
 MIT License
 
-Copyright (c) 2024 =
+Copyright (c) 2024 Federico Scarpioni
+
+This license applies to pyeclab's own code. The contents of src/pyeclab/api/
+are adapted from Bio-Logic Science Instruments' EC-Lab Development Package
+and are not covered by this license; see src/pyeclab/api/NOTICE.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
