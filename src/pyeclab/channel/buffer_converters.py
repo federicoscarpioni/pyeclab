@@ -1,12 +1,14 @@
 import numpy as np
 
+from pyeclab.api.tech_types import TECH_ID
+
 def base(bio_device, data_info, current_values, buffer):
     Ewe = np.array(
         [bio_device.ConvertNumericIntoSingle(buffer[i, 2]) for i in range(0, data_info.NbRows)]
     )
     I = (
         np.array([bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, data_info.NbRows)])
-        if data_info.TechniqueID != 100
+        if data_info.TechniqueID != TECH_ID.OCV.value
         else np.array([0] * len(Ewe))
     )
     t = np.array(
@@ -19,7 +21,7 @@ def base(bio_device, data_info, current_values, buffer):
 
 def with_charge(bio_device, data_info, current_values, buffer):
     t, Ewe, I = base(bio_device, data_info, current_values, buffer)
-    if data_info.TechniqueID == 100:
+    if data_info.TechniqueID == TECH_ID.OCV.value:
         q = np.array([bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, data_info.NbRows)])
     else:
         q = np.array([bio_device.ConvertNumericIntoSingle(buffer[i, 5]) for i in range(0, data_info.NbRows)])
@@ -27,7 +29,7 @@ def with_charge(bio_device, data_info, current_values, buffer):
 
 def with_Ece(bio_device, data_info, current_values, buffer):
     t, Ewe, I = base(bio_device, data_info, current_values, buffer)
-    if data_info.TechniqueID == 100:
+    if data_info.TechniqueID == TECH_ID.OCV.value:
         Ece = np.array(
             [bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, data_info.NbRows)]
         )
@@ -39,7 +41,7 @@ def with_Ece(bio_device, data_info, current_values, buffer):
 
 def with_charge_and_Ece(bio_device, data_info, current_values, buffer):
     t, Ewe, I = base(bio_device, data_info, current_values, buffer)
-    if data_info.TechniqueID == 100:
+    if data_info.TechniqueID == TECH_ID.OCV.value:
         Ece = np.array(
             [bio_device.ConvertNumericIntoSingle(buffer[i, 3]) for i in range(0, data_info.NbRows)]
         )
